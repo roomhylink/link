@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Admin Properties</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background for the main content area */
+        }
+        .sidebar {
+            background-color: #111827; /* Dark gray for sidebar */
+        }
+        .sidebar-link {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #374151; /* Slightly lighter gray on hover/active */
+            color: #ffffff;
+        }
+        /* Dropdown transition */
+        .profile-dropdown {
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+         /* Table styles */
+        th {
+            @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50;
+        }
+        td {
+             @apply px-4 py-4 whitespace-nowrap text-sm text-gray-700;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+       <aside class="sidebar w-64 flex-shrink-0 text-gray-300 hidden md:flex flex-col">
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-700">
+                 <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <a href="admin.html" class="sidebar-link flex items-center px-6 py-3 text-white">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+                <a href="properties.html" class="sidebar-link flex active items-center px-6 py-3">
+                    <i data-lucide="building" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="rooms.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms
+                </a>
+                 <a href="tenants.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <a href="tenantrec.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                 <a href="bookings.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                 <a href="documents.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i>Document & Rules 
+                </a>
+                <a href="review.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="complaints.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints
+                </a>
+                 <a href="payment.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments
+                </a>
+                 <a href="chat.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                 <a href="location.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+               
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30">
+                <div class="flex items-center">
+                    <button id="mobile-menu-button" class="md:hidden mr-4 p-2 text-gray-600 hover:text-gray-900">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <!-- Breadcrumbs -->
+                     <nav class="text-sm font-medium hidden sm:flex items-center space-x-2">
+                        <a href="#" class="text-gray-500 hover:text-gray-700">Dashboard</a>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-gray-800">Properties</span>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-6 h-6"></i></button>
+                    <!-- Profile Dropdown -->
+                    <div class="relative">
+                        <button id="profile-button" class="block">
+                            <img src="https://i.pravatar.cc/150?u=admin" alt="Admin Avatar" class="w-10 h-10 rounded-full border-2 border-purple-300 hover:border-purple-500 transition">
+                        </button>
+                        <div id="profile-dropdown" class="profile-dropdown hidden absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl overflow-hidden origin-top-right transform scale-95 opacity-0">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <p class="text-sm font-semibold text-gray-800">Ajay Kumar</p>
+                                <p class="text-xs text-gray-500">ajay@gmail.com</p>
+                            </div>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4 mr-3 text-gray-500"></i> Profile
+                            </a>
+                            <a href="#" id="logoutBtn" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100">
+                                <i data-lucide="log-out" class="w-4 h-4 mr-3 text-gray-500"></i> Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+             <!-- Mobile Sidebar -->
+            <div id="mobile-menu" class="md:hidden fixed inset-0 z-50 flex hidden">
+                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" id="mobile-menu-overlay"></div>
+                <aside class="sidebar w-64 flex-shrink-0 text-gray-300 flex flex-col relative z-10">
+                    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+                         <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+                         <button id="close-mobile-menu" class="p-2 text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                     <nav class="flex-1 overflow-y-auto py-4">
+                        <a href="admin.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                        <a href="properties.html" class="sidebar-link active flex items-center px-6 py-3 text-white"><i data-lucide="building" class="w-5 h-5 mr-3"></i> Properties</a>
+                        <a href="rooms.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms</a>
+                        <a href="tenants.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                        <a href="tenantrec.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                        <a href="bookings.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                        <a href="review.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                        <a href="payment.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
+                        <a href="chat.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                        <a href="location.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location</a>
+                    </nav>
+                </aside>
+            </div>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Properties</h2>
+                    <p class="text-gray-500 mt-1">All properties that are listed on the roomhy are listed here.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
+                         <h3 class="text-lg font-semibold text-gray-700">Property <span class="text-gray-500 font-normal">(You have total of 1 properties)</span></h3>
+                         <div class="flex items-center space-x-2">
+                            <div class="relative">
+                                <input type="text" placeholder="Search by Name" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                            </div>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700">Search</button>
+                             <select class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option>All</option>
+                                <option>Active</option>
+                                <option>Inactive</option>
+                             </select>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- Properties Table -->
+                <div class="bg-white rounded-xl shadow overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th>Property Name</th>
+                                <th>Owner Name</th>
+                                <th>City</th>
+                                <th>Area</th>
+                                <th>Property Size</th>
+                                <th>Description</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <!-- Sample Row -->
+                            <tr>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <img class="h-10 w-10 rounded-lg object-cover" src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1974&auto=format&fit=crop" alt="Big Hostel">
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Big Hostel</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Ajay Kumar</td>
+                                <td>Kota</td>
+                                <td>Landmark</td>
+                                <td>456 sqft</td>
+                                <td class="max-w-xs truncate">Lorem ipsum dolor sit amet...</td>
+                                <td>Kota</td>
+                            </tr>
+                            <!-- Add more rows as needed -->
+                        </tbody>
+                    </table>
+                </div>
+                 <!-- Pagination -->
+                 <div class="mt-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
+                    <div class="mb-4 md:mb-0">
+                        Showing 1 to 1 of 1 entries
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span>Rows per page:</span>
+                        <select class="border border-gray-300 rounded px-2 py-1">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                         <span class="ml-4">Page 1 of 1</span>
+                         <div class="flex items-center space-x-1 ml-4">
+                            <button class="p-1 text-gray-400 cursor-not-allowed"><i data-lucide="chevrons-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-400 cursor-not-allowed"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800"><i data-lucide="chevrons-right" class="w-5 h-5"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // --- Auth Guard ---
+        // Prefer per-tab owner session, then session user, then local storage fallback
+        const user = JSON.parse(sessionStorage.getItem('owner_session') || sessionStorage.getItem('user') || localStorage.getItem('user') || 'null');
+        if (!user || user.role !== 'owner') {
+            window.location.href = 'ownerlogin.html';
+        }
+        
+        const ownerId = user.ownerId || user.loginId;
+        
+        // --- Header Population & Data Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('headerName')) {
+                document.getElementById('headerName').innerText = user.name;
+            }
+            if (document.getElementById('headerAvatar')) {
+                document.getElementById('headerAvatar').innerText = user.name.charAt(0).toUpperCase();
+            }
+
+            // Load properties for this owner and render table
+            const allProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+            const myProps = allProps.filter(p => {
+                // Support either ownerId or ownerLoginId fields
+                return (p.ownerId && p.ownerId === ownerId) || (p.ownerLoginId && p.ownerLoginId === ownerId);
+            });
+
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
+            if (myProps.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500">No properties found for your account.</td>`;
+                tbody.appendChild(tr);
+            } else {
+                myProps.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-lg object-cover" src="${p.image || 'https://via.placeholder.com/80'}" alt="${p.name}">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${p.name || p.propertyName || 'Untitled'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${p.ownerName || user.name}</td>
+                        <td>${p.city || p.location || '-'}</td>
+                        <td>${p.area || '-'}</td>
+                        <td>${p.size || p.propertySize || '-'}</td>
+                        <td class="max-w-xs truncate">${p.description || '-'}</td>
+                        <td>${p.address || '-'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        });
+        
+        // --- Logout Handler ---
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            // Clear per-tab owner session
+            sessionStorage.removeItem('owner_session');
+            window.location.href = 'ownerlogin.html';
+        });
+        
+        // Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const closeMobileMenuButton = document.getElementById('close-mobile-menu');
+
+        const openMenu = () => mobileMenu.classList.remove('hidden');
+        const closeMenu = () => mobileMenu.classList.add('hidden');
+
+        mobileMenuButton.addEventListener('click', openMenu);
+        closeMobileMenuButton.addEventListener('click', closeMenu);
+        mobileMenuOverlay.addEventListener('click', closeMenu);
+
+        // Close mobile menu on link click
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeMenu);
+        });
+
+        // Profile Dropdown Toggle
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent click from bubbling up to document
+            const isHidden = profileDropdown.classList.contains('hidden');
+            if(isHidden) {
+                profileDropdown.classList.remove('hidden', 'scale-95', 'opacity-0');
+                profileDropdown.classList.add('scale-100', 'opacity-100');
+            } else {
+                 profileDropdown.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => {
+                    profileDropdown.classList.add('hidden');
+                 }, 200); 
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (profileButton && !profileButton.contains(event.target) && profileDropdown && !profileDropdown.contains(event.target)) {
+                 if(!profileDropdown.classList.contains('hidden')) {
+                     profileDropdown.classList.add('scale-95', 'opacity-0');
+                     setTimeout(() => {
+                        profileDropdown.classList.add('hidden');
+                    }, 200);
+                 }
+            }
+        });
+
+    </script>
+</body>
+</html>
+

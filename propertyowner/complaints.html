@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Tenant Complaints Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link { color: #9ca3af; font-weight: 500; transition: all 0.2s ease; display: flex; align-items: center; padding: 0.75rem 1.5rem; font-size: 0.9rem; border-left: 3px solid transparent; cursor: pointer; }
+        .sidebar-link:hover { color: #f3f4f6; background-color: #1f2937; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+        .complaint-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white; }
+        .complaint-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .status-badge { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .status-open { background-color: #fee2e2; color: #991b1b; }
+        .status-taken { background-color: #fef3c7; color: #92400e; }
+        .status-resolved { background-color: #dcfce7; color: #166534; }
+        .status-rejected { background-color: #f3f4f6; color: #374151; }
+        .priority-high { background-color: #fecaca; color: #7f1d1d; }
+        .priority-medium { background-color: #fed7aa; color: #92400e; }
+        .priority-low { background-color: #bfdbfe; color: #1e40af; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (copied from admin layout) -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="home" class="w-5 h-5 text-white"></i></div>
+                     <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">OWNER PANEL</span></div>
+                 </div>
+            </div>
+            <nav class="flex-1 py-6 space-y-1">
+                <a href="admin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                <a href="properties.html" class="sidebar-link"><i data-lucide="building" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="rooms.html" class="sidebar-link"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms</a>
+                <a href="tenants.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                <a href="tenantrec.html" class="sidebar-link"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                <a href="documents.html" class="sidebar-link"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Documents</a>
+                <a href="payment.html" class="sidebar-link"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
+                <a href="complaints.html" class="sidebar-link active"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints</a>
+                <a href="chat.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                <a href="review.html" class="sidebar-link"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                <a href="location.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Location</a>
+                <a href="ownerprofile.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Profile & Settings</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Header (copied from admin layout) -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" title="Open menu" aria-label="Open menu" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <h2 class="text-lg font-semibold text-slate-800">Tenant Complaints</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600" title="Notifications"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold border border-purple-200" id="headerAvatar">OP</div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-semibold text-gray-700" id="headerName">Owner</p>
+                                <p class="text-[10px] text-gray-500">Property Owner</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+                            <a href="ownerprofile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800">Tenant Complaints</h2>
+                    <p class="text-gray-500 mt-1">Manage complaints from your tenants, respond and resolve issues.</p>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                        <p class="text-xs text-gray-500 uppercase font-semibold">Open</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1" id="count-open">0</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+                        <p class="text-xs text-gray-500 uppercase font-semibold">In Progress</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1" id="count-taken">0</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                        <p class="text-xs text-gray-500 uppercase font-semibold">Resolved</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1" id="count-resolved">0</p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-gray-400">
+                        <p class="text-xs text-gray-500 uppercase font-semibold">Rejected</p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1" id="count-rejected">0</p>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="relative flex-grow md:flex-grow-0">
+                        <input type="text" id="search-complaints" placeholder="Search tenant name or complaint..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-purple-500 focus:border-purple-500 w-full md:w-64">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="filterComplaints('all')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 active">All</button>
+                        <button onclick="filterComplaints('Open')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Open</button>
+                        <button onclick="filterComplaints('Taken')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">In Progress</button>
+                        <button onclick="filterComplaints('Resolved')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100">Resolved</button>
+                    </div>
+                </div>
+
+                <!-- Complaints List -->
+                <div id="complaints-container" class="space-y-4">
+                    <div class="text-center py-12 text-gray-400">
+                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2"></i>
+                        <p>Loading complaints...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Action Modal -->
+    <div id="actionModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Update Complaint Status</h3>
+            <div id="modal-content" class="space-y-3 mb-6">
+                <!-- Content will be filled by JS -->
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeActionModal()" class="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Cancel</button>
+                <button onclick="confirmAction()" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentComplaintId = null;
+        let currentAction = null;
+        let ownerComplaints = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (!user || user.role !== 'owner') {
+                document.getElementById('complaints-container').innerHTML = '<div class="text-center py-12 text-red-600">Please login as property owner first</div>';
+                return;
+            }
+
+            // Populate header with owner info
+            try {
+                const displayName = user.name || user.displayName || user.profileName || user.loginId;
+                if (document.getElementById('headerName')) document.getElementById('headerName').innerText = displayName;
+                if (document.getElementById('headerAvatar')) document.getElementById('headerAvatar').innerText = (displayName || 'O').charAt(0).toUpperCase();
+            } catch (e) { /* ignore */ }
+
+            // Attach logout handler
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('user');
+                    window.location.href = 'ownerlogin.html';
+                });
+            }
+
+            // Prefer explicit ownerId when available
+            const ownerId = user.ownerId || user.loginId;
+            loadOwnerComplaints(ownerId);
+        });
+
+        function loadOwnerComplaints(ownerId) {
+            try {
+                const allComplaints = JSON.parse(localStorage.getItem('roomhy_complaints') || '[]');
+
+                // Tenant records may store owner reference in different fields depending on flow
+                const tenantsRaw = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+                const tenants = tenantsRaw.filter(t => {
+                    return (t.ownerId && t.ownerId === ownerId) || (t.assignedBy && t.assignedBy === ownerId) || (t.propertyOwner && t.propertyOwner === ownerId);
+                });
+
+                const tenantIds = tenants.map(t => t.id || t.loginId).filter(Boolean);
+
+                // Filter complaints from this owner's tenants
+                ownerComplaints = allComplaints.filter(c => tenantIds.includes(c.tenantId));
+
+                renderComplaints(ownerComplaints);
+                updateStats();
+            } catch (e) {
+                console.error('Error loading complaints:', e);
+                document.getElementById('complaints-container').innerHTML = '<div class="text-center py-12 text-red-600">Error loading complaints</div>';
+            }
+        }
+
+        function renderComplaints(complaints) {
+            const container = document.getElementById('complaints-container');
+            
+            if (complaints.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300"><i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i><p class="text-gray-600">No complaints yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = complaints.map(c => {
+                const statusClass = c.status === 'Open' ? 'status-open' : (c.status === 'Taken' ? 'status-taken' : (c.status === 'Resolved' ? 'status-resolved' : 'status-rejected'));
+                const priorityClass = c.priority === 'High' ? 'priority-high' : (c.priority === 'Medium' ? 'priority-medium' : 'priority-low');
+                const createdDate = new Date(c.createdAt).toLocaleDateString();
+
+                return `
+                    <div class="complaint-card">
+                        <div class="flex justify-between items-start gap-4 mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded font-semibold">${c.category}</span>
+                                    <span class="priority-badge ${priorityClass}">${c.priority}</span>
+                                    <span class="text-xs text-gray-400">${createdDate}</span>
+                                </div>
+                                <h3 class="text-base font-semibold text-gray-800 mb-1">${c.description}</h3>
+                                <div class="flex items-center gap-4 text-xs text-gray-600">
+                                    <div><strong>Tenant:</strong> ${c.tenantName}</div>
+                                    <div><strong>Room:</strong> ${c.roomNo}${c.bedNo ? ' ('+c.bedNo+')' : ''}</div>
+                                    <div><strong>Phone:</strong> ${c.tenantPhone}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${c.status}</span>
+                        </div>
+                        <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                            ${c.status === 'Open' ? `<button onclick="updateStatus('${c.id}', 'Taken')" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded text-sm font-medium hover:bg-yellow-200">Mark as In Progress</button>` : ''}
+                            ${c.status === 'Taken' ? `<button onclick="updateStatus('${c.id}', 'Resolved')" class="px-3 py-1 bg-green-100 text-green-700 rounded text-sm font-medium hover:bg-green-200">Mark as Resolved</button><button onclick="updateStatus('${c.id}', 'Rejected')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm font-medium hover:bg-gray-200">Reject</button>` : ''}
+                            ${c.status === 'Open' ? `<button onclick="updateStatus('${c.id}', 'Rejected')" class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200">Reject</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function updateStats() {
+            const counts = {
+                Open: ownerComplaints.filter(c => c.status === 'Open').length,
+                Taken: ownerComplaints.filter(c => c.status === 'Taken').length,
+                Resolved: ownerComplaints.filter(c => c.status === 'Resolved').length,
+                Rejected: ownerComplaints.filter(c => c.status === 'Rejected').length
+            };
+            document.getElementById('count-open').textContent = counts.Open;
+            document.getElementById('count-taken').textContent = counts.Taken;
+            document.getElementById('count-resolved').textContent = counts.Resolved;
+            document.getElementById('count-rejected').textContent = counts.Rejected;
+        }
+
+        function updateStatus(complaintId, newStatus) {
+            currentComplaintId = complaintId;
+            currentAction = newStatus;
+            const complaint = ownerComplaints.find(c => c.id === complaintId);
+            
+            const statusText = newStatus === 'Taken' ? 'In Progress' : newStatus;
+            document.getElementById('modal-content').innerHTML = `
+                <p class="text-gray-600">Are you sure you want to mark this complaint as <strong>${statusText}</strong>?</p>
+                <p class="text-sm text-gray-500"><strong>Complaint:</strong> ${complaint.description}</p>
+            `;
+            
+            document.getElementById('actionModal').classList.remove('hidden');
+            document.getElementById('actionModal').classList.add('flex');
+        }
+
+        function confirmAction() {
+            if (!currentComplaintId || !currentAction) return;
+            
+            const allComplaints = JSON.parse(localStorage.getItem('roomhy_complaints') || '[]');
+            const idx = allComplaints.findIndex(c => c.id === currentComplaintId);
+            
+            if (idx > -1) {
+                allComplaints[idx].status = currentAction;
+                allComplaints[idx].updatedAt = new Date().toISOString();
+                if (currentAction === 'Resolved') {
+                    allComplaints[idx].resolvedAt = new Date().toISOString();
+                }
+                localStorage.setItem('roomhy_complaints', JSON.stringify(allComplaints));
+                
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                loadOwnerComplaints(user.loginId || user.ownerId);
+                closeActionModal();
+                alert(`Complaint status updated to ${currentAction === 'Taken' ? 'In Progress' : currentAction}`);
+            }
+        }
+
+        function closeActionModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+            document.getElementById('actionModal').classList.remove('flex');
+            currentComplaintId = null;
+            currentAction = null;
+        }
+
+        function filterComplaints(status) {
+            const filtered = status === 'all' ? ownerComplaints : ownerComplaints.filter(c => c.status === status);
+            renderComplaints(filtered);
+        }
+
+        document.getElementById('search-complaints')?.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = ownerComplaints.filter(c => 
+                c.tenantName.toLowerCase().includes(query) || 
+                c.description.toLowerCase().includes(query)
+            );
+            renderComplaints(filtered);
+        });
+    </script>
+</body>
+</html>

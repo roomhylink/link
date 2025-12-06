@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Request Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+            extend: {
+                colors: {
+                    'primary-blue': '#2563eb', // Indigo/Blue
+                    'primary-green': '#10b981', // Emerald/Green
+                },
+                keyframes: {
+                    fade_in: {
+                        '0%': { opacity: 0, transform: 'translateY(10px)' },
+                        '100%': { opacity: 1, transform: 'translateY(0)' },
+                    },
+                },
+                animation: {
+                    fade_in: 'fade_in 0.5s ease-out forwards',
+                }
+            }
+        }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc; /* Very light background */
+            color: #1F2937;
+        }
+
+        .light-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .light-card:hover {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Hamburger Menu Styling */
+        .mobile-menu {
+             position: fixed;
+             top: 0;
+             right: 0;
+             width: 80%;
+             max-width: 320px;
+             height: 100%;
+             background-color: #ffffff;
+             z-index: 50;
+             box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+             transform: translateX(100%);
+             transition: transform 0.3s ease-in-out;
+             display: flex;
+             flex-direction: column;
+        }
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        .menu-overlay {
+             position: fixed;
+             inset: 0;
+             background-color: rgba(0, 0, 0, 0.5);
+             z-index: 40;
+             display: none;
+        }
+        
+        .menu-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s, color 0.2s;
+            color: #4b5563; /* Gray-600 */
+        }
+        .menu-item:hover {
+            background-color: #eff6ff; /* Blue-50 */
+            color: #2563eb; /* Primary Blue */
+        }
+
+        .tab-button {
+            transition: color 0.2s, border-color 0.2s;
+            padding: 0.75rem 1.5rem;
+            margin: 0;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #6b7280; /* Gray-500 */
+            white-space: nowrap;
+        }
+        .tab-button.active {
+            color: #2563eb; /* Primary Blue */
+            border-bottom: 3px solid #2563eb;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+            animation: fade_in 0.4s ease-out forwards;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header (Simple top navigation with Hamburger) -->
+    <header class="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="flex h-16 items-center justify-between">
+                
+                <a href="tenant.html" class="flex-shrink-0 flex items-center space-x-2">
+                    <div class="text-xl font-bold text-primary-blue">Roomhy</div>
+                    <span class="text-xs font-medium text-gray-400 hidden sm:inline">Request Hub</span>
+                </a>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Dashboard Link -->
+                     <a href="tenant.html" class="flex items-center space-x-2 text-sm font-semibold text-gray-700 hover:text-primary-blue transition-colors">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <span class="hidden sm:inline">Dashboard</span>
+                    </a>
+                    
+                    <!-- Hamburger Menu Toggle -->
+                    <button id="menu-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i data-lucide="menu" class="w-7 h-7 text-primary-blue"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 py-8 md:py-10">
+        
+        <!-- Header Section -->
+        <div class="flex items-center justify-between mb-8 animate-fade-in">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                    <i data-lucide="user" class="w-6 h-6 text-gray-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-semibold text-gray-800">Hi, Emily 👋</h1>
+                    <p class="text-sm text-gray-500">Welcome to your property management portal.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Requests Cards (Matches Image Style) -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">My Requests</h2>
+            <div class="grid grid-cols-2 gap-4">
+                
+                <!-- Card 1: Send Request -->
+                <button class="light-card p-4 flex flex-col items-center text-center hover:shadow-lg transition-all" onclick="openServiceModal('service')">
+                    <i data-lucide="plus" class="w-8 h-8 text-primary-blue mb-2"></i>
+                    <span class="text-base font-semibold">Send Request</span>
+                </button>
+                
+                <!-- Card 2: View My Requests -->
+                <a href="tenant.html?tab=requests" class="light-card p-4 flex flex-col items-center text-center hover:shadow-lg transition-all">
+                    <i data-lucide="calendar" class="w-8 h-8 text-primary-green mb-2"></i>
+                    <span class="text-base font-semibold">View my requests</span>
+                </a>
+            </div>
+            <p class="text-sm text-gray-500 mt-3 text-left">Can't find your property? Invite yourself.</p>
+        </div>
+
+        <!-- Updates Section (Matches Image Style) -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Updates</h2>
+                <select class="text-sm font-semibold border rounded-lg p-1 bg-white hover:bg-gray-50">
+                    <option>Till date</option>
+                    <option>Last 7 days</option>
+                    <option>Last 30 days</option>
+                </select>
+            </div>
+
+            <div class="space-y-3">
+                
+                <!-- Update 1: Bookings/Requests -->
+                <div class="light-card p-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="book-open" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Bookings requests</p>
+                            <p class="text-lg font-bold">0</p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                </div>
+                
+                <!-- Update 2: Explore Offers -->
+                <div class="light-card p-4 flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="gift" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                        <p class="font-medium text-gray-800">Explore offers</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+    
+    <!-- Mobile Menu / Hamburger Panel -->
+    <div id="menu-overlay" class="menu-overlay"></div>
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="flex justify-between items-center p-4 border-b flex-shrink-0">
+            <h2 class="text-xl font-bold text-primary-blue">Navigation</h2>
+            <button id="menu-close" class="p-2 text-gray-400 hover:text-primary-blue">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 border-b">
+            <div class="flex items-center space-x-3">
+                <img src="https://i.pravatar.cc/150?u=tenant" alt="User Avatar" class="w-12 h-12 rounded-full object-cover border-2 border-primary-blue">
+                <div>
+                    <span class="text-lg font-semibold text-gray-800">Emily Clark</span>
+                    <p class="text-sm text-gray-500">Room 203, The Student Loft PG</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-grow p-4 space-y-1 overflow-y-auto">
+            <h3 class="text-xs font-semibold uppercase text-gray-400 px-3 pt-2 pb-1">Account & Actions</h3>
+            <a href="tenant.html" class="menu-item text-gray-600 w-full justify-start">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="tenant.html?action=pay" class="menu-item text-primary-blue w-full justify-start">
+                <i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i>
+                <span>Make Payment</span>
+            </a>
+            <a href="tenantchat.html" class="menu-item text-primary-green w-full justify-start">
+                <i data-lucide="message-square" class="w-5 h-5 mr-3"></i>
+                <span>Live Chat with Owner</span>
+            </a>
+        </nav>
+        
+        <div class="p-4 border-t flex-shrink-0">
+            <a href="#" class="flex items-center space-x-4 p-3 rounded-lg text-red-600 hover:bg-red-50">
+                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5 text-gray-600"></i>
+                </div>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Modal Container (Needed for submission success/error messages) -->
+    <div id="modal-container" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0" onclick="closeModals(event)">
+        <div id="generic-modal" class="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-transform duration-300 scale-95" onclick="event.stopPropagation()">
+            <!-- Modal Content will be inserted here -->
+            <div class="p-6">
+                 <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-title" class="text-xl font-bold text-gray-900">Modal Title</h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="closeModals()">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="modal-body" class="text-gray-700 space-y-4">
+                    <!-- Dynamic content -->
+                </div>
+                <div id="modal-footer" class="pt-4 mt-4 border-t text-right">
+                    <button class="bg-primary-blue text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700" onclick="closeModals()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            lucide.createIcons();
+        });
+
+        // ======================================================
+        // REQUEST FORM LOGIC (Moved to here from tenant.html for centralization)
+        // ======================================================
+        const serviceCategories = [
+            { value: 'plumbing', text: 'Plumbing Issue (Leaky Tap, Drain)' },
+            { value: 'electrical', text: 'Electrical Issue (Light, Fan, Outlet)' },
+            { value: 'repair', text: 'Carpentry/Furniture Repair' },
+            { value: 'cleaning', text: 'Cleaning/Housekeeping Request' },
+            { value: 'other_service', text: 'Other Maintenance' }
+        ];
+
+        const complaintCategories = [
+            { value: 'staff', text: 'Staff Behavior/Conduct' },
+            { value: 'noise', text: 'Noise Disturbance (Neighbor/Area)' },
+            { value: 'amenity_failure', text: 'Amenity Failure (e.g., WiFi, Water shortage)' },
+            { value: 'rules', text: 'House Rules Violation' },
+            { value: 'other_complaint', text: 'Other Formal Complaint' }
+        ];
+        
+        /**
+         * Unified function to open modal for both Service Requests and Complaints.
+         * Routed to this page via the Send Request button.
+         * @param {string} type - 'service' or 'complaint'
+         */
+        function openServiceModal(type = 'service') {
+            let title = type === 'service' ? 'New Service/Maintenance Request' : 'Lodge a Formal Complaint';
+            let categories = type === 'service' ? serviceCategories : complaintCategories;
+            let buttonClass = type === 'service' ? 'bg-primary-green hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
+            
+            const categoryOptions = categories.map(cat => `<option value="${cat.value}">${cat.text}</option>`).join('');
+
+            const body = `
+                <p class="text-sm text-gray-500">${type === 'service' ? 'Submit a maintenance request.' : 'Lodge a complaint for non-maintenance issues.'}</p>
+                <div>
+                    <label for="request-type" class="block text-sm font-medium mb-1">Category:</label>
+                    <select id="request-type" class="w-full p-2 border rounded-lg">
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div>
+                    <label for="request-details" class="block text-sm font-medium mb-1">Details / Description:</label>
+                    <textarea id="request-details" rows="4" class="w-full p-2 border rounded-lg" placeholder="Describe the issue, location, and urgency."></textarea>
+                </div>
+            `;
+            const footer = `
+                <button class="text-white font-bold py-2.5 px-4 rounded-lg ${buttonClass}" onclick="submitRequest('${type}')">Send Request</button>
+            `;
+            openModal(title, body, footer);
+        }
+        
+        function submitRequest(type) {
+            // In a real app, you would gather data (request-type, request-details) and send it to the server.
+            const typeLabel = type === 'service' ? 'Service Request' : 'Complaint';
+            const bodySuccess = `
+                <div class="text-center text-primary-green">
+                    <i data-lucide="check-circle" class="w-12 h-12 text-primary-green mx-auto mb-4"></i>
+                    <p class="font-bold text-xl">${typeLabel} Submitted!</p>
+                    <p class="text-sm text-gray-600 mt-2">Your request has been forwarded to the property manager.</p>
+                    <p class="text-xs text-gray-500 mt-1">Check the 'Requests' tab on your dashboard for status updates.</p>
+                </div>
+            `;
+            openModal('Request Submitted', bodySuccess);
+        }
+
+        // ======================================================
+        // MODAL/HAMBURGER LOGIC (Copied from tenant.html)
+        // ======================================================
+        const modalContainer = document.getElementById('modal-container');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const genericModal = document.getElementById('generic-modal');
+
+        function openModal(title, bodyHTML, footerHTML = '') {
+            modalTitle.innerText = title;
+            modalBody.innerHTML = bodyHTML;
+            
+            const modalFooter = document.getElementById('modal-footer');
+            if (modalFooter) {
+                modalFooter.innerHTML = footerHTML || '<button class="bg-primary-blue text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700" onclick="closeModals()">Close</button>';
+            }
+
+            modalContainer.classList.remove('hidden');
+            setTimeout(() => {
+                modalContainer.classList.remove('opacity-0');
+                genericModal.classList.remove('scale-95');
+                genericModal.classList.add('scale-100');
+            }, 10);
+            lucide.createIcons();
+            closeMobileMenu(); 
+        }
+
+        function closeModals(event) {
+            if (event && event.target !== modalContainer) return;
+
+            genericModal.classList.remove('scale-100');
+            genericModal.classList.add('scale-95');
+            modalContainer.classList.add('opacity-0');
+
+            setTimeout(() => {
+                modalContainer.classList.add('hidden');
+            }, 300);
+        }
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuClose = document.getElementById('menu-close');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            menuOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            menuOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (menuToggle && mobileMenu && menuClose && menuOverlay) {
+            menuToggle.addEventListener('click', openMobileMenu);
+            menuClose.addEventListener('click', closeMobileMenu);
+            menuOverlay.addEventListener('click', closeMobileMenu);
+        }
+        
+    </script>
+</html>

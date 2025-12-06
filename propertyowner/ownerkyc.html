@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Owner KYC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .file-upload-box { border: 2px dashed #d1d5db; transition: border-color 0.3s; }
+        .file-upload-box:hover { border-color: #2563eb; background-color: #eff6ff; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 text-white p-1.5 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
+                <h1 class="text-xl font-bold text-slate-800">Roomhy Onboarding</h1>
+            </div>
+            <div class="text-sm text-slate-500">Step 2 of 2: Verification</div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-3xl mx-auto">
+                 <!-- Stepper -->
+                <div class="flex items-center justify-center mb-8">
+                    <div class="flex items-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold mb-1"><i data-lucide="check" class="w-5 h-5"></i></div>
+                            <span class="text-xs font-medium text-green-600">Profile</span>
+                        </div>
+                        <div class="w-24 h-1 bg-green-500 mx-2 rounded"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full border-2 bg-blue-600 border-blue-600 text-white flex items-center justify-center font-bold mb-1">2</div>
+                            <span class="text-xs font-bold text-blue-600">KYC</span>
+                        </div>
+                        <div class="w-24 h-1 bg-gray-200 mx-2 rounded"></div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold mb-1">3</div>
+                            <span class="text-xs font-medium text-gray-400">Dashboard</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">Identity Verification</h1>
+                        <p class="text-gray-500">Upload your Aadhar card to activate your dashboard.</p>
+                    </div>
+                    
+                    <form onsubmit="event.preventDefault(); submitKYC();" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Aadhar Number</label>
+                            <input type="text" id="aadhar-number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none tracking-widest" placeholder="0000 0000 0000" maxlength="14" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Document</label>
+                            <label class="file-upload-box block p-8 text-center cursor-pointer rounded-xl bg-gray-50">
+                                <input type="file" class="hidden" id="id-proof" accept="image/*,.pdf" required>
+                                <div id="upload-content">
+                                    <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto text-blue-500 mb-3"></i>
+                                    <span class="text-blue-600 font-semibold text-sm block">Click to upload Aadhar Card</span>
+                                    <span class="text-xs text-gray-400 mt-1 block">(Small files only for demo)</span>
+                                </div>
+                                <div id="file-preview" class="hidden flex-col items-center">
+                                    <i data-lucide="file-check" class="w-10 h-10 text-green-500 mb-2"></i>
+                                    <span class="text-green-700 font-medium text-sm" id="file-name">filename.jpg</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors shadow-lg mt-4">
+                            Submit & Launch Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let base64Image = "";
+
+        // --- SAFE REDIRECT FUNCTION ---
+        function safeRedirect(url) {
+            try {
+                window.location.href = url;
+            } catch (e) {
+                console.warn("Automatic redirect failed, showing manual link.", e && e.message);
+                document.body.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-screen bg-gray-100 text-center p-4">
+                        <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-800 mb-2">Navigation Required</h2>
+                            <p class="text-gray-600 mb-6 text-sm">We need to move you to the next page.</p>
+                            <a href="${url}" class="block w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-blue-700 shadow transition">
+                                Continue to Next Step
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user) {
+            safeRedirect('ownerlogin.html');
+        }
+
+        // Polling: refresh owner data periodically when KYC is incomplete
+        let __ownerPollId = null;
+        function startOwnerPolling(intervalMs = 10000) {
+            if (!user || !user.loginId) return;
+            if (__ownerPollId) return; // already polling
+            __ownerPollId = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`);
+                    if (res.ok) {
+                        const fresh = await res.json();
+                        const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                        db[user.loginId] = db[user.loginId] || {};
+                        db[user.loginId].kyc = fresh.kyc || db[user.loginId].kyc;
+                        db[user.loginId].profileFilled = db[user.loginId].profileFilled || !!fresh.profileFilled;
+                        localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+                        // If KYC moved to submitted/verified, trigger a storage event marker so other tabs can react
+                        if (fresh.kyc && (fresh.kyc.status === 'submitted' || fresh.kyc.status === 'verified')) {
+                            try { localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: user.loginId, ts: Date.now() })); } catch (e) {}
+                            stopOwnerPolling();
+                        }
+                    }
+                } catch (e) {
+                    // ignore fetch errors, will retry
+                }
+            }, intervalMs);
+        }
+        function stopOwnerPolling() { if (__ownerPollId) { clearInterval(__ownerPollId); __ownerPollId = null; } }
+
+        // Listen for cross-tab notifications of KYC updates
+        window.addEventListener('storage', async (ev) => {
+            if (ev.key === 'owner_kyc_updated') {
+                try {
+                    const payload = JSON.parse(ev.newValue || '{}');
+                    if (payload && payload.loginId === user.loginId) {
+                        // refresh local owner record
+                        try {
+                            const fres = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`);
+                            if (fres.ok) {
+                                const freshOwner = await fres.json();
+                                const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                                db[user.loginId] = db[user.loginId] || {};
+                                db[user.loginId].kyc = freshOwner.kyc || db[user.loginId].kyc;
+                                db[user.loginId].profileFilled = db[user.loginId].profileFilled || !!freshOwner.profileFilled;
+                                localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                                // if KYC now submitted or verified, stop polling and redirect to dashboard
+                                if (freshOwner.kyc && (freshOwner.kyc.status === 'submitted' || freshOwner.kyc.status === 'verified')) {
+                                    try { localStorage.setItem('kycCompleted', 'true'); localStorage.setItem('ownerProfileCompleted', 'true'); } catch(e){}
+                                    setTimeout(() => safeRedirect('admin.html'), 300);
+                                }
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+                } catch (e) {}
+            }
+        });
+
+        // Aadhar Formatting
+        const aadharInput = document.getElementById('aadhar-number');
+        if (aadharInput) {
+            aadharInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '').substring(0, 12);
+                let formattedValue = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 4 === 0) formattedValue += ' ';
+                    formattedValue += value[i];
+                }
+                e.target.value = formattedValue;
+            });
+        }
+
+        // File Upload
+        const idProofInput = document.getElementById('id-proof');
+        if (idProofInput) {
+            idProofInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if(file) {
+                    // Check size (limit to 500KB for localStorage safety)
+                    if (file.size > 500000) {
+                        alert("File is too large! Please upload an image smaller than 500KB for this demo.");
+                        this.value = ""; // Reset
+                        return;
+                    }
+
+                    document.getElementById('upload-content').classList.add('hidden');
+                    document.getElementById('file-preview').classList.remove('hidden');
+                    document.getElementById('file-preview').classList.add('flex');
+                    document.getElementById('file-name').innerText = file.name;
+                    const reader = new FileReader();
+                    reader.onload = function(evt) { base64Image = evt.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Submit KYC: try backend PATCH then fallback to localStorage
+        async function submitKYC() {
+            const aadhar = document.getElementById('aadhar-number').value.replace(/\s/g, '');
+            if (aadhar.length !== 12) { alert('Invalid Aadhar Number'); return; }
+            if (!base64Image) { alert('Please upload document'); return; }
+
+            const kycPayload = {
+                kyc: {
+                    status: 'submitted',
+                    aadharNumber: aadhar,
+                    documentImage: base64Image,
+                    submittedAt: new Date().toISOString()
+                },
+                profileFilled: true
+            };
+
+            try {
+                if (user && user.loginId) {
+                    try {
+                        const res = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(kycPayload)
+                        });
+
+                        if (res.ok) {
+                            const updatedOwner = await res.json();
+                            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                            db[user.loginId] = db[user.loginId] || {};
+                            db[user.loginId].kyc = updatedOwner.kyc || kycPayload.kyc;
+                            db[user.loginId].profile = db[user.loginId].profile || { name: user.name || 'Owner', loginId: user.loginId };
+                            db[user.loginId].profileFilled = true;
+                            localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+                            // NEW: canonical flags and cleanup of old keys
+                            try {
+                                localStorage.setItem('kycCompleted', 'true');
+                                localStorage.setItem('ownerProfileCompleted', 'true');
+                                localStorage.removeItem('kyc');
+                                localStorage.removeItem('kyc_status');
+                            } catch (e) { console.warn('LocalStorage set failed', e && e.message); }
+
+                            // Refresh owner data from API to ensure dashboard reads fresh state
+                            try {
+                                const fresh = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`);
+                                if (fresh.ok) {
+                                    const freshOwner = await fresh.json();
+                                    const db2 = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                                    db2[user.loginId] = db2[user.loginId] || {};
+                                    db2[user.loginId].kyc = freshOwner.kyc || db2[user.loginId].kyc;
+                                    db2[user.loginId].profileFilled = true;
+                                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db2));
+                                }
+                            } catch (e) { console.warn('Failed to refresh owner after KYC', e && e.message); }
+
+                            alert('🎉 KYC Submitted! Redirecting to Dashboard...');
+                            // wait briefly to ensure state writes propagate
+                            setTimeout(() => safeRedirect('admin.html'), 300);
+                            return;
+                        } else if (res.status === 404) {
+                            console.warn('KYC PATCH returned 404 - owner not found. Attempting to create owner then retry PATCH.');
+                            // Try to create the owner and then retry the PATCH once
+                            try {
+                                const createPayload = { loginId: user.loginId, name: user.name || 'Owner' };
+                                const createRes = await fetch('/api/owners', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(createPayload)
+                                });
+                                if (createRes.ok || createRes.status === 201) {
+                                    console.info('Owner created successfully, retrying PATCH...');
+                                    // Retry PATCH once
+                                    const retryRes = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`, {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(kycPayload)
+                                    });
+                                        if (retryRes.ok) {
+                                        const updatedOwner = await retryRes.json();
+                                        const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                                        db[user.loginId] = db[user.loginId] || {};
+                                        db[user.loginId].kyc = updatedOwner.kyc || kycPayload.kyc;
+                                        db[user.loginId].profile = db[user.loginId].profile || { name: user.name || 'Owner', loginId: user.loginId };
+                                        db[user.loginId].profileFilled = true;
+                                        localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+                                        try {
+                                            localStorage.setItem('kycCompleted', 'true');
+                                            localStorage.setItem('ownerProfileCompleted', 'true');
+                                            localStorage.removeItem('kyc');
+                                            localStorage.removeItem('kyc_status');
+                                        } catch (e) { console.warn('LocalStorage set failed', e && e.message); }
+
+                                        try {
+                                            const fresh = await fetch(`/api/owners/${encodeURIComponent(user.loginId)}`);
+                                            if (fresh.ok) {
+                                                const freshOwner = await fresh.json();
+                                                const db2 = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                                                db2[user.loginId] = db2[user.loginId] || {};
+                                                db2[user.loginId].kyc = freshOwner.kyc || db2[user.loginId].kyc;
+                                                db2[user.loginId].profileFilled = true;
+                                                localStorage.setItem('roomhy_owners_db', JSON.stringify(db2));
+                                            }
+                                        } catch (e) { console.warn('Failed to refresh owner after KYC', e && e.message); }
+
+                                        alert('🎉 KYC Submitted! Redirecting to Dashboard...');
+                                        setTimeout(() => safeRedirect('admin.html'), 300);
+                                        return;
+                                    } else {
+                                        console.warn('Retry PATCH after create failed with status', retryRes.status);
+                                    }
+                                } else {
+                                    console.warn('Owner create returned', createRes.status);
+                                }
+                            } catch (createErr) {
+                                console.warn('Owner create attempt failed', createErr);
+                            }
+                        } else {
+                            console.warn('KYC PATCH failed with status', res.status);
+                        }
+                    } catch (err) {
+                        console.warn('KYC PATCH request failed, will fallback to localStorage', err);
+                    }
+                }
+
+                // Fallback to localStorage
+                const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                    if (user && !db[user.loginId]) {
+                    db[user.loginId] = {
+                        profile: { name: user.name || 'Owner', loginId: user.loginId },
+                        credentials: { firstTime: false },
+                        kyc: { status: 'pending' },
+                        profileFilled: false
+                    };
+                }
+
+                if (user) {
+                    db[user.loginId].kyc = kycPayload.kyc;
+                    db[user.loginId].profileFilled = true;
+                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                        try {
+                            localStorage.setItem('kycCompleted', 'true');
+                            localStorage.setItem('ownerProfileCompleted', 'true');
+                            localStorage.removeItem('kyc');
+                            localStorage.removeItem('kyc_status');
+                        } catch (e) { console.warn('LocalStorage set failed', e && e.message); }
+
+                        // give the browser a moment to persist localStorage before navigation
+                        setTimeout(() => {
+                            alert('🎉 KYC Submitted (offline). Redirecting to Dashboard...');
+                            safeRedirect('admin.html');
+                        }, 300);
+                } else {
+                    safeRedirect('ownerlogin.html');
+                }
+
+            } catch (e) {
+                console.error('submitKYC error', e);
+                if (e.name === 'QuotaExceededError') {
+                    alert('Storage Error: The image is too large. Please try a smaller image.');
+                } else {
+                    alert('Unable to save KYC. Please try again.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

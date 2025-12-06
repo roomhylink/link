@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Admin Roles & Permissions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background for the main content area */
+        }
+        .sidebar {
+            background-color: #111827; /* Dark gray for sidebar */
+        }
+        .sidebar-link {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #374151; /* Slightly lighter gray on hover/active */
+            color: #ffffff;
+        }
+        /* Dropdown transition */
+        .profile-dropdown {
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+         /* Table styles - Excel Look */
+        .excel-table {
+            border-collapse: collapse; /* Makes borders connect like Excel */
+            width: 100%;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #e5e7eb; /* Gray border for all cells */
+            padding: 12px 16px; /* py-3 px-4 */
+            text-align: left;
+            vertical-align: middle;
+        }
+        .excel-table th {
+            background-color: #f9fafb; /* Very light gray header */
+            font-weight: 600;
+            font-size: 0.75rem; /* 12px */
+            text-transform: uppercase;
+            color: #6b7280; /* Gray-500 */
+        }
+         .excel-table td {
+             font-size: 0.875rem; /* 14px */
+             color: #1f2937; /* Gray-800 */
+             white-space: nowrap; 
+         }
+         .excel-table tbody tr:hover {
+            background-color: #f0f9ff; /* Light blue on hover */
+        }
+        
+        .action-icon {
+             @apply p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition;
+        }
+        .action-icon-delete {
+            @apply text-red-400 hover:text-red-600 hover:bg-red-50;
+        }
+        
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .modal-body {
+             max-height: 70vh;
+             overflow-y: auto;
+        }
+        
+        /* Checkbox color */
+        input[type="checkbox"]:checked {
+            color: #6D28D9; /* Purple */
+            border-color: #6D28D9;
+        }
+         input[type="checkbox"] {
+            @apply h-5 w-5 rounded text-purple-600 border-gray-300 focus:ring-purple-500;
+        }
+
+    </style>
+</head>
+<body class="text-gray-900">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 flex-shrink-0 text-gray-300 hidden md:flex flex-col">
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-700">
+                 <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+                <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Overview</div>
+                <a href="#" class="sidebar-link active flex items-center px-6 py-3 text-white">
+                    <i data-lucide="user-check" class="w-5 h-5 mr-3"></i> Roles & Permissions
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Team Members
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="building" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="mail" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">RoomHy Location</div>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> City
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map" class="w-5 h-5 mr-3"></i> Area
+                </a>
+                 <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Settings</div>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Initial Booking Amount
+                </a>
+                 <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="archive" class="w-5 h-5 mr-3"></i> Collections
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30">
+                <div class="flex items-center">
+                    <button id="mobile-menu-button" class="md:hidden mr-4 p-2 text-gray-600 hover:text-gray-900">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <!-- Breadcrumbs -->
+                     <nav class="text-sm font-medium hidden sm:flex items-center space-x-2">
+                        <a href="#" class="text-gray-500 hover:text-gray-700">Dashboard</a>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-gray-800">Roles & Permissions</span>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-6 h-6"></i></button>
+                    <!-- Profile Dropdown -->
+                    <div class="relative">
+                        <button id="profile-button" class="block">
+                            <img src="https://i.pravatar.cc/150?u=admin" alt="Admin Avatar" class="w-10 h-10 rounded-full border-2 border-purple-300 hover:border-purple-500 transition">
+                        </button>
+                        <div id="profile-dropdown" class="profile-dropdown hidden absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl overflow-hidden origin-top-right transform scale-95 opacity-0">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <p class="text-sm font-semibold text-gray-800">Ajay Kumar</p>
+                                <p class="text-xs text-gray-500">ajay@gmail.com</p>
+                            </div>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4 mr-3 text-gray-500"></i> Profile
+                            </a>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100">
+                                <i data-lucide="log-out" class="w-4 h-4 mr-3 text-gray-500"></i> Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+             <!-- Mobile Sidebar -->
+            <div id="mobile-menu" class="md:hidden fixed inset-0 z-50 flex hidden">
+                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" id="mobile-menu-overlay"></div>
+                <aside class="sidebar w-64 flex-shrink-0 text-gray-300 flex flex-col relative z-10">
+                    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+                         <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+                         <button id="close-mobile-menu" class="p-2 text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                     <nav class="flex-1 overflow-y-auto py-4">
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Overview</div>
+                        <a href="#" class="sidebar-link active flex items-center px-6 py-3 text-white"><i data-lucide="user-check" class="w-5 h-5 mr-3"></i> Roles & Permissions</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Team Members</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="building" class="w-5 h-5 mr-3"></i> Property Owners</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Tenants</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="mail" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">RoomHy Location</div>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> City</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map" class="w-5 h-5 mr-3"></i> Area</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Settings</div>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Initial Booking Amount</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="archive" class="w-5 h-5 mr-3"></i> Collections</a>
+                    </nav>
+                </aside>
+            </div>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="mb-8 flex flex-col sm:flex-row justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800">Roles & Permissions</h2>
+                        <p class="text-gray-500 mt-1">Manage user roles and what they can access.</p>
+                    </div>
+                     <button id="add-role-button" class="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-purple-700 flex items-center mt-4 sm:mt-0 shadow hover:shadow-md transition">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Create Role
+                    </button>
+                </div>
+                
+                <!-- Roles Table -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full excel-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Role</th>
+                                    <th>Created By</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-role-id="1" data-role-name="Super Admin">
+                                    <td>1</td>
+                                    <td class="font-medium text-gray-900">Super Admin</td>
+                                    <td>System</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-role-id="2" data-role-name="Property Owner">
+                                    <td>2</td>
+                                    <td class="font-medium text-gray-900">Property Owner</td>
+                                    <td>System</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-role-id="3" data-role-name="Tenant">
+                                    <td>3</td>
+                                    <td class="font-medium text-gray-900">Tenant</td>
+                                    <td>System</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                <tr data-role-id="4" data-role-name="City Manager">
+                                    <td>4</td>
+                                    <td class="font-medium text-gray-900">City Manager</td>
+                                    <td>Admin</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                 <tr data-role-id="5" data-role-name="Area Manager">
+                                    <td>5</td>
+                                    <td class="font-medium text-gray-900">Area Manager</td>
+                                    <td>Admin</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                 <tr data-role-id="6" data-role-name="Roomu">
+                                    <td>6</td>
+                                    <td class="font-medium text-gray-900">Roomu</td>
+                                    <td>Admin</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                  <tr data-role-id="7" data-role-name="Maneet Test">
+                                    <td>7</td>
+                                    <td class="font-medium text-gray-900">Maneet Test - Please Ignore</td>
+                                    <td>Admin</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                                 <tr data-role-id="8" data-role-name="Accountant">
+                                    <td>8</td>
+                                    <td class="font-medium text-gray-900">Accountant</td>
+                                    <td>Admin</td>
+                                    <td class="text-right">
+                                        <button class="action-icon open-edit-role-modal" title="Edit Role"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <!-- Pagination -->
+                 <div class="mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
+                    <div class="mb-4 md:mb-0">
+                        Showing 1 to 8 of 8 entries
+                    </div>
+                     <div class="flex items-center space-x-2">
+                         <span>Rows per page:</span>
+                        <select class="border border-gray-300 rounded px-2 py-1">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                         <span class="ml-4">Page 1 of 1</span>
+                         <div class="flex items-center space-x-1 ml-4">
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevrons-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevrons-right" class="w-5 h-5"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Role Modal -->
+    <div id="role-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 invisible">
+        <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-4xl transform scale-95 opacity-0 max-h-[90vh] flex flex-col"> <!-- Increased max-w-4xl -->
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 flex-shrink-0">
+                <h3 id="role-modal-title" class="text-xl font-semibold text-gray-800">Create Role & Permissions</h3>
+                <button class="close-modal-button text-gray-400 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <form id="role-form" class="p-6 space-y-6 overflow-y-auto flex-grow modal-body">
+                <input type="hidden" id="edit-role-id" name="edit-role-id">
+                <div>
+                    <label for="role-name" class="block text-sm font-medium text-gray-700 mb-1">Enter Role Name *</label>
+                    <p class="text-xs text-gray-500 mb-2">Enter the role name that you want to create.</p>
+                    <input type="text" id="role-name" name="role-name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="Enter role name here...">
+                </div>
+                
+                <!-- Permissions Matrix -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
+                    <p class="text-xs text-gray-500 mb-3">Select permissions that you want to give to this Roles.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 mt-2 p-4 border rounded-lg bg-gray-50">
+                        <!-- Column 1 -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-gray-800 border-b pb-1">Amenity</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_amenity_read"> <span>Amenity Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_amenity_create"> <span>Amenity Create</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Location</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_location_read"> <span>Location Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_location_create"> <span>Location Create</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Payment</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_read"> <span>Payment Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_update"> <span>Payment Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Property</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_property_update"> <span>Property Update</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_property_delete"> <span>Property Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Quote Request</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_quote_read"> <span>Quote Request Read</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Room</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_room_create"> <span>Room Create</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_room_update"> <span>Room Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Team</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_team_update"> <span>Team Update</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_update"> <span>Tenant Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Settings</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_settings_read"> <span>Settings Read</span></label>
+                        </div>
+                         <!-- Column 2 -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-gray-800 border-b pb-1">Chat</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_chat_read"> <span>Chat Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_chat_create"> <span>Chat Create</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Maintenance</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_maint_update"> <span>Maintenance Update</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_maint_read"> <span>Maintenance Read</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Transaction</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_trans_read"> <span>Transaction Read</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Property Owner</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_owner_read"> <span>Property Owner Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_owner_update"> <span>Property Owner Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Role</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_role_create"> <span>Role Create</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_role_update"> <span>Role Update</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_room_read"> <span>Room Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_team_read"> <span>Team Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_team_delete"> <span>Team Delete</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_visitor_read"> <span>Visitor Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_review_create"> <span>Review Create</span></label>
+                        </div>
+                         <!-- Column 3 -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-gray-800 border-b pb-1">Enquiry</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_enquiry_read"> <span>Enquiry Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_location_delete"> <span>Location Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Payment</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_create"> <span>Payment Create</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_delete"> <span>Payment Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Property</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_property_create"> <span>Property Create</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Quote Request</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_quote_update"> <span>Quote Request Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Role</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_role_read"> <span>Role Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_role_delete"> <span>Role Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Tenant Room</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_room_create"> <span>Tenant Room Create</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_room_read"> <span>Tenant Room Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_room_update"> <span>Tenant Room Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Review</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_review_read"> <span>Review Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_review_update"> <span>Review Update</span></label>
+                        </div>
+                         <!-- Column 4 -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-gray-800 border-b pb-1">Location</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_location_update"> <span>Location Update</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Maintenance</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_maint_delete"> <span>Maintenance Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Property</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_property_read"> <span>Property Read</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Quote Request</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_quote_delete"> <span>Quote Request Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Role</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_role_assign"> <span>Role Assign</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Room</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_room_delete"> <span>Room Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Tenant</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_create"> <span>Tenant Create</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_read"> <span>Tenant Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_tenant_delete"> <span>Tenant Delete</span></label>
+                             <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Payment Amount</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_amt_read"> <span>Payment Amount Read</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_amt_update"> <span>Payment Amount Update</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_payment_amt_delete"> <span>Payment Amount Delete</span></label>
+                            <h4 class="font-semibold text-gray-800 border-b pb-1 pt-2">Review</h4>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_review_delete"> <span>Review Delete</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm_collection_create"> <span>Collection Create</span></label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <!-- Modal Footer -->
+            <div class="flex justify-end p-5 border-t border-gray-200 bg-gray-50 rounded-b-xl space-x-3 flex-shrink-0">
+                <button class="cancel-modal-button px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                 <button type="submit" form="role-form" id="save-role-button" class="px-5 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">Create Role</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+        
+        // --- Reusable Modal Logic ---
+        const openModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            modal.classList.remove('hidden', 'invisible');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        const closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden', 'invisible');
+                const form = modal.querySelector('form');
+                if (form) form.reset();
+                 if (modalId === 'role-modal') {
+                    document.getElementById('role-modal-title').textContent = 'Create Role & Permissions';
+                    document.getElementById('save-role-button').textContent = 'Create Role';
+                    document.getElementById('edit-role-id').value = '';
+                 }
+            }, 300);
+        };
+
+        // --- Add Event Listeners for Modal Buttons ---
+        document.querySelectorAll('.close-modal-button, .cancel-modal-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                if (modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        // Close modal when clicking overlay
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const closeMobileMenuButton = document.getElementById('close-mobile-menu');
+
+        const openMobileMenu = () => mobileMenu.classList.remove('hidden');
+        const closeMobileMenu = () => mobileMenu.classList.add('hidden');
+
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+        closeMobileMenuButton.addEventListener('click', closeMobileMenu);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMobileMenu));
+
+        // --- Profile Dropdown Toggle ---
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            const isHidden = profileDropdown.classList.contains('hidden');
+            if(isHidden) {
+                profileDropdown.classList.remove('hidden', 'scale-95', 'opacity-0');
+                profileDropdown.classList.add('scale-100', 'opacity-100');
+            } else {
+                 profileDropdown.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => profileDropdown.classList.add('hidden'), 200); 
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (profileButton && !profileButton.contains(event.target) && profileDropdown && !profileDropdown.contains(event.target)) {
+                 if(!profileDropdown.classList.contains('hidden')) {
+                     profileDropdown.classList.add('scale-95', 'opacity-0');
+                     setTimeout(() => profileDropdown.classList.add('hidden'), 200);
+                 }
+            }
+        });
+        
+        
+        // --- Add Role Modal ---
+        document.getElementById('add-role-button').addEventListener('click', () => {
+             document.getElementById('role-modal-title').textContent = 'Create Role & Permissions';
+             document.getElementById('save-role-button').textContent = 'Create Role';
+             document.getElementById('edit-role-id').value = '';
+             document.getElementById('role-form').reset();
+             openModal('role-modal');
+        });
+
+        // --- Edit Role Modal ---
+        document.querySelectorAll('.open-edit-role-modal').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const row = event.target.closest('tr');
+                const roleId = row.dataset.roleId;
+                const roleName = row.dataset.roleName;
+
+                // Populate the modal
+                document.getElementById('role-modal-title').textContent = `Edit Role: ${roleName}`;
+                document.getElementById('save-role-button').textContent = 'Save Changes';
+                document.getElementById('edit-role-id').value = roleId;
+                document.getElementById('role-name').value = roleName;
+                
+                // Reset checks first
+                document.getElementById('role-form').reset();
+                document.getElementById('role-name').value = roleName;
+                
+                // In a real app, you'd fetch and set the specific permissions for this role
+                // For this demo, we'll just fake check boxes based on role name
+                if(roleName === 'Super Admin') {
+                    document.querySelectorAll('#role-form input[type="checkbox"]').forEach(cb => cb.checked = true);
+                } else if (roleName === 'Property Owner') {
+                     document.querySelector('input[name="perm_properties_view"]').checked = true;
+                     document.querySelector('input[name="perm_rooms_view"]').checked = true;
+                     document.querySelector('input[name="perm_rooms_create"]').checked = true;
+                     document.querySelector('input[name="perm_rooms_edit"]').checked = true;
+                     document.querySelector('input[name="perm_tenants_view"]').checked = true;
+                } else if (roleName === 'Tenant') {
+                     document.querySelector('input[name="perm_bookings_view"]').checked = true;
+                     document.querySelector('input[name="perm_payments_view"]').checked = true;
+                }
+
+                openModal('role-modal');
+            });
+        });
+
+    </script>
+</body>
+</html>
+

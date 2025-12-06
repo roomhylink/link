@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Owner Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fc; color: #1F2937; }
+        .light-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="light-card w-full max-w-md p-8 text-center relative overflow-hidden">
+        <div class="text-3xl font-bold text-blue-600 mb-2">Roomhy</div>
+        
+        <!-- DYNAMIC TEST CREDENTIALS BOX (For Demo Convenience) -->
+        <div id="test-creds-box" class="hidden bg-yellow-50 border border-yellow-200 rounded p-3 mb-6 text-xs text-yellow-800 text-left shadow-sm">
+            <p class="font-bold flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Use Latest Credentials:</p>
+            <div class="mt-2 grid grid-cols-2 gap-2 font-mono bg-white p-2 rounded border border-yellow-100">
+                <div>
+                    <span class="text-gray-400 text-[10px] block uppercase">Login ID</span>
+                    <span id="hint-id" class="font-bold text-blue-600 select-all">---</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 text-[10px] block uppercase">Password</span>
+                    <span id="hint-pass" class="font-bold text-green-600 select-all">---</span>
+                </div>
+            </div>
+            <button onclick="fillCreds()" class="mt-2 w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-[10px] font-bold py-1 rounded transition-colors">
+                Tap to Autofill
+            </button>
+        </div>
+
+        <!-- STEP 1: Login Form -->
+        <div id="step-1" class="fade-in">
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Portal Login</h1>
+            <p class="text-gray-500 mb-6">Enter your Owner ID generated from Enquiry.</p>
+
+            <form onsubmit="event.preventDefault(); verifyCredentials();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 text-left mb-2">Login ID</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="user" class="w-5 h-5"></i></span>
+                        <input type="text" id="login-id" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 transition-colors" placeholder="e.g. ROOMHY001" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 text-left mb-2">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="key" class="w-5 h-5"></i></span>
+                        <input type="password" id="password" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 transition-colors" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors flex justify-center items-center gap-2">
+                    Login <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+        
+        <!-- STEP 2: Set Password (Onboarding Step 1) -->
+        <div id="step-2" class="hidden fade-in">
+            <div class="flex justify-center mb-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="lock" class="w-8 h-8 text-green-600"></i></div></div>
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Set New Password</h1>
+            <p class="text-gray-500 mb-6">This is your first login. Please set a new password.</p>
+
+            <form onsubmit="event.preventDefault(); finalizeOwnerLogin();">
+                <div class="mb-4 text-left">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">New Password</label>
+                    <input type="password" id="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" placeholder="Min 6 chars" required>
+                </div>
+                <div class="mb-6 text-left">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" placeholder="Confirm Password" required>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors flex justify-center items-center gap-2">
+                    Update & Continue <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentUserPayload = null;
+
+        // Auto-fill hint logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+            const recent = visits
+                .filter(v => v.status === 'approved' && v.generatedCredentials)
+                .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
+
+            if (recent) {
+                document.getElementById('hint-id').innerText = recent.generatedCredentials.loginId;
+                document.getElementById('hint-pass').innerText = recent.generatedCredentials.tempPassword;
+                document.getElementById('test-creds-box').classList.remove('hidden');
+            }
+        });
+
+        function fillCreds() {
+            document.getElementById('login-id').value = document.getElementById('hint-id').innerText;
+            document.getElementById('password').value = document.getElementById('hint-pass').innerText;
+        }
+
+        async function verifyCredentials() {
+            const loginId = document.getElementById('login-id').value.trim().toUpperCase();
+            const password = document.getElementById('password').value.trim();
+
+            console.log("Attempting Login:", loginId, password);
+
+            // 1. Check Manager (Optional)
+            if (loginId.startsWith("MGR")) {
+                // ... manager login logic
+                return;
+            }
+
+            // 2. CHECK OWNER CREDENTIALS
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+
+            // A. Check Visits (If just approved but not fully set up)
+            // This handles the "generated ID from enquiry" part perfectly
+            const visitMatch = visits.find(v => 
+                v.status === 'approved' &&
+                v.generatedCredentials && 
+                v.generatedCredentials.loginId === loginId && 
+                v.generatedCredentials.tempPassword === password
+            );
+
+            if (visitMatch) {
+                // First Time Login Detected from Visit Report
+                currentUserPayload = {
+                    loginId: loginId,
+                    ownerId: loginId,
+                    name: visitMatch.propertyInfo.ownerName,
+                    role: 'owner'
+                };
+                
+                // Initialize in DB if missing
+                if(!db[loginId]) {
+                     db[loginId] = {
+                        profile: currentUserPayload,
+                        credentials: { password: password, firstTime: true },
+                        kyc: { status: 'pending' },
+                        profileFilled: false
+                    };
+                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                    // Try to persist owner to backend (API-first). This helps KYC and later PATCH requests.
+                    (async () => {
+                        try {
+                            const payload = {
+                                loginId: loginId,
+                                name: visitMatch.propertyInfo.ownerName || visitMatch.propertyInfo.name || 'Owner',
+                                phone: visitMatch.propertyInfo.contactPhone || '',
+                                address: visitMatch.propertyInfo.address || '',
+                                locationCode: visitMatch.propertyInfo.locationCode || '',
+                                credentials: { password: password, firstTime: true },
+                                kyc: { status: 'pending' }
+                            };
+                            const res = await fetch('/api/owners', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            if (res.ok) {
+                                console.log('✅ Owner created in MongoDB:', loginId);
+                            } else {
+                                // Try to surface backend error body for debugging
+                                let bodyText = '';
+                                try { bodyText = await res.text(); } catch (e) { bodyText = '<unreadable response>'; }
+                                console.warn('⚠️ Owner creation API failed:', res.status, bodyText);
+
+                                // If the failure is a duplicate-key (owner already exists), attempt a PATCH
+                                const dupSignals = ['DUPLICATE', 'duplicate key', 'Owner ID already exists', 'E11000'];
+                                const isDup = dupSignals.some(s => bodyText.includes(s) || ('' + res.status).includes('409') );
+                                if (isDup) {
+                                    try {
+                                        const patchPayload = {
+                                            credentials: { password: password, firstTime: true },
+                                            kyc: { status: 'pending' }
+                                        };
+                                        const patchRes = await fetch(`/api/owners/${encodeURIComponent(loginId)}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(patchPayload)
+                                        });
+                                        if (patchRes.ok) console.log('✅ Owner PATCH succeeded after duplicate on create for', loginId);
+                                        else {
+                                            let pbody = '';
+                                            try { pbody = await patchRes.text(); } catch (e) { pbody = '<unreadable response>'; }
+                                            console.warn('⚠️ Owner PATCH after duplicate also failed:', patchRes.status, pbody);
+                                        }
+                                    } catch (err) {
+                                        console.warn('🌐 Error when PATCHing after duplicate create:', err.message);
+                                    }
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('🌐 Owner creation API error, continuing with localStorage fallback:', err.message);
+                        }
+                    })();
+                }
+                
+                showSetPasswordScreen();
+                return;
+            }
+
+            // B. Check Main DB (Normal Login)
+            if (db[loginId] && db[loginId].credentials) {
+                if (db[loginId].credentials.password === password) {
+                    
+                    // Check if it's still first time (e.g. refreshed page before setting password)
+                    if (db[loginId].credentials.firstTime) {
+                        currentUserPayload = { loginId: loginId, role: 'owner' };
+                        showSetPasswordScreen();
+                    } else {
+                        // Normal Login Flow
+                        proceedToDashboard(loginId, db[loginId]);
+                    }
+                    return;
+                }
+            }
+
+            alert("Invalid Credentials! Please check the ID and Password.");
+        }
+
+        function showSetPasswordScreen() {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            document.getElementById('test-creds-box').classList.add('hidden');
+        }
+
+        function finalizeOwnerLogin() {
+            const newPass = document.getElementById('new-password').value.trim();
+            const confirm = document.getElementById('confirm-password').value.trim();
+
+            if (newPass.length < 6) return alert("Password too short.");
+            if (newPass !== confirm) return alert("Passwords do not match");
+
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const loginId = currentUserPayload && currentUserPayload.loginId;
+
+            if (!loginId) {
+                return alert('Unable to determine current user. Please start login again.');
+            }
+
+            // Ensure a local owner record exists before updating
+            if (!db[loginId]) {
+                console.warn('Local owner record missing for', loginId, '- creating local placeholder to continue onboarding.');
+                db[loginId] = {
+                    profile: { loginId: loginId, name: currentUserPayload.name || 'Owner' },
+                    credentials: { password: newPass, firstTime: false },
+                    kyc: { status: 'pending' },
+                    profileFilled: false,
+                    passwordSet: true
+                };
+            } else {
+                // Ensure credentials object exists
+                db[loginId].credentials = db[loginId].credentials || { password: '', firstTime: true };
+                // Update Password & First Time Flag
+                db[loginId].credentials.password = newPass;
+                db[loginId].credentials.firstTime = false;
+                db[loginId].passwordSet = true;
+            }
+
+            localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+            // Try to update backend owner record as well. If PATCH fails (404/400), try creating the owner then retry PATCH once.
+            (async () => {
+                const patchPayload = { credentials: { password: newPass, firstTime: false }, passwordSet: true };
+                const patchUrl = `/api/owners/${encodeURIComponent(loginId)}`;
+
+                async function doPatch() {
+                    try {
+                        const res = await fetch(patchUrl, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(patchPayload)
+                        });
+                        if (res.ok) {
+                            console.log('✅ Owner password updated in MongoDB for', loginId);
+                            return { ok: true };
+                        }
+                        let bodyText = '';
+                        try { bodyText = await res.text(); } catch (e) { bodyText = '<unreadable response>'; }
+                        console.warn('⚠️ Owner password PATCH failed:', res.status, bodyText);
+                        return { ok: false, status: res.status, body: bodyText };
+                    } catch (err) {
+                        console.warn('🌐 Owner password PATCH error, will rely on localStorage:', err.message);
+                        return { ok: false, error: err };
+                    }
+                }
+
+                const firstTry = await doPatch();
+                if (!firstTry.ok && (firstTry.status === 404 || firstTry.status === 400)) {
+                    // Attempt to create owner using the local record as payload, then retry PATCH once
+                    try {
+                        const localDb = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                        const localOwner = localDb[loginId] || {};
+                        const createPayload = {
+                            loginId: loginId,
+                            name: localOwner.profile?.name || currentUserPayload?.name || 'Owner',
+                            phone: localOwner.profile?.phone || '',
+                            address: localOwner.profile?.address || '',
+                            locationCode: localOwner.profile?.locationCode || '',
+                            credentials: localOwner.credentials || { password: newPass, firstTime: false },
+                            kyc: localOwner.kyc || { status: 'pending' }
+                        };
+
+                        const createRes = await fetch('/api/owners', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(createPayload)
+                        });
+                        if (createRes.ok) {
+                            console.log('✅ Owner created during PATCH-retry for', loginId);
+                            // Retry PATCH once
+                            const retry = await doPatch();
+                            if (retry.ok) {
+                                console.log('✅ PATCH retry succeeded after create for', loginId);
+                            } else {
+                                console.warn('⚠️ PATCH retry still failed for', loginId, retry.status || retry.error || retry.body);
+                            }
+                        } else {
+                            let bodyText = '';
+                            try { bodyText = await createRes.text(); } catch (e) { bodyText = '<unreadable response>'; }
+                            console.warn('⚠️ Owner creation during PATCH-retry failed:', createRes.status, bodyText);
+
+                            const dupSignals = ['DUPLICATE', 'duplicate key', 'Owner ID already exists', 'E11000'];
+                            const isDup = dupSignals.some(s => bodyText.includes(s) || ('' + createRes.status).includes('409'));
+                            if (isDup) {
+                                // If duplicate, try PATCH (server supports upsert)
+                                try {
+                                    const retry = await doPatch();
+                                    if (retry.ok) console.log('✅ PATCH retry succeeded after duplicate create for', loginId);
+                                    else console.warn('⚠️ PATCH retry failed after duplicate create:', retry.status || retry.error || retry.body);
+                                } catch (err) {
+                                    console.warn('🌐 Error when retrying PATCH after duplicate create:', err.message);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('🌐 Owner creation during PATCH-retry error:', err.message);
+                    }
+                }
+            })();
+
+            // Set Session
+            const user = { loginId: loginId, ownerId: loginId, role: 'owner', name: db[loginId].profile?.name || 'Owner' };
+            localStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('owner_session', JSON.stringify(user));
+
+            alert("🎉 Password Set! Starting Onboarding...");
+            
+            // 1st Time Flow: Go to Profile
+            window.location.href = 'ownerprofile.html';
+        }
+
+        function proceedToDashboard(loginId, ownerData) {
+            const user = { loginId: loginId, ownerId: loginId, role: 'owner', name: ownerData.profile?.name || 'Owner' };
+            
+            localStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('owner_session', JSON.stringify(user));
+
+            // ENFORCE ONBOARDING SEQUENCE
+            const hasProfile = ownerData.profileFilled;
+            // Check KYC status: 'submitted' or 'verified' allows Dashboard. 'pending' does not.
+            const kycDone = (ownerData.kyc?.status === 'submitted' || ownerData.kyc?.status === 'verified');
+
+            if (!hasProfile) {
+                window.location.href = 'ownerprofile.html';
+            } else if (!kycDone) {
+                window.location.href = 'ownerkyc.html';
+            } else {
+                window.location.href = 'admin.html';
+            }
+        }
+    </script>
+</body>
+</html>

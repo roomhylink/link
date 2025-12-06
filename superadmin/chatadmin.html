@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Chats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* --- Sidebar Styling (Dark Theme) --- */
+        .sidebar {
+            background-color: #111827;
+            color: #9ca3af;
+        }
+        .sidebar-link {
+            color: #9ca3af;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .sidebar-link:hover {
+            color: #f3f4f6; 
+            background-color: #1f2937;
+        }
+        .sidebar-link.active {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-left-color: #a855f7; /* Purple-500 */
+        }
+
+        /* Submenu Styling */
+        .submenu {
+            background-color: #0f172a;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+        }
+        .submenu.open {
+            max-height: 500px;
+        }
+        .submenu a {
+            padding-left: 3.5rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Chat Bubbles */
+        .chat-bubble-user {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border-radius: 12px 12px 12px 0;
+        }
+        .chat-bubble-admin {
+            background-color: #9333ea; /* Purple-600 */
+            color: white;
+            border-radius: 12px 12px 0 12px;
+        }
+
+        /* Active Chat Item */
+        .chat-item.active {
+            background-color: #f3f4f6;
+            border-left: 3px solid #9333ea;
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+    <div class="flex h-full overflow-hidden">
+       <!-- Sidebar -->
+          <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+                     </div>
+                     <div>
+                        <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
+                        <span class="text-[10px] text-gray-500 font-medium tracking-wider">ADMIN PANEL</span>
+                     </div>
+                 </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link active">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers
+                </a>
+                <a href="owner.html" class="sidebar-link">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="properties.html" class="sidebar-link">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="tenant.html" class="sidebar-link">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <a href="kyc_verification.html" class="sidebar-link">
+                    <i data-lucide="file-badge" class="w-5 h-5 mr-3"></i> KYC Verification
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link">
+                    <i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                <a href="enquiry.html" class="sidebar-link">
+                    <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="booking.html" class="sidebar-link">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="reviews.html" class="sidebar-link">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="complaint-history.html" class="sidebar-link">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History
+                </a>
+
+                <!-- Dropdown: Payment & Finance -->
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payment & Finance
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link text-sm hover:text-white">All Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link text-sm hover:text-white">Platform Commissions</a>
+                        <a href="refund.html" class="sidebar-link text-sm hover:text-white">Refund Approvals</a>
+                        <a href="payment_disputes.html" class="sidebar-link text-sm hover:text-white">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <!-- Dropdown: Reports -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('reports-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Reports
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="reports-submenu" class="submenu">
+                        <a href="platform_reports.html" class="sidebar-link text-sm hover:text-white">Platform-wide Reports</a>
+                        <a href="monthly.html" class="sidebar-link text-sm hover:text-white">Monthly Revenue</a>
+                        <a href="#" class="sidebar-link text-sm hover:text-white text-purple-400 flex items-center"><i data-lucide="download" class="w-3 h-3 mr-2"></i> Export PDF/Excel</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link active">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                 <a href="profile.html" class="sidebar-link">
+                    <i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile
+                </a>
+                 <a href="settings.html" class="sidebar-link">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings
+                </a>
+                 <a href="location.html" class="sidebar-link">
+                    <i data-lucide="globe" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+
+                <!-- 3-Dot Menu / Settings Section -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="more-horizontal" class="w-5 h-5 mr-3"></i> System Settings
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link text-sm hover:text-white">Login Logs</a>
+                        <a href="security.html" class="sidebar-link text-sm hover:text-white">Security Settings</a>
+                        <a href="backup.html" class="sidebar-link text-sm hover:text-white">Backup Settings</a>
+                    </div>
+                </div>
+                
+                <div class="h-20"></div> <!-- Spacer -->
+            </nav>
+        </aside>
+
+        <!-- Main Chat Interface -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-white h-full relative">
+            <!-- Mobile Header -->
+            <div class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-20">
+                <button id="mobile-menu-open" class="text-gray-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <span class="font-semibold text-gray-800">Chats</span>
+                <button class="text-gray-500"><i data-lucide="search" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Chat List Sidebar -->
+                <div class="w-full md:w-80 border-r border-gray-200 flex flex-col bg-white h-full">
+                    <!-- Search & Filters -->
+                    <div class="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+                        <div class="relative mb-3">
+                            <input type="text" placeholder="Search conversations..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+                        </div>
+                        
+                        <!-- Role Filters -->
+                        <div class="flex justify-between bg-gray-100 p-1 rounded-lg">
+                            <button onclick="filterChats('tenant')" class="chat-filter-btn active flex-1 text-xs font-medium py-1.5 rounded-md text-center bg-white text-purple-600 shadow-sm">Tenants</button>
+                            <button onclick="filterChats('manager')" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Managers</button>
+                            <button onclick="filterChats('owner')" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Owners</button>
+                        </div>
+                    </div>
+
+                    <!-- Conversations List -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar" id="chatList">
+                        <!-- Item 1 (Active) -->
+                        <div class="chat-item active p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <div class="flex items-center">
+                                    <div class="relative">
+                                        <img src="https://i.pravatar.cc/150?u=tenant1" class="w-10 h-10 rounded-full object-cover">
+                                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="text-sm font-semibold text-gray-900">Arjun Kapoor</h4>
+                                        <span class="text-xs text-gray-500">Tenant • Room 204</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-400">10:30 AM</span>
+                            </div>
+                            <p class="text-xs text-gray-600 truncate pl-12">Regarding the wifi issue, is it resolved?</p>
+                        </div>
+
+                        <!-- Item 2 (Unread) -->
+                        <div class="chat-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors bg-purple-50/30">
+                            <div class="flex justify-between items-start mb-1">
+                                <div class="flex items-center">
+                                    <div class="relative">
+                                        <img src="https://i.pravatar.cc/150?u=tenant2" class="w-10 h-10 rounded-full object-cover">
+                                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-gray-300 border-2 border-white rounded-full"></span>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="text-sm font-semibold text-gray-900">Neha Sharma</h4>
+                                        <span class="text-xs text-gray-500">Tenant • Room 101</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-green-600 font-medium">Yesterday</span>
+                            </div>
+                            <div class="flex justify-between items-center pl-12">
+                                <p class="text-xs text-gray-800 font-medium truncate">I have transferred the rent via UPI.</p>
+                                <span class="bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">2</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="chat-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <div class="flex items-center">
+                                    <div class="relative">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">RJ</div>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="text-sm font-semibold text-gray-900">Rohan Joshi</h4>
+                                        <span class="text-xs text-gray-500">Tenant • Room 305</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-400">Oct 22</span>
+                            </div>
+                            <p class="text-xs text-gray-500 truncate pl-12">Thanks for the quick help!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="flex-1 flex flex-col bg-[#f8fafc] relative">
+                    <!-- Chat Header -->
+                    <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
+                        <div class="flex items-center">
+                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-10 h-10 rounded-full object-cover mr-3">
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-900">Arjun Kapoor</h3>
+                                <p class="text-xs text-green-600 flex items-center"><span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>Online</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 text-gray-500">
+                            <button class="hover:text-purple-600" title="Call"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                            <button class="hover:text-purple-600" title="View Profile"><i data-lucide="info" class="w-5 h-5"></i></button>
+                            <button class="hover:text-purple-600" title="More Options"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar" id="messageContainer">
+                        <!-- Date Divider -->
+                        <div class="flex justify-center">
+                            <span class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Today</span>
+                        </div>
+
+                        <!-- Message Received -->
+                        <div class="flex items-end gap-2">
+                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-8 h-8 rounded-full object-cover mb-1">
+                            <div class="chat-bubble-user p-3 max-w-[70%] shadow-sm">
+                                <p class="text-sm">Hi, is the internet issue in Block A resolved? I'm having trouble connecting.</p>
+                                <span class="text-[10px] text-gray-400 block mt-1 text-right">10:15 AM</span>
+                            </div>
+                        </div>
+
+                        <!-- Message Sent -->
+                        <div class="flex items-end justify-end gap-2">
+                            <div class="chat-bubble-admin p-3 max-w-[70%] shadow-sm">
+                                <p class="text-sm">Hello Arjun, yes, the technician just left. Please try restarting your router. Let me know if it works.</p>
+                                <span class="text-[10px] text-purple-200 block mt-1 text-right">10:20 AM <i data-lucide="check-check" class="w-3 h-3 inline ml-1"></i></span>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold mb-1">SA</div>
+                        </div>
+
+                        <!-- Message Received -->
+                        <div class="flex items-end gap-2">
+                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-8 h-8 rounded-full object-cover mb-1">
+                            <div class="chat-bubble-user p-3 max-w-[70%] shadow-sm">
+                                <p class="text-sm">It's working now. Thanks for the quick response!</p>
+                                <span class="text-[10px] text-gray-400 block mt-1 text-right">10:25 AM</span>
+                            </div>
+                        </div>
+                        
+                         <!-- Message Sent -->
+                        <div class="flex items-end justify-end gap-2">
+                            <div class="chat-bubble-admin p-3 max-w-[70%] shadow-sm">
+                                <p class="text-sm">Great! Regarding the wifi issue, is it resolved completely for all devices?</p>
+                                <span class="text-[10px] text-purple-200 block mt-1 text-right">10:30 AM <i data-lucide="check" class="w-3 h-3 inline ml-1"></i></span>
+                            </div>
+                             <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold mb-1">SA</div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-4 bg-white border-t border-gray-200">
+                        <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
+                            <button class="text-gray-400 hover:text-purple-600 p-1"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                            <button class="text-gray-400 hover:text-purple-600 p-1"><i data-lucide="image" class="w-5 h-5"></i></button>
+                            <input type="text" placeholder="Type a message..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400">
+                            <button class="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col">
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="superadmin.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Chats</a>
+            </nav>
+        </aside>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Filter Tabs Logic
+        function filterChats(role) {
+            const buttons = document.querySelectorAll('.chat-filter-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'bg-white', 'text-purple-600', 'shadow-sm');
+                btn.classList.add('text-gray-500');
+            });
+            
+            // In a real app, this would filter the list. 
+            // For UI demo, we just toggle styles.
+            event.target.classList.add('active', 'bg-white', 'text-purple-600', 'shadow-sm');
+            event.target.classList.remove('text-gray-500');
+        }
+
+        // Sidebar Submenu
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Mobile Menu
+        function toggleMobileMenu() {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
+            
+            if (isClosed) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+    </script>
+</body>
+</html>

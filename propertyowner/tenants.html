@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Admin Tenant Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background for the main content area */
+        }
+        .sidebar {
+            background-color: #111827; /* Dark gray for sidebar */
+        }
+        .sidebar-link {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #374151; /* Slightly lighter gray on hover/active */
+            color: #ffffff;
+        }
+        /* Dropdown transition */
+        .profile-dropdown {
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+         /* Table styles - Excel Look */
+        .excel-table {
+            border-collapse: collapse; /* Makes borders connect like Excel */
+            width: 100%;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #e5e7eb; /* Gray border for all cells */
+            padding: 12px 16px; /* py-3 px-4 */
+            white-space: nowrap;
+            text-align: left;
+        }
+        .excel-table th {
+            background-color: #f9fafb; /* Very light gray header */
+            font-weight: 600;
+            font-size: 0.75rem; /* 12px */
+            text-transform: uppercase;
+            color: #6b7280; /* Gray-500 */
+        }
+         .excel-table td {
+             font-size: 0.875rem; /* 14px */
+             color: #1f2937; /* Gray-800 */
+         }
+        .excel-table tbody tr:hover {
+            background-color: #f0f9ff; /* Light blue on hover */
+        }
+        
+        /* Status Dropdown */
+        .status-select {
+            @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm font-medium;
+        }
+        .status-select-active {
+            @apply bg-green-100 text-green-800 border-green-200;
+        }
+        .status-select-inactive {
+            @apply bg-gray-100 text-gray-800 border-gray-200;
+        }
+
+        .action-icon {
+             @apply p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition;
+        }
+        .action-icon-delete {
+            @apply text-red-400 hover:text-red-600 hover:bg-red-50;
+        }
+        
+        /* Filter Tab - Updated Style */
+        .filter-tab {
+            @apply px-5 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm border;
+        }
+        
+        /* All Tenants Button */
+        .filter-all {
+             @apply bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100;
+        }
+        .filter-all.active {
+            @apply bg-purple-600 text-white border-purple-600 hover:bg-purple-700;
+        }
+
+        /* Active Button */
+        .filter-active {
+             @apply bg-green-50 text-green-700 border-green-200 hover:bg-green-100;
+        }
+        .filter-active.active {
+            @apply bg-green-600 text-white border-green-600 hover:bg-green-700;
+        }
+        
+        /* Inactive Button */
+        .filter-inactive {
+             @apply bg-red-50 text-red-700 border-red-200 hover:bg-red-100;
+        }
+        .filter-inactive.active {
+            @apply bg-red-600 text-white border-red-600 hover:bg-red-700;
+        }
+
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .file-input-label {
+            @apply block w-full px-3 py-2 border border-dashed border-gray-300 rounded-md text-center text-sm text-gray-500 cursor-pointer hover:border-purple-500 hover:text-purple-600 transition;
+        }
+        .modal-body {
+             max-height: 70vh;
+             overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+       <aside class="sidebar w-64 flex-shrink-0 text-gray-300 hidden md:flex flex-col">
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-700">
+                 <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <a href="admin.html" class="sidebar-link  flex items-center px-6 py-3">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+                <!-- Properties Removed -->
+                <a href="rooms.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms
+                </a>
+                 <a href="tenants.html" class="sidebar-link active flex items-center px-6 py-3 text-white">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <a href="tenantrec.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                 <a href="bookings.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                 <a href="documents.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>Document & Rules 
+                </a>
+                <a href="review.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                 <a href="payment.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments
+                </a>
+                 <a href="chat.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                <!-- Added New Sidebar Items -->
+                <a href="complaints.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints
+                </a>
+                 <a href="location.html" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+                 <a href="settings.html" class="sidebar-link flex items-center px-6 py-3 border-t border-gray-700 mt-2">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings
+                </a>
+               
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30">
+                <div class="flex items-center">
+                    <button id="mobile-menu-button" class="md:hidden mr-4 p-2 text-gray-600 hover:text-gray-900">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <!-- Breadcrumbs -->
+                     <nav class="text-sm font-medium hidden sm:flex items-center space-x-2">
+                        <a href="#" class="text-gray-500 hover:text-gray-700">Dashboard</a>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-gray-800">Tenants</span>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-6 h-6"></i></button>
+                    <!-- Profile Dropdown -->
+                    <div class="relative">
+                        <button id="profile-button" class="block">
+                            <img src="https://i.pravatar.cc/150?u=admin" alt="Admin Avatar" class="w-10 h-10 rounded-full border-2 border-purple-300 hover:border-purple-500 transition">
+                        </button>
+                        <div id="profile-dropdown" class="profile-dropdown hidden absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl overflow-hidden origin-top-right transform scale-95 opacity-0">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <p class="text-sm font-semibold text-gray-800">Ajay Kumar</p>
+                                <p class="text-xs text-gray-500">ajay@gmail.com</p>
+                            </div>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4 mr-3 text-gray-500"></i> Profile
+                            </a>
+                            <a href="#" id="logoutBtn" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100">
+                                <i data-lucide="log-out" class="w-4 h-4 mr-3 text-gray-500"></i> Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+             <!-- Mobile Sidebar -->
+            <div id="mobile-menu" class="md:hidden fixed inset-0 z-50 flex hidden">
+                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" id="mobile-menu-overlay"></div>
+                <aside class="sidebar w-64 flex-shrink-0 text-gray-300 flex flex-col relative z-10">
+                    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+                         <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+                         <button id="close-mobile-menu" class="p-2 text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                     <nav class="flex-1 overflow-y-auto py-4">
+                        <a href="admin.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                        <a href="rooms.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms</a>
+                        <a href="tenants.html" class="sidebar-link active flex items-center px-6 py-3 text-white"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                        <a href="tenantrec.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                        <a href="bookings.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                        <a href="review.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                        <a href="payment.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
+                        <a href="chat.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                        <a href="complaints.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints</a>
+                        <a href="location.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location</a>
+                        <a href="settings.html" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+                    </nav>
+                </aside>
+            </div>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="mb-8 flex flex-col sm:flex-row justify-between items-center"> <!-- Increased margin bottom -->
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800">Tenant List</h2>
+                        <p class="text-gray-500 mt-1">You have total of 2 tenants</p>
+                    </div>
+                    <!-- ADDED: Add New Tenant Button -->
+                    <button id="add-new-tenant-button" class="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-purple-700 flex items-center mt-4 sm:mt-0 shadow hover:shadow-md transition">
+                        <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> Add New Tenant
+                    </button>
+                </div>
+                
+                 <!-- Filter Tabs - Updated -->
+                <div class="mb-8 flex space-x-3" style=" width:450px;"> <!-- Increased margin bottom -->
+                    <button class="filter-tab filter-all active" data-filter="all" style="border: 1px solid black; border-radius: 20px; width:100px; background-color: rosybrown;">All Tenants</button>
+                    <button class="filter-tab filter-active" data-filter="active" style="border: 1px solid black; border-radius: 20px; width:100px; background-color: rgb(21, 182, 21);" >Active</button>
+                    <button class="filter-tab filter-inactive" data-filter="inactive" style="border: 1px solid black; border-radius: 20px; width:100px; background-color: #365fa0;">Inactive</button>
+                </div>
+
+
+                <!-- Tenant Table -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden"> <!-- Increased shadow, removed overflow-x-auto here -->
+                    <div class="overflow-x-auto"> <!-- Added wrapper for overflow -->
+                        <table class="min-w-full excel-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Aadhaar No.</th>
+                                    <th>Phone</th>
+                                    <th>Property</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th>KYC Doc</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Tenant 1 (Active) -->
+                                <tr class="tenant-row" data-status="active" data-tenant-id="1" data-name="Rohan Sharma" data-email="rohan@example.com" data-phone="9876543210" data-property="big_hostel" data-room="101" data-rent="2500" data-date="2025-08-18" data-aadhaar="XXXX-XXXX-1234">
+                                    <td>
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full object-cover mr-3" src="https://i.pravatar.cc/150?u=rohan" alt="Rohan Sharma">
+                                            <div>
+                                                <div class="font-medium text-gray-900">Rohan Sharma</div>
+                                                <div class="text-xs text-gray-500">ID: #001</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>XXXX-XXXX-1234</td>
+                                    <td>9876543210</td>
+                                    <td>Big Hostel</td>
+                                    <td>101</td>
+                                    <td data-status="active">
+                                        <select class="status-select status-select-active">
+                                            <option value="active" selected>Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="text-purple-600 hover:text-purple-800 flex items-center text-sm font-medium" title="View KYC">
+                                            <i data-lucide="eye" class="w-4 h-4 mr-1"></i> View
+                                        </button>
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="flex justify-end space-x-1">
+                                            <button class="action-icon open-edit-tenant-modal" title="Edit Tenant"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                            <button class="action-icon action-icon-delete" title="Delete Tenant"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                 <!-- Tenant 2 (Inactive) -->
+                                <tr class="tenant-row" data-status="inactive" data-tenant-id="2" data-name="Priya Singh" data-email="priya@example.com" data-phone="8887776666" data-property="athena_house" data-room="G-01" data-rent="15000" data-date="2025-07-01" data-aadhaar="XXXX-XXXX-5678">
+                                    <td>
+                                        <div class="flex items-center">
+                                            <img class="h-10 w-10 rounded-full object-cover mr-3" src="https://i.pravatar.cc/150?u=priya" alt="Priya Singh">
+                                            <div>
+                                                <div class="font-medium text-gray-900">Priya Singh</div>
+                                                <div class="text-xs text-gray-500">ID: #002</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>XXXX-XXXX-5678</td>
+                                    <td>8887776666</td>
+                                    <td>Athena House</td>
+                                    <td>G-01</td>
+                                    <td data-status="inactive">
+                                        <select class="status-select status-select-inactive">
+                                            <option value="active">Active</option>
+                                            <option value="inactive" selected>Inactive</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button class="text-purple-600 hover:text-purple-800 flex items-center text-sm font-medium" title="View KYC">
+                                            <i data-lucide="eye" class="w-4 h-4 mr-1"></i> View
+                                        </button>
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="flex justify-end space-x-1">
+                                            <button class="action-icon open-edit-tenant-modal" title="Edit Tenant"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                            <button class="action-icon action-icon-delete" title="Delete Tenant"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pagination -->
+                 <div class="mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600"> <!-- Increased margin top -->
+                    <div class="mb-4 md:mb-0">
+                        Showing 1 to 2 of 2 entries
+                    </div>
+                    <div class="flex items-center space-x-2">
+                         <div class="flex items-center space-x-1">
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevrons-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded font-semibold">1</span>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevrons-right" class="w-5 h-5"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Tenant Modal -->
+    <div id="tenant-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 invisible">
+        <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-lg transform scale-95 opacity-0 max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 flex-shrink-0">
+                <h3 id="tenant-modal-title" class="text-xl font-semibold text-gray-800">Add New Tenant</h3>
+                <button class="close-modal-button text-gray-400 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <form id="tenant-form" class="p-6 space-y-4 overflow-y-auto flex-grow modal-body">
+                <input type="hidden" id="edit-tenant-id" name="edit-tenant-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tenant-name" class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                        <input type="text" id="tenant-name" name="tenant-name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., Rahul Sharma">
+                    </div>
+                    <div>
+                        <label for="tenant-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                        <input type="tel" id="tenant-phone" name="tenant-phone" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., 9876543210">
+                    </div>
+                </div>
+                 <div>
+                    <label for="tenant-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                    <input type="email" id="tenant-email" name="tenant-email" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., rahul@example.com">
+                </div>
+                 <div>
+                    <label for="tenant-aadhaar" class="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number *</label>
+                    <input type="text" id="tenant-aadhaar" name="tenant-aadhaar" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., 1234 5678 9012">
+                </div>
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tenant-property" class="block text-sm font-medium text-gray-700 mb-1">Property *</label>
+                        <select id="tenant-property" name="tenant-property" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm bg-white">
+                            <option value="">Select Property</option>
+                            <option value="big_hostel">Big Hostel</option>
+                            <option value="athena_house">Athena House</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tenant-room" class="block text-sm font-medium text-gray-700 mb-1">Room *</label>
+                         <select id="tenant-room" name="tenant-room" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm bg-white">
+                            <option value="">Select Room</option>
+                            <option value="101">Room 101</option>
+                            <option value="102">Room 102</option>
+                            <option value="G-01">G-01</option>
+                        </select>
+                    </div>
+                 </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tenant-move-in" class="block text-sm font-medium text-gray-700 mb-1">Move-in Date *</label>
+                        <input type="date" id="tenant-move-in" name="tenant-move-in" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="tenant-rent" class="block text-sm font-medium text-gray-700 mb-1">Agreed Rent (₹) *</label>
+                        <input type="number" id="tenant-rent" name="tenant-rent" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., 5000">
+                    </div>
+                 </div>
+                 <div>
+                     <label for="kyc-document" class="block text-sm font-medium text-gray-700 mb-1">KYC Document (PDF/Image)</label>
+                     <input type="file" id="kyc-document" name="kyc-document" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"/>
+                 </div>
+            </form>
+            <!-- Modal Footer -->
+            <div class="flex justify-end p-5 border-t border-gray-200 bg-gray-50 rounded-b-xl space-x-3 flex-shrink-0">
+                <button class="cancel-modal-button px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                 <button type="submit" form="tenant-form" id="save-tenant-button" class="px-5 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">Add Tenant</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Code Generation Success Modal -->
+     <div id="code-success-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 invisible">
+        <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm transform scale-95 opacity-0">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-5 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-800">Tenant Onboarding Code</h3>
+                <button class="close-modal-button text-gray-400 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-6 text-center">
+                <i data-lucide="check-circle" class="w-12 h-12 text-green-500 mx-auto mb-4"></i>
+                <p class="text-gray-700 mb-4">New tenant added. Share this unique code for login:</p>
+                <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <p class="text-2xl font-bold text-purple-800" id="generated-tenant-code">RHY-XXXXXX</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">The tenant will use this code to complete their profile and e-sign the agreement on the Tenant Portal.</p>
+            </div>
+            <!-- Modal Footer -->
+            <div class="flex justify-end p-5 border-t border-gray-200 bg-gray-50 rounded-b-xl space-x-3">
+                <button class="cancel-modal-button px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Done</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../sessionManager.js"></script>
+    <script>
+        lucide.createIcons();
+        
+        // --- Auth Guard (prefer per-tab owner session)---
+        const _ownerInit = () => {
+            const owner = typeof getCurrentOwner === 'function' ? getCurrentOwner() : null;
+            if (!owner) {
+                window.location.href = 'ownerlogin.html';
+                return null;
+            }
+            return owner;
+        };
+
+        const owner = _ownerInit();
+        if (owner) var ownerId = owner.ownerId || owner.loginId;
+        
+        // --- Header Population ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!owner) return;
+            if (document.getElementById('headerName')) {
+                document.getElementById('headerName').innerText = owner.name;
+            }
+            if (document.getElementById('headerAvatar')) {
+                document.getElementById('headerAvatar').innerText = owner.name.charAt(0).toUpperCase();
+            }
+        });
+        
+        // --- Logout Handler (per-tab) ---
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            try { sessionStorage.removeItem('owner_session'); sessionStorage.removeItem('user'); } catch(_) {}
+            try { localStorage.removeItem('user'); } catch(_) {}
+            window.location.href = 'ownerlogin.html';
+        });
+        
+        // --- Reusable Modal Logic ---
+        const openModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            modal.classList.remove('hidden', 'invisible');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        const closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (!modal) return; // Add check if modal exists
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden', 'invisible');
+                // Reset form if applicable
+                const form = modal.querySelector('form');
+                if (form) form.reset();
+                 // Reset modal title and button text for Add/Edit modal
+                 if (modalId === 'tenant-modal') {
+                    document.getElementById('tenant-modal-title').textContent = 'Add New Tenant';
+                    document.getElementById('save-tenant-button').textContent = 'Add Tenant';
+                    document.getElementById('edit-tenant-id').value = ''; // Clear edit ID
+                 }
+
+            }, 300);
+        };
+
+        // --- Add Event Listeners for Modal Buttons ---
+        document.querySelectorAll('.close-modal-button, .cancel-modal-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                if (modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        // Close modal when clicking overlay
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const closeMobileMenuButton = document.getElementById('close-mobile-menu');
+
+        const openMobileMenu = () => mobileMenu.classList.remove('hidden');
+        const closeMobileMenu = () => mobileMenu.classList.add('hidden');
+
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+        closeMobileMenuButton.addEventListener('click', closeMobileMenu);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMobileMenu));
+
+        // --- Profile Dropdown Toggle ---
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            const isHidden = profileDropdown.classList.contains('hidden');
+            if(isHidden) {
+                profileDropdown.classList.remove('hidden', 'scale-95', 'opacity-0');
+                profileDropdown.classList.add('scale-100', 'opacity-100');
+            } else {
+                 profileDropdown.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => profileDropdown.classList.add('hidden'), 200); 
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (profileButton && !profileButton.contains(event.target) && profileDropdown && !profileDropdown.contains(event.target)) {
+                 if(!profileDropdown.classList.contains('hidden')) {
+                     profileDropdown.classList.add('scale-95', 'opacity-0');
+                     setTimeout(() => profileDropdown.classList.add('hidden'), 200);
+                 }
+            }
+        });
+        
+        // --- Add New Tenant Button Click ---
+        document.getElementById('add-new-tenant-button').addEventListener('click', () => {
+            document.getElementById('tenant-modal-title').textContent = 'Add New Tenant';
+            document.getElementById('save-tenant-button').textContent = 'Add Tenant';
+            document.getElementById('edit-tenant-id').value = ''; // Ensure no ID for add
+            document.getElementById('tenant-form').reset(); // Clear form
+            openModal('tenant-modal');
+        });
+
+        // --- Edit Tenant Modal ---
+        document.querySelectorAll('.open-edit-tenant-modal').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const row = event.target.closest('.tenant-row'); // Use tenant row class
+                const tenantId = row.dataset.tenantId;
+                const name = row.dataset.name;
+                const email = row.dataset.email;
+                const phone = row.dataset.phone;
+                const property = row.dataset.property;
+                const room = row.dataset.room;
+                const rent = row.dataset.rent;
+                const date = row.dataset.date;
+                const aadhaar = row.dataset.aadhaar;
+                
+                // Populate the modal form
+                document.getElementById('tenant-modal-title').textContent = `Edit Tenant: ${name}`;
+                document.getElementById('save-tenant-button').textContent = 'Save Changes';
+                document.getElementById('edit-tenant-id').value = tenantId;
+                document.getElementById('tenant-name').value = name;
+                document.getElementById('tenant-email').value = email;
+                document.getElementById('tenant-phone').value = phone;
+                document.getElementById('tenant-property').value = property;
+                document.getElementById('tenant-room').value = room;
+                document.getElementById('tenant-move-in').value = date;
+                document.getElementById('tenant-rent').value = rent;
+                if(document.getElementById('tenant-aadhaar')) document.getElementById('tenant-aadhaar').value = aadhaar;
+                
+                openModal('tenant-modal');
+            });
+        });
+        
+        // --- Tenant Form Submission (Add/Edit Logic) ---
+        document.getElementById('tenant-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const isEdit = document.getElementById('edit-tenant-id').value !== '';
+            
+            // Collect Data
+            const formData = {
+                name: document.getElementById('tenant-name').value,
+                email: document.getElementById('tenant-email').value,
+                phone: document.getElementById('tenant-phone').value,
+                property: document.getElementById('tenant-property').value,
+                room: document.getElementById('tenant-room').value,
+                moveIn: document.getElementById('tenant-move-in').value,
+                rent: document.getElementById('tenant-rent').value,
+                aadhaar: document.getElementById('tenant-aadhaar').value,
+            };
+
+            // 1. Close the Add/Edit Modal
+            closeModal('tenant-modal');
+
+            if (isEdit) {
+                // Mock Edit/Update Logic
+                console.log('Updating Tenant ID:', document.getElementById('edit-tenant-id').value, formData);
+                
+                // Show success message
+                openModal('code-success-modal');
+                document.getElementById('generated-tenant-code').textContent = 'Updated!';
+            
+            } else {
+                // 2. Mock Generate Unique Code (e.g., RHY-003, RHY-ABCD)
+                const newTenantCode = 'RHY-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                
+                // Mock Add/Create Logic
+                console.log('Adding New Tenant:', formData);
+                console.log('Generated Code:', newTenantCode);
+                
+                // 3. Display Code Success Modal
+                document.getElementById('generated-tenant-code').textContent = newTenantCode;
+                openModal('code-success-modal');
+                
+                // 4. In a real app, you would save formData and newTenantCode to the database (e.g., Firestore).
+                // 5. Here, we mock updating the table (optional for this demo, as refresh would happen in real app)
+            }
+        });
+
+
+        // --- Filter Tabs Logic ---
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        const tenantRows = document.querySelectorAll('.tenant-row');
+
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tab styles
+                filterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const filterValue = tab.dataset.filter;
+
+                // Filter rows
+                tenantRows.forEach(row => {
+                    if (filterValue === 'all') {
+                        row.style.display = 'table-row'; // Show all
+                    } else {
+                        if (row.dataset.status === filterValue) {
+                            row.style.display = 'table-row'; // Show matching
+                        } else {
+                            row.style.display = 'none'; // Hide non-matching
+                        }
+                    }
+                });
+            });
+        });
+        
+        // --- Status Select Color Changer ---
+        document.querySelectorAll('.status-select').forEach(select => {
+            select.addEventListener('change', (event) => {
+                const newStatus = event.target.value;
+                // Update the row's data-status for filtering
+                const row = event.target.closest('tr.tenant-row');
+                row.dataset.status = newStatus;
+                
+                // Update the select's color
+                if (newStatus === 'active') {
+                    event.target.classList.add('status-select-active');
+                    event.target.classList.remove('status-select-inactive');
+                } else {
+                    event.target.classList.add('status-select-inactive');
+                    event.target.classList.remove('status-select-active');
+                }
+
+                // In a real app, you would also send an API call here to update the backend
+                console.log(`Tenant ID ${row.dataset.tenantId} status changed to ${newStatus}`);
+                
+                // Manually re-apply filter if needed
+                const activeFilter = document.querySelector('.filter-tab.active').dataset.filter;
+                if (activeFilter !== 'all' && newStatus !== activeFilter) {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

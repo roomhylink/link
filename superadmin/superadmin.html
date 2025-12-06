@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Super Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../sessionManager.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* --- Sidebar Styling (Dark Theme) --- */
+        .sidebar {
+            background-color: #111827; /* Gray 900 */
+            color: #9ca3af;
+        }
+        
+        .sidebar-link {
+            color: #9ca3af; /* Gray 400 */
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        
+        .sidebar-link:hover {
+            color: #f3f4f6; 
+            background-color: #1f2937; /* Gray 800 */
+        }
+        
+        /* Active Link Style */
+        .sidebar-link.active {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-left-color: #a855f7; /* Purple-500 */
+        }
+
+        /* Submenu Styling */
+        .submenu {
+            background-color: #0f172a; /* Darker shade */
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+        }
+        .submenu.open {
+            max-height: 500px; /* Arbitrary large height */
+        }
+        .submenu a {
+            padding-left: 3.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Chart Bars Animation */
+        @keyframes growUp {
+            from { height: 0; }
+        }
+        .bar-animate {
+            animation: growUp 0.6s ease-out forwards;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <script>
+        // Session validation for Super Admin
+        function checkSession() {
+            checkSuperAdminSession();
+        }
+        
+        // Check session on page load
+        document.addEventListener('DOMContentLoaded', checkSession);
+    </script>
+
+    <div class="flex h-screen overflow-hidden">
+       <!-- Sidebar -->
+          <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+                     </div>
+                     <div>
+                        <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
+                        <span class="text-[10px] text-gray-500 font-medium tracking-wider">ADMIN PANEL</span>
+                     </div>
+                 </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link active">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers
+                </a>
+                <a href="owner.html" class="sidebar-link">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="properties.html" class="sidebar-link">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="tenant.html" class="sidebar-link">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <a href="kyc_verification.html" class="sidebar-link">
+                    <i data-lucide="file-badge" class="w-5 h-5 mr-3"></i> KYC Verification
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link">
+                    <i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                <a href="enquiry.html" class="sidebar-link">
+                    <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="booking.html" class="sidebar-link">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="reviews.html" class="sidebar-link">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="complaint-history.html" class="sidebar-link">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History
+                </a>
+
+                <!-- Dropdown: Payment & Finance -->
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payment & Finance
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link text-sm hover:text-white">All Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link text-sm hover:text-white">Platform Commissions</a>
+                        <a href="refund.html" class="sidebar-link text-sm hover:text-white">Refund Approvals</a>
+                        <a href="payment_disputes.html" class="sidebar-link text-sm hover:text-white">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <!-- Dropdown: Reports -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('reports-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Reports
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="reports-submenu" class="submenu">
+                        <a href="platform_reports.html" class="sidebar-link text-sm hover:text-white">Platform-wide Reports</a>
+                        <a href="monthly.html" class="sidebar-link text-sm hover:text-white">Monthly Revenue</a>
+                        <a href="#" class="sidebar-link text-sm hover:text-white text-purple-400 flex items-center"><i data-lucide="download" class="w-3 h-3 mr-2"></i> Export PDF/Excel</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                 <a href="location.html" class="sidebar-link">
+                    <i data-lucide="globe" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+
+                <!-- 3-Dot Menu / Settings Section -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="more-horizontal" class="w-5 h-5 mr-3"></i> System Settings
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link text-sm hover:text-white">Login Logs</a>
+                        <a href="security.html" class="sidebar-link text-sm hover:text-white">Security Settings</a>
+                        <a href="backup.html" class="sidebar-link text-sm hover:text-white">Backup Settings</a>
+                    </div>
+                </div>
+                
+                <div class="h-20"></div> <!-- Spacer -->
+            </nav>
+        </aside>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Top Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    
+                    <!-- Breadcrumb -->
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium">Dashboard</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-slate-400"></i>
+                        <span class="text-slate-800 font-semibold">Overview</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600 relative">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- Profile -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-semibold text-gray-700">Super Admin</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                        <!-- Dropdown -->
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block border border-slate-100 z-50">
+                             <div class="px-4 py-2 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-700">Ajay Kumar</p>
+                                <p class="text-xs text-gray-500">admin@roomhy.com</p>
+                             </div>
+                             <a href="profile.html" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
+                             <a href="settings.html" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Settings</a>
+                             <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Canvas -->
+            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <!-- Dashboard Title & Tabs -->
+                    <div class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                                Dashboard <span class="text-2xl">👋</span>
+                            </h2>
+                            <p class="text-sm text-slate-500 mt-1">Overview of your property management system.</p>
+                        </div>
+                        
+                        <!-- Action Button matching theme -->
+                        <div class="flex gap-2">
+                             <button class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors shadow-sm">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export Report
+                            </button>
+                            <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors shadow-sm">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add New Property
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tab Switcher -->
+                    <div class="flex border-b border-slate-200 w-full mb-6">
+                        <button class="px-4 py-2 text-sm font-medium text-purple-600 border-b-2 border-purple-600 bg-transparent">Overview</button>
+                        <button class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Analytics</button>
+                        <button class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">System Health</button>
+                    </div>
+
+                    <!-- KPI Cards Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        
+                        <!-- Card 1: Properties (Purple Theme) -->
+                        <div class="bg-purple-500 rounded-xl p-6 relative overflow-hidden shadow-md text-white transition-transform hover:-translate-y-1 duration-300">
+                            <div class="relative z-10">
+                                <p class="text-purple-100 font-medium text-sm">Total Properties</p>
+                                <h3 class="text-3xl font-bold mt-2">12</h3>
+                                <p class="text-xs mt-4 text-purple-100 opacity-90">Active in 3 cities</p>
+                            </div>
+                            <div class="absolute right-4 top-4 opacity-20">
+                                <i data-lucide="building" class="w-16 h-16 text-white"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Tenants (White) -->
+                        <div class="bg-white rounded-xl p-6 relative overflow-hidden shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 duration-300">
+                             <div class="relative z-10">
+                                <p class="text-slate-500 font-medium text-sm">Total Tenants</p>
+                                <h3 class="text-3xl font-bold text-slate-800 mt-2">89</h3>
+                                <p class="text-slate-400 text-xs mt-4">All active tenants</p>
+                            </div>
+                            <div class="absolute right-4 top-4 opacity-5">
+                                <i data-lucide="users" class="w-16 h-16 text-slate-900"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Earnings (Purple Theme) -->
+                        <div class="bg-purple-500 rounded-xl p-6 relative overflow-hidden shadow-md text-white transition-transform hover:-translate-y-1 duration-300">
+                            <div class="relative z-10">
+                                <p class="text-purple-100 font-medium text-sm">This Month Earnings</p>
+                                <h3 class="text-3xl font-bold mt-2">₹1.2L</h3>
+                                <p class="text-xs mt-4 text-purple-100 opacity-90">+12% from last month</p>
+                            </div>
+                            <div class="absolute right-4 top-4 opacity-20">
+                                <i data-lucide="indian-rupee" class="w-16 h-16 text-white"></i>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Vacant Seats (White) -->
+                        <div class="bg-white rounded-xl p-6 relative overflow-hidden shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 duration-300">
+                             <div class="relative z-10">
+                                <p class="text-slate-500 font-medium text-sm">Vacant Seats</p>
+                                <h3 class="text-3xl font-bold text-slate-800 mt-2">4</h3>
+                                <p class="text-slate-400 text-xs mt-4">Across 12 properties</p>
+                            </div>
+                            <div class="absolute right-4 top-4 opacity-5">
+                                <i data-lucide="home" class="w-16 h-16 text-slate-900"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Monthly Revenue Chart -->
+                        <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800">Monthly Revenue</h3>
+                                    <p class="text-sm text-slate-500">Revenue trends over the last 12 months</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-400 uppercase font-semibold">Total Revenue</p>
+                                    <p class="text-2xl font-bold text-slate-800">₹13,00,000.00</p>
+                                </div>
+                            </div>
+
+                            <!-- Chart Container -->
+                            <div class="relative h-64 w-full flex items-end justify-between gap-2 pt-8 px-2">
+                                <!-- Grid Lines -->
+                                <div class="absolute inset-0 flex flex-col justify-between pointer-events-none pb-0 pt-8">
+                                    <div class="border-t border-dashed border-slate-200 w-full h-0 relative"><span class="absolute -left-8 -top-2 text-[10px] text-slate-400">₹12k</span></div>
+                                    <div class="border-t border-dashed border-slate-200 w-full h-0 relative"><span class="absolute -left-8 -top-2 text-[10px] text-slate-400">₹9k</span></div>
+                                    <div class="border-t border-dashed border-slate-200 w-full h-0 relative"><span class="absolute -left-8 -top-2 text-[10px] text-slate-400">₹6k</span></div>
+                                    <div class="border-t border-dashed border-slate-200 w-full h-0 relative"><span class="absolute -left-8 -top-2 text-[10px] text-slate-400">₹3k</span></div>
+                                    <div class="border-t border-dashed border-slate-200 w-full h-0 relative"></div>
+                                </div>
+                                
+                                <!-- Bars (Using Purple shades) -->
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[10%] bar-animate opacity-70"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[25%] bar-animate opacity-70" style="animation-delay: 0.1s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[15%] bar-animate opacity-70" style="animation-delay: 0.2s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[30%] bar-animate opacity-70" style="animation-delay: 0.3s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[45%] bar-animate opacity-70" style="animation-delay: 0.4s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[20%] bar-animate opacity-70" style="animation-delay: 0.5s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[60%] bar-animate opacity-70" style="animation-delay: 0.6s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[35%] bar-animate opacity-70" style="animation-delay: 0.7s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[80%] bar-animate opacity-70" style="animation-delay: 0.8s"></div>
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[40%] bar-animate opacity-70" style="animation-delay: 0.9s"></div>
+                                <div class="w-full bg-purple-600 rounded-t-sm h-[95%] bar-animate shadow-lg shadow-purple-200" style="animation-delay: 1s"></div> <!-- Highlight bar -->
+                                <div class="w-full bg-purple-300 rounded-t-sm h-[55%] bar-animate opacity-70" style="animation-delay: 1.1s"></div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Bookings List -->
+                        <div class="lg:col-span-1 bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                            <div class="mb-4 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-800">Recent Payments</h3>
+                                    <p class="text-sm text-slate-500">Latest successful transactions</p>
+                                </div>
+                                <a href="#" class="text-xs font-medium text-purple-600 hover:text-purple-700">View All</a>
+                            </div>
+
+                            <div class="space-y-0 h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                                <!-- Item 1 -->
+                                <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs font-bold">RK</div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-slate-800 truncate w-32">Ravi Kumar</p>
+                                            <p class="text-[10px] text-slate-400">Rent - Oct 2025</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-semibold text-green-600">+₹5000</p>
+                                    </div>
+                                </div>
+
+                                <!-- Item 2 -->
+                                <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">AS</div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-slate-800">Anita Singh</p>
+                                            <p class="text-[10px] text-slate-400">Security Deposit</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-semibold text-green-600">+₹15000</p>
+                                    </div>
+                                </div>
+
+                                <!-- Item 3 -->
+                                <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://i.pravatar.cc/150?u=3" class="w-9 h-9 rounded-full bg-slate-100">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-slate-800">Tere Naam</p>
+                                            <p class="text-[10px] text-slate-400">Booking Advance</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-semibold text-green-600">+₹1000</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Item 4 -->
+                                <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://i.pravatar.cc/150?u=4" class="w-9 h-9 rounded-full bg-slate-100">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-slate-800">Keshav Sharma</p>
+                                            <p class="text-[10px] text-slate-400">Monthly Rent</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-semibold text-green-600">+₹6500</p>
+                                    </div>
+                                </div>
+                                
+                                 <!-- Item 5 -->
+                                 <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 text-xs font-bold">SL</div>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-slate-800">Shyam Lall</p>
+                                            <p class="text-[10px] text-slate-400">Penalty Fee</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-semibold text-green-600">+₹500</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm"></div>
+        
+        <!-- Mobile Sidebar (Simplified clone of desktop for responsiveness) -->
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-gray-800 sticky top-0 bg-[#111827]">
+                 <h1 class="text-xl font-bold text-white">RoomHy</h1>
+                 <button id="mobile-menu-close"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
+            </div>
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 text-white"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i data-lucide="building-2" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800 hover:text-white">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <!-- Add more mobile items here if needed -->
+            </nav>
+        </aside>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Submenu Toggle Logic
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                // Close others? Optional.
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Mobile Menu Logic
+        const mobileOpenBtn = document.getElementById('mobile-menu-open');
+        const mobileCloseBtn = document.getElementById('mobile-menu-close');
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+
+        function toggleMobileMenu() {
+            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        }
+
+        mobileOpenBtn.addEventListener('click', toggleMobileMenu);
+        mobileCloseBtn.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+    </script>
+</body>
+</html>

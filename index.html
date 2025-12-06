@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoomHy - Staff Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="seeder.js"></script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #1F2937;
+            min-height: 100vh;
+        }
+        .card-light { 
+            background: #FFFFFF; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid #e5e7eb;
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); cursor: pointer; }
+        .btn-primary:hover { background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%); }
+        .input-focus:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        .error-msg { color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="card-light w-full max-w-md p-8" id="login-container">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-lg mb-4">
+                <i data-lucide="home" class="w-8 h-8 text-indigo-700"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-1">RoomHy</h1>
+            <p class="text-gray-500 text-sm">Login to Your Account</p>
+        </div>
+
+        <!-- Unified Login Form -->
+        <div id="login-form" class="fade-in">
+            <form onsubmit="event.preventDefault(); handleUnifiedLogin();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Login ID</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i data-lucide="user" class="w-5 h-5"></i></span>
+                        <input 
+                            type="text" 
+                            class="input-focus w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 transition-colors outline-none" 
+                            id="login-id" 
+                            placeholder="Enter your ID..." 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Email, ID code, or account number</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i data-lucide="lock" class="w-5 h-5"></i></span>
+                        <input 
+                            type="password" 
+                            class="input-focus w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 transition-colors outline-none" 
+                            id="login-password" 
+                            placeholder="••••••••" 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div id="error-msg" class="error-msg hidden"></div>
+                </div>
+
+                <button type="submit" class="btn-primary w-full text-white font-bold py-3 rounded-lg transition-all flex justify-center items-center gap-2">
+                    Login <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center border-t border-gray-100 pt-4">
+                <p class="text-sm text-gray-500">Don't have credentials yet?</p>
+                <a href="owner-login.html" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Request access or sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // Unified Login Handler - Auto-detects user role by ID
+        function handleUnifiedLogin() {
+            const loginId = document.getElementById('login-id').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.classList.add('hidden');
+
+            if (!loginId || !password) {
+                showError('Please fill in all fields.', errorMsg);
+                return;
+            }
+
+            // Clear previous sessions (prefer per-tab/session storage)
+            sessionStorage.removeItem('manager_user');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('owner_session');
+            // keep localStorage untouched unless explicitly logging out from another flow
+
+            // Auto-detect role by ID format
+            if (loginId.includes('@')) {
+                // Email format - try SuperAdmin
+                loginSuperAdmin(loginId, password, errorMsg);
+            } else if (loginId.toUpperCase().startsWith('ROOMHY')) {
+                // Owner ID format
+                loginOwner(loginId, password, errorMsg);
+            } else if (loginId.toUpperCase().startsWith('MGR')) {
+                // Area Manager format
+                loginAreaManager(loginId, password, errorMsg);
+            } else if (loginId.toUpperCase().startsWith('EMP')) {
+                // Employee format
+                loginEmployee(loginId, password, errorMsg);
+            } else {
+                showError('Login ID format not recognized.', errorMsg);
+            }
+        }
+
+        // SuperAdmin Login
+        function loginSuperAdmin(email, password, errorMsg) {
+            const db = JSON.parse(localStorage.getItem('roomhy_superadmin_db') || 'null');
+            // Seeder fallback
+            if (!db && email === 'roomhyadmin@gmail.com' && password === 'admin@123') {
+                 const user = { id: 'SUPER_ADMIN', email, name: 'Super Admin', role: 'superadmin' };
+                 // Set in both storages for cross-environment compatibility (esp. Render)
+                 sessionStorage.setItem('user', JSON.stringify(user));
+                 localStorage.setItem('user', JSON.stringify(user));
+                 window.location.href = 'superadmin/superadmin.html';
+                 return;
+            }
+
+            if (db && db.email === email && db.password === password) {
+                const user = { ...db, role: 'superadmin' };
+                // Set in both storages for cross-environment compatibility (esp. Render)
+                sessionStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = 'superadmin/superadmin.html';
+            } else {
+                showError('Invalid credentials.', errorMsg);
+            }
+        }
+
+        // Owner Login
+        function loginOwner(ownerId, password, errorMsg) {
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const owner = db[ownerId];
+
+            if (!owner) {
+                return showError('ID not found.', errorMsg);
+            }
+
+            const storedPass = owner.credentials?.password || owner.password;
+            
+            if (storedPass === password) {
+                // Check if first time setup is needed
+                if (owner.credentials?.firstTime || !owner.passwordSet) {
+                    showError('Please use the separate portal to set your password.', errorMsg);
+                    return;
+                }
+
+                // Successful login - set sessionStorage ONLY (do not clear shared localStorage to avoid cross-tab logout)
+                const sessionUser = { 
+                    loginId: ownerId, 
+                    role: 'owner', 
+                    ownerId: ownerId, 
+                    name: owner.profile?.name || 'Owner' 
+                };
+                sessionStorage.setItem('owner_session', JSON.stringify(sessionUser));
+                window.location.href = 'propertyowner/admin.html';
+            } else {
+                showError('Invalid credentials.', errorMsg);
+            }
+        }
+
+        // Area Manager Login
+        function loginAreaManager(loginId, password, errorMsg) {
+            const db = JSON.parse(localStorage.getItem('roomhy_areamanagers_db') || '[]');
+            const mgr = db.find(m => m.loginId === loginId.toUpperCase() && m.password === password);
+            if (mgr) {
+                const user = { ...mgr, role: 'areamanager' };
+                user.areaCode = user.areaCode || user.area || user.areaName || '';
+                user.areaName = user.areaName || user.area || '';
+                // Set in both storages for cross-environment compatibility
+                sessionStorage.setItem('manager_user', JSON.stringify(user));
+                sessionStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('manager_user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = 'Areamanager/areaadmin.html';
+            } else {
+                showError('Invalid credentials.', errorMsg);
+            }
+        }
+
+        // Employee Login
+        function loginEmployee(loginId, password, errorMsg) {
+             const employees = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+             const emp = employees.find(e => e.loginId === loginId && e.password === password);
+
+             if (!emp) {
+                 showError('Invalid credentials.', errorMsg);
+                 return;
+             }
+
+             const user = {
+                 loginId: emp.loginId,
+                 name: emp.name,
+                 role: 'employee',
+                 team: emp.team || emp.role || 'Employee',
+                 permissions: emp.permissions || [],
+                 location: emp.location || emp.area || emp.areaName || '',
+                 area: emp.area || emp.areaName || '',
+                 areaName: emp.areaName || emp.area || '',
+                 areaCode: emp.areaCode || ''
+             };
+
+             // Set in both storages for cross-environment compatibility
+             sessionStorage.setItem('manager_user', JSON.stringify(user));
+             sessionStorage.setItem('user', JSON.stringify(user));
+             localStorage.setItem('manager_user', JSON.stringify(user));
+             localStorage.setItem('user', JSON.stringify(user));
+             window.location.href = 'Areamanager/areaadmin.html';
+        }
+
+        function showError(msg, errorMsg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

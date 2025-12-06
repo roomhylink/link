@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - My Area Owners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link {
+            display: flex; align-items: center; padding: 0.75rem 1.5rem; 
+            color: #9ca3af; font-weight: 500; font-size: 0.9rem;
+            transition: all 0.2s; border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: #1f2937; color: #f3f4f6; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+
+        /* Submenu Styling */
+        .submenu { background-color: #0f172a; overflow: hidden; transition: max-height 0.3s ease-in-out; max-height: 0; }
+        .submenu.open { max-height: 500px; }
+        .submenu a { padding-left: 3.5rem; font-size: 0.85rem; }
+        
+        .excel-table th { background: #f9fafb; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; text-align: left; }
+        .excel-table td { border-bottom: 1px solid #e5e7eb; padding: 12px; background: white; font-size: 0.875rem; vertical-align: middle; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (Area Manager - Full) -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="map" class="w-5 h-5 text-white"></i></div>
+                     <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">AREA ADMIN</span></div>
+                 </div>
+            </div>
+            
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="areaadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="areaproperty.html" class="sidebar-link"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="visit.html" class="sidebar-link"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Visit Reports</a>
+                <a href="areatenant.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                <!-- Active Page -->
+                <a href="areaowner.html" class="sidebar-link active"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Owners</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="areapayment.html" class="sidebar-link"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payments</a>
+                <a href="complaint.html" class="sidebar-link"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints & Maint.</a>
+                <a href="areakyc.html" class="sidebar-link"><i data-lucide="file-check" class="w-5 h-5 mr-3"></i> KYC Verification</a>
+                 <a href="areaenq.html" class="sidebar-link"><i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Communication</div>
+                <a href="areachat.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="arealoc.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location</a>
+                 <a href="areareport.html" class="sidebar-link"><i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Reports</a>
+                 <a href="profile.html" class="sidebar-link"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+                 <a href="setting.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="flex items-center">
+                        <span class="text-slate-500 font-medium text-sm">Area:</span>
+                        <span class="ml-2 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wide" id="userAreaBadge">Loading...</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=areaadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-semibold text-gray-700" id="headerName">Manager</p>
+                                <p class="text-[10px] text-gray-500" id="headerRole">Area Manager</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                         <div>
+                             <h1 class="text-2xl font-bold text-slate-800">Owners in My Area</h1>
+                             <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-sm font-medium mt-1 inline-block" id="filterBadge">
+                                 Showing: All
+                             </div>
+                         </div>
+                         
+                         <!-- Actions: Search & Export -->
+                         <div class="flex gap-2 w-full md:w-auto">
+                             <div class="relative flex-1 md:w-64">
+                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                                 <input type="text" id="ownerSearch" placeholder="Search Owner Name/ID" class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none w-full" onkeyup="filterOwners()">
+                             </div>
+                             <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center shadow-sm">
+                                <i data-lucide="sheet" class="w-4 h-4 mr-2"></i> Export Excel
+                             </button>
+                         </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse excel-table" id="ownersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Login ID</th>
+                                        <th>Owner Name</th>
+                                        <th>Address</th>
+                                        <th>Password</th>
+                                        <th>Aadhar</th>
+                                        <th>KYC Status</th>
+                                        <th>Docs</th>
+                                        <th class="text-center w-16">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="areaOwnersTableBody">
+                                    <tr><td colspan="8" class="text-center py-8 text-gray-500">Loading area owners...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Document Modal -->
+    <div id="kycModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 backdrop-blur-sm" onclick="closeKycModal()">
+        <div class="bg-white p-2 rounded-lg max-w-2xl w-full relative" onclick="event.stopPropagation()">
+            <button onclick="closeKycModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300"><i data-lucide="x" class="w-8 h-8"></i></button>
+            <img id="kycImage" src="" class="w-full h-auto max-h-[80vh] object-contain rounded">
+            <div class="p-4 text-center font-bold">KYC Document Preview</div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let myAreaCode = ''; 
+        let myArea = '';
+        let isAreaManager = false;
+        let canViewAllDetails = false; // Permission flag
+        let currentOwnersData = [];
+
+        // Auth Check - prefer manager_user then fall back to user
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
+            
+            if (user && user.role === 'areamanager') {
+                isAreaManager = true;
+                document.getElementById('headerName').innerText = user.name;
+                const displayArea = user.areaName || user.area || user.city || 'All Areas';
+                document.getElementById('userAreaBadge').innerText = displayArea;
+                document.getElementById('filterBadge').innerText = 'Showing: All Areas';
+                myAreaCode = user.areaCode || '';
+                loadAreaOwners();
+            } else if (user && user.role === 'employee') {
+                isAreaManager = false;
+                // Use location field if available, otherwise fallback to areaName > area > team
+                myArea = user.location || user.areaName || user.area || user.team || '';
+                document.getElementById('headerName').innerText = user.name;
+                const displayArea = user.location || user.areaName || user.area || user.team || 'Team Member';
+                document.getElementById('userAreaBadge').innerText = displayArea;
+                document.getElementById('filterBadge').innerText = `Showing: ${displayArea}`;
+                
+                // Check permissions
+                canViewAllDetails = user.permissions && user.permissions.includes('view_all_details');
+                
+                loadAreaOwners();
+            } else {
+                // Demo Fallback
+                console.log("Demo mode: Defaulting to KO");
+                myAreaCode = 'KO';
+                document.getElementById('userAreaBadge').innerText = "Koramangala (KO)";
+                document.getElementById('filterBadge').innerText = "Showing: Koramangala (KO)";
+                loadAreaOwners();
+            }
+        });
+
+        function loadAreaOwners() {
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const tbody = document.getElementById('areaOwnersTableBody');
+            tbody.innerHTML = '';
+
+            // Filter by area
+            let ownerIds = Object.keys(db);
+            
+            if (!isAreaManager && myArea) {
+                // Employees see only owners in their assigned area (via ownerArea field)
+                ownerIds = ownerIds.filter(id => {
+                    const ownerData = db[id];
+                    return ownerData.ownerArea === myArea;
+                });
+            } else if (myAreaCode) {
+                // Backward compatibility: area managers with area code filter by code
+                ownerIds = ownerIds.filter(id => id.startsWith(myAreaCode));
+            }
+
+            if (ownerIds.length === 0) {
+                const msg = myArea ? `No owners found for ${myArea} area.` : (myAreaCode ? `No owners found for ${myAreaCode} area.` : 'No owners found.');
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">${msg}</td></tr>`;
+                return;
+            }
+
+            currentOwnersData = []; // Reset for export
+
+            ownerIds.forEach(id => {
+                const data = db[id];
+                const profile = data.profile || {};
+                const kyc = data.kyc || {};
+                const creds = data.credentials || {};
+                
+                // Export data - hide sensitive info unless user has view_all_details permission
+                const passwordDisplay = (isAreaManager || canViewAllDetails) ? (creds.password || '-') : '●●●●●●●●';
+                const aadharDisplay = (isAreaManager || canViewAllDetails) ? (kyc.aadharNumber || '-') : '●●●●●●●●';
+                
+                currentOwnersData.push({
+                    "Owner ID": id,
+                    "Name": profile.name || 'Unknown',
+                    "Phone": profile.phone || '-',
+                    "Address": profile.address || '-',
+                    "Password": passwordDisplay,
+                    "Aadhar": aadharDisplay,
+                    "Status": kyc.status || 'Pending'
+                });
+                
+                let kycStatus = `<span class="text-yellow-600 font-bold text-xs">Pending</span>`;
+                if(kyc.status === 'verified') kycStatus = `<span class="text-green-600 font-bold text-xs">Verified</span>`;
+
+                let viewBtn = `<span class="text-gray-300 text-xs">-</span>`;
+                if(kyc.documentImage && (isAreaManager || canViewAllDetails)) {
+                    viewBtn = `<button onclick="viewKyc('${id}')" class="text-purple-600 hover:text-purple-800 text-xs font-bold flex items-center justify-center w-full"><i data-lucide="eye" class="w-3 h-3 mr-1"></i> View</button>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b border-gray-100" id="row-${id}">
+                        <td class="font-mono font-bold text-slate-700">${id}</td>
+                        <td class="font-medium text-slate-800">${profile.name || 'Unknown'}<br><span class="text-xs text-gray-500">${profile.phone || '-'}</span></td>
+                        <td class="text-sm text-gray-600 max-w-xs truncate" title="${profile.address || '-'}">${profile.address || '-'}</td>
+                        <td><code class="text-xs font-mono bg-red-50 text-red-600 px-2 py-1 rounded border border-red-100">${passwordDisplay}</code></td>
+                        <td class="font-mono text-sm text-gray-700">${aadharDisplay}</td>
+                        <td>${kycStatus}</td>
+                        <td class="text-center">${viewBtn}</td>
+                        <td class="text-center">
+                            <button onclick="deleteOwner('${id}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Delete Owner">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function deleteOwner(id) {
+            if(!confirm(`Delete owner ${id}? This action cannot be undone.`)) return;
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            if (db[id]) {
+                delete db[id];
+                localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                const row = document.getElementById(`row-${id}`);
+                if(row) row.remove();
+                alert("Owner deleted.");
+                loadAreaOwners(); 
+            }
+        }
+
+        function exportToExcel() {
+            if(currentOwnersData.length === 0) return alert("No data to export.");
+            const ws = XLSX.utils.json_to_sheet(currentOwnersData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Area_Owners");
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Roomhy_Owners_${myAreaCode}_${date}.xlsx`);
+        }
+
+        function filterOwners() {
+            const input = document.getElementById('ownerSearch');
+            const filter = input.value.toUpperCase();
+            const rows = document.querySelectorAll("#areaOwnersTableBody tr");
+            rows.forEach(row => {
+                const text = row.innerText.toUpperCase();
+                row.style.display = text.includes(filter) ? "" : "none";
+            });
+        }
+
+        function viewKyc(id) {
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            if(db[id]?.kyc?.documentImage) {
+                document.getElementById('kycImage').src = db[id].kyc.documentImage;
+                document.getElementById('kycModal').classList.remove('hidden');
+                document.getElementById('kycModal').classList.add('flex');
+            }
+        }
+
+        function closeKycModal() {
+            document.getElementById('kycModal').classList.add('hidden');
+            document.getElementById('kycModal').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>

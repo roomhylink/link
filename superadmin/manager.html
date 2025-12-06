@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Team Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../sessionManager.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: #111827;
+            color: #9ca3af;
+        }
+        .sidebar-link {
+            color: #9ca3af;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .sidebar-link:hover {
+            color: #f3f4f6; 
+            background-color: #1f2937;
+        }
+        .sidebar-link.active {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-left-color: #a855f7;
+        }
+
+        /* Submenu Styling */
+        .submenu {
+            background-color: #0f172a;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+        }
+        .submenu.open {
+            max-height: 500px;
+        }
+        .submenu a {
+            padding-left: 3.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Team Card Style */
+        .team-card { transition: all 0.2s ease; cursor: pointer; border: 1px solid #e5e7eb; }
+        .team-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #a855f7; }
+        .team-card.active { border-color: #a855f7; background-color: #f3e8ff; }
+        .team-card.active .icon-box { background-color: #9333ea; color: white; }
+
+        .permission-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem; }
+        .permission-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; cursor: pointer; transition: all 0.1s; background: white; }
+        .permission-item:hover { border-color: #a855f7; background-color: #faf5ff; }
+        .permission-item.selected { background-color: #f3e8ff; border-color: #a855f7; color: #6b21a8; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+        /* Modal Transitions */
+        .modal { transition: opacity 0.25s ease; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <script>
+        // Check session
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user || (user.role !== 'superadmin' && user.role !== 'admin')) {
+             console.log("Session check: User is " + (user ? user.role : 'null'));
+        }
+    </script>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Full Super Admin Sidebar -->
+          <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+                     </div>
+                     <div>
+                        <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
+                        <span class="text-[10px] text-gray-500 font-medium tracking-wider">ADMIN PANEL</span>
+                     </div>
+                 </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link active">
+                    <i data-lucide="users-round" class="w-5 h-5 mr-3"></i> Team Management
+                </a>
+                <a href="owner.html" class="sidebar-link">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="properties.html" class="sidebar-link">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="tenant.html" class="sidebar-link">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="enquiry.html" class="sidebar-link">
+                    <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="booking.html" class="sidebar-link">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="reviews.html" class="sidebar-link">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="complaint-history.html" class="sidebar-link">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History
+                </a>
+
+                <!-- Dropdown: Payment & Finance -->
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payment & Finance
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link text-sm hover:text-white">All Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link text-sm hover:text-white">Platform Commissions</a>
+                        <a href="refund.html" class="sidebar-link text-sm hover:text-white">Refund Approvals</a>
+                        <a href="payment_disputes.html" class="sidebar-link text-sm hover:text-white">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <!-- Dropdown: Reports -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('reports-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Reports
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="reports-submenu" class="submenu">
+                        <a href="platform_reports.html" class="sidebar-link text-sm hover:text-white">Platform-wide Reports</a>
+                        <a href="monthly.html" class="sidebar-link text-sm hover:text-white">Monthly Revenue</a>
+                        <a href="#" class="sidebar-link text-sm hover:text-white text-purple-400 flex items-center"><i data-lucide="download" class="w-3 h-3 mr-2"></i> Export PDF/Excel</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                 <a href="profile.html" class="sidebar-link">
+                    <i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile
+                </a>
+                 <a href="settings.html" class="sidebar-link">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings
+                </a>
+                 <a href="location.html" class="sidebar-link">
+                    <i data-lucide="globe" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+                 
+                 <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link text-sm hover:text-white">Login Logs</a>
+                        <a href="security.html" class="sidebar-link text-sm hover:text-white">Security Settings</a>
+                        <a href="backup.html" class="sidebar-link text-sm hover:text-white">Backup Settings</a>
+                    </div>
+                </div>
+                
+                <div class="h-20"></div> <!-- Spacer -->
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                        Team Management <span class="text-gray-400">/</span> <span id="currentTeamLabel" class="text-purple-600">All Employees</span>
+                    </h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <img src="https://i.pravatar.cc/150?u=superadmin" class="w-8 h-8 rounded-full border border-slate-200">
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <!-- Header Actions -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Team Directory</h3>
+                            <p class="text-sm text-gray-500">Manage employees, assign to Areas, and set permissions.</p>
+                        </div>
+                        <button onclick="openEmployeeModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 shadow-sm transition-colors">
+                            <i data-lucide="user-plus" class="w-5 h-5"></i> Add Employee
+                        </button>
+                    </div>
+
+                    <!-- LOCATION FILTERS (Connected to roomhy_cities & roomhy_areas) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+                        <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-2 text-purple-600"></i> Filter by Location</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- City Filter -->
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Select City</label>
+                                <select id="filterCity" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500" onchange="updateAreaDropdown()">
+                                    <option value="">All Cities</option>
+                                    <!-- Dynamically Populated -->
+                                </select>
+                            </div>
+                            <!-- Area Filter -->
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Select Area</label>
+                                <select id="filterArea" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500" onchange="applyFilters()">
+                                    <option value="">All Areas</option>
+                                    <!-- Dynamically Populated -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DEPARTMENT BOXES (Team Areas) -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        
+                        <div onclick="filterTeam('All')" class="team-card active bg-white p-4 rounded-xl cursor-pointer text-center" id="box-all">
+                            <div class="icon-box w-10 h-10 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">All Staff</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-all">0</p>
+                        </div>
+
+                        <div onclick="filterTeam('Marketing Team')" class="team-card bg-white p-4 rounded-xl cursor-pointer text-center" id="box-marketing">
+                            <div class="icon-box w-10 h-10 bg-pink-50 text-pink-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="megaphone" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">Marketing</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-marketing">0</p>
+                        </div>
+
+                        <div onclick="filterTeam('Accounts Department')" class="team-card bg-white p-4 rounded-xl cursor-pointer text-center" id="box-accounts">
+                            <div class="icon-box w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="calculator" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">Accounts</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-accounts">0</p>
+                        </div>
+
+                        <div onclick="filterTeam('Maintenance Team')" class="team-card bg-white p-4 rounded-xl cursor-pointer text-center" id="box-maintenance">
+                            <div class="icon-box w-10 h-10 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="hammer" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">Maintenance</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-maintenance">0</p>
+                        </div>
+
+                        <div onclick="filterTeam('Customer Support')" class="team-card bg-white p-4 rounded-xl cursor-pointer text-center" id="box-support">
+                            <div class="icon-box w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="headset" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">Support</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-support">0</p>
+                        </div>
+                        
+                        <!-- Additional Custom Box -->
+                        <div onclick="filterTeam('Custom')" class="team-card bg-white p-4 rounded-xl cursor-pointer text-center md:col-span-5 lg:col-span-1 lg:col-start-5" id="box-custom">
+                            <div class="icon-box w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <i data-lucide="star" class="w-5 h-5"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-700 uppercase">Custom / Other</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="count-custom">0</p>
+                        </div>
+                    </div>
+
+                    <!-- List Area -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Employee Profile</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Department</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Location</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Login ID</th>
+                                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Manage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeesTableBody" class="divide-y divide-gray-200 bg-white">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="emptyState" class="hidden flex flex-col items-center justify-center p-12 text-gray-500">
+                            <div class="bg-gray-50 p-4 rounded-full mb-3"><i data-lucide="ghost" class="w-8 h-8 text-gray-300"></i></div>
+                            <p>No employees found matching criteria.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Employee Modal -->
+    <div id="employeeModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Add Employee</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Create a new user with specific role and location access.</p>
+                </div>
+                <button onclick="closeEmployeeModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                
+                <!-- 1. Profile & Location -->
+                <section>
+                    <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                        <span class="bg-purple-100 text-purple-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Identity & Location
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="empName" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Role / Department</label>
+                            <select id="empRole" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white">
+                                <option value="Marketing Team">Marketing Team</option>
+                                <option value="Accounts Department">Accounts Department</option>
+                                <option value="Maintenance Team">Maintenance Team</option>
+                                <option value="Customer Support">Customer Support</option>
+                                <option value="Custom">Custom Role</option>
+                            </select>
+                        </div>
+                        
+                        <!-- City Selection -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Assigned City</label>
+                            <select id="modalCity" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white" onchange="updateModalAreaDropdown()">
+                                <option value="">Select City</option>
+                                <!-- JS Populated from roomhy_cities -->
+                            </select>
+                        </div>
+
+                        <!-- Area Selection -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Assigned Area</label>
+                            <select id="modalArea" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white">
+                                <option value="">Select Area</option>
+                                <!-- JS Populated from roomhy_areas -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="text" id="empPhone" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="empEmail" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Credentials -->
+                <section>
+                    <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Credentials
+                    </h4>
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-4 items-center">
+                        <div class="flex-1">
+                            <label class="block text-[10px] uppercase font-bold text-blue-800 mb-1">Login ID</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="empLoginId" readonly class="w-full bg-white border border-blue-200 rounded px-3 py-2 text-sm font-mono text-slate-700 font-bold">
+                                <button onclick="generateCreds()" class="text-blue-600 bg-white border border-blue-200 px-3 rounded hover:bg-blue-50"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                         <div class="flex-1">
+                            <label class="block text-[10px] uppercase font-bold text-blue-800 mb-1">Password</label>
+                            <input type="text" id="empPassword" class="w-full bg-white border border-blue-200 rounded px-3 py-2 text-sm font-mono text-slate-700">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. Permissions -->
+                <section>
+                    <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2 border-b pb-2">
+                        <span class="bg-green-100 text-green-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> Module Access
+                    </h4>
+                    <div class="flex justify-between items-end mb-3">
+                        <p class="text-xs text-gray-500">These modules will appear in the employee's sidebar.</p>
+                        <div class="flex gap-2">
+                            <button onclick="selectAllPerms()" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700">All</button>
+                            <button onclick="clearPerms()" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded text-gray-700">None</button>
+                        </div>
+                    </div>
+                    <div id="permissionsContainer" class="permission-grid">
+                        <!-- Populated via JS -->
+                    </div>
+                </section>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeEmployeeModal()" class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-white transition-colors">Cancel</button>
+                <button onclick="saveEmployee()" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm transition-colors flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Creds Modal -->
+    <div id="viewCredModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600"><i data-lucide="check-circle" class="w-6 h-6"></i></div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Success!</h3>
+            <div class="bg-gray-50 rounded-lg p-4 border text-left space-y-3">
+                <div><label class="text-xs text-gray-400 uppercase font-bold">Login ID</label><div class="flex justify-between"><code id="viewLoginId" class="text-sm font-mono font-bold select-all"></code></div></div>
+                <div class="border-t pt-2"><label class="text-xs text-gray-400 uppercase font-bold">Password</label><div class="flex justify-between"><code id="viewPassword" class="text-sm font-mono font-bold select-all"></code></div></div>
+            </div>
+            <button onclick="document.getElementById('viewCredModal').classList.add('hidden')" class="w-full mt-6 bg-slate-900 text-white py-2 rounded-lg text-sm">Done</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentTeamFilter = 'All';
+        
+        // Global store for Cities and Areas
+        let citiesData = [];
+        let areasData = [];
+
+        const allPermissions = [
+            { id: 'dashboard', label: 'Dashboard' }, { id: 'properties', label: 'Properties' }, { id: 'visits', label: 'Visits' },
+            { id: 'tenants', label: 'Tenants' }, { id: 'owners', label: 'Owners' }, { id: 'payments', label: 'Payments' },
+            { id: 'complaints', label: 'Complaints' }, { id: 'kyc', label: 'KYC Verify' }, { id: 'enquiries', label: 'Enquiries' },
+            { id: 'chat', label: 'Chat Access' }, { id: 'reports', label: 'View Reports' }, { id: 'finance', label: 'Finance Access' },
+            { id: 'view_all_details', label: 'View All Details' }, { id: 'show_by_area', label: 'Show by Area' }
+        ];
+        let selectedPermissions = new Set();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLocationsFromStorage();
+            renderPermissions();
+            loadEmployees();
+            updateCounts();
+            initLocationSync();
+        });
+
+        // Listen for location changes from location.html via BroadcastChannel or storage events
+        function initLocationSync() {
+            // Try BroadcastChannel first (modern browsers, cross-tab communication)
+            try {
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const locationChannel = new BroadcastChannel('roomhy_locations');
+                    locationChannel.addEventListener('message', (event) => {
+                        if (event.data && event.data.type === 'locations-updated') {
+                            refreshLocationsFromStorage();
+                        }
+                    });
+                }
+            } catch (e) {
+                // Fallback to storage events for same-tab updates
+                window.addEventListener('storage', (event) => {
+                    if (event.key === 'roomhy_locations_updated_at') {
+                        refreshLocationsFromStorage();
+                    }
+                });
+            }
+        }
+
+        // Refresh locations from localStorage and update UI
+        function refreshLocationsFromStorage() {
+            loadLocationsFromStorage();
+            loadEmployees();
+            // Notify user (optional visual indicator)
+            console.log('Locations updated from location.html');
+        }
+
+        // --- 1. LOCATION DATA LOADING (Linked to locations.html) ---
+        function loadLocationsFromStorage() {
+            // Read from roomhy_cities and roomhy_areas (Must match keys from location.html)
+            citiesData = JSON.parse(localStorage.getItem('roomhy_cities') || '[]');
+            areasData = JSON.parse(localStorage.getItem('roomhy_areas') || '[]');
+
+            // FALLBACK: Ensure defaults exist if location.html hasn't run
+            if (citiesData.length === 0) {
+                citiesData = [
+                    { id: 'ct_1', name: 'Bangalore', state: 'Karnataka', status: 'Active' },
+                    { id: 'ct_2', name: 'Chennai', state: 'Tamil Nadu', status: 'Active' },
+                    { id: 'ct_3', name: 'Coimbatore', state: 'Tamil Nadu', status: 'Active' }
+                ];
+                // Save to ensure persistence across pages (simulating backend)
+                localStorage.setItem('roomhy_cities', JSON.stringify(citiesData));
+            }
+
+            if (areasData.length === 0) {
+                areasData = [
+                    { id: 'ar_1', name: 'Koramangala', city: 'Bangalore', pincode: '560034', status: 'Active' },
+                    { id: 'ar_2', name: 'Indiranagar', city: 'Bangalore', pincode: '560038', status: 'Active' },
+                    { id: 'ar_3', name: 'Anna Nagar', city: 'Chennai', pincode: '600040', status: 'Active' },
+                    { id: 'ar_4', name: 'T Nagar', city: 'Chennai', pincode: '600017', status: 'Active' },
+                    { id: 'ar_5', name: 'Gandhipuram', city: 'Coimbatore', pincode: '641012', status: 'Active' }
+                ];
+                localStorage.setItem('roomhy_areas', JSON.stringify(areasData));
+            }
+            
+            // Populate Filter Dropdowns
+            const filterCity = document.getElementById('filterCity');
+            const modalCity = document.getElementById('modalCity');
+
+            // Clear existing to avoid duplicates on reload
+            filterCity.innerHTML = '<option value="">All Cities</option>';
+            modalCity.innerHTML = '<option value="">Select City</option>';
+
+            citiesData.forEach(c => {
+                filterCity.add(new Option(c.name, c.name));
+                modalCity.add(new Option(c.name, c.name));
+            });
+        }
+
+        // Update Filter Area Dropdown
+        function updateAreaDropdown() {
+            const city = document.getElementById('filterCity').value;
+            const areaSelect = document.getElementById('filterArea');
+            areaSelect.innerHTML = '<option value="">All Areas</option>';
+            
+            const relevantAreas = city ? areasData.filter(a => a.city === city) : areasData;
+            relevantAreas.forEach(a => areaSelect.add(new Option(a.name, a.name)));
+            
+            applyFilters();
+        }
+
+        // Update Modal Area Dropdown
+        function updateModalAreaDropdown() {
+            const city = document.getElementById('modalCity').value;
+            const areaSelect = document.getElementById('modalArea');
+            areaSelect.innerHTML = '<option value="">Select Area</option>';
+            
+            const relevantAreas = city ? areasData.filter(a => a.city === city) : [];
+            relevantAreas.forEach(a => areaSelect.add(new Option(a.name, a.name)));
+        }
+
+        // --- 2. Filter Logic ---
+        function filterTeam(role) {
+            currentTeamFilter = role;
+            document.querySelectorAll('.team-card').forEach(c => c.classList.remove('active'));
+            
+            let idMap = { 
+                'All': 'box-all', 'Marketing Team': 'box-marketing', 'Accounts Department': 'box-accounts', 
+                'Maintenance Team': 'box-maintenance', 'Customer Support': 'box-support', 'Custom': 'box-custom'
+            };
+            if(idMap[role]) document.getElementById(idMap[role]).classList.add('active');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const city = document.getElementById('filterCity').value;
+            const area = document.getElementById('filterArea').value;
+            // Update Title based on filters
+            let title = currentTeamFilter;
+            if (city) title += ` (${city})`;
+            if (area) title += ` - ${area}`;
+            
+            document.getElementById('currentTeamLabel').innerText = title;
+            loadEmployees();
+        }
+
+        // --- 3. Employee CRUD ---
+        function loadEmployees() {
+            const employees = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const tbody = document.getElementById('employeesTableBody');
+            const empty = document.getElementById('emptyState');
+            const filterCity = document.getElementById('filterCity').value;
+            const filterArea = document.getElementById('filterArea').value;
+
+            const filtered = employees.filter(e => {
+                const matchRole = currentTeamFilter === 'All' || e.role === currentTeamFilter;
+                const matchCity = !filterCity || e.city === filterCity;
+                const matchArea = !filterArea || e.area === filterArea;
+                return matchRole && matchCity && matchArea;
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            tbody.innerHTML = filtered.map(e => `
+                <tr class="hover:bg-gray-50 border-b border-gray-100">
+                    <td class="px-6 py-4"><div class="font-medium text-gray-900 text-sm">${e.name}</div><div class="text-xs text-gray-500">${e.phone}</div></td>
+                    <td class="px-6 py-4"><span class="bg-white border px-2 py-1 rounded text-xs font-semibold">${e.role}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${e.area || '-'}, <span class="text-xs text-gray-400">${e.city || '-'}</span></td>
+                    <td class="px-6 py-4"><code class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded font-bold">${e.loginId}</code></td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="editEmployee('${e.id}')" class="p-1.5 text-gray-400 hover:text-purple-600" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="viewCredentials('${e.loginId}', '${e.password}')" class="p-1.5 text-gray-400 hover:text-blue-600" title="View Credentials"><i data-lucide="key" class="w-4 h-4"></i></button>
+                        <button onclick="deleteEmp('${e.id}')" class="p-1.5 text-gray-400 hover:text-red-600" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function updateCounts() {
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const count = (role) => db.filter(e => e.role === role).length;
+            document.getElementById('count-all').innerText = db.length;
+            ['Marketing Team', 'Accounts Department', 'Maintenance Team', 'Customer Support', 'Custom'].forEach(r => {
+                const id = r.split(' ')[0].toLowerCase();
+                const el = document.getElementById(`count-${id === 'customer' ? 'support' : id}`);
+                if(el) el.innerText = count(r);
+            });
+        }
+
+        // --- Permission UI ---
+        function renderPermissions() {
+            document.getElementById('permissionsContainer').innerHTML = allPermissions.map(p => `
+                <div class="permission-item" onclick="togglePerm('${p.id}', this)">
+                    <div class="w-4 h-4 border rounded bg-white flex-shrink-0 checkbox-ui"></div>
+                    <span class="text-xs font-medium text-gray-700">${p.label}</span>
+                </div>`).join('');
+        }
+        function togglePerm(id, el) {
+            if(selectedPermissions.has(id)) { selectedPermissions.delete(id); el.classList.remove('selected'); el.querySelector('.checkbox-ui').innerHTML=''; el.querySelector('.checkbox-ui').classList.remove('bg-purple-600'); } 
+            else { selectedPermissions.add(id); el.classList.add('selected'); el.querySelector('.checkbox-ui').innerHTML='<i data-lucide="check" class="w-3 h-3 text-white"></i>'; el.querySelector('.checkbox-ui').classList.add('bg-purple-600'); lucide.createIcons(); }
+        }
+        function selectAllPerms() { allPermissions.forEach(p => { if(!selectedPermissions.has(p.id)) togglePerm(p.id, document.querySelectorAll('.permission-item')[allPermissions.indexOf(p)]); }); }
+        function clearPerms() { selectedPermissions.forEach(id => togglePerm(id, document.querySelectorAll('.permission-item')[allPermissions.findIndex(p=>p.id===id)])); }
+
+        // --- Actions ---
+        function generateCreds() {
+            document.getElementById('empLoginId').value = 'EMP' + Math.floor(10000 + Math.random() * 90000);
+            document.getElementById('empPassword').value = Math.random().toString(36).slice(-8).toUpperCase();
+        }
+
+        function saveEmployee() {
+            const name = document.getElementById('empName').value.trim();
+            const role = document.getElementById('empRole').value;
+            const city = document.getElementById('modalCity').value;
+            const area = document.getElementById('modalArea').value;
+            const phone = document.getElementById('empPhone').value.trim();
+            const email = document.getElementById('empEmail').value.trim();
+            const loginId = document.getElementById('empLoginId').value;
+            const password = document.getElementById('empPassword').value;
+
+            if(!name || !role || !loginId) return alert("Fill Required Fields");
+            
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+
+            if (editingEmployeeId) {
+                // Update existing employee
+                const empIdx = db.findIndex(e => e.id === editingEmployeeId);
+                if (empIdx >= 0) {
+                    db[empIdx] = {
+                        ...db[empIdx],
+                        name, role, city, area, phone, email, loginId, password,
+                        permissions: Array.from(selectedPermissions)
+                    };
+                }
+                editingEmployeeId = null;
+            } else {
+                // Create new employee
+                const newEmp = {
+                    id: Date.now().toString(),
+                    name, role, city, area, phone, email, loginId, password,
+                    permissions: Array.from(selectedPermissions),
+                    createdAt: new Date().toISOString()
+                };
+                db.push(newEmp);
+            }
+
+            localStorage.setItem('roomhy_employees', JSON.stringify(db));
+
+            closeEmployeeModal();
+            applyFilters();
+            updateCounts();
+            
+            // Show Creds modal if new employee
+            if (!editingEmployeeId) {
+                document.getElementById('viewLoginId').innerText = loginId;
+                document.getElementById('viewPassword').innerText = password;
+                document.getElementById('viewCredModal').classList.remove('hidden');
+            } else {
+                alert('Employee updated successfully!');
+            }
+        }
+
+        let editingEmployeeId = null; // Track which employee is being edited
+
+        function editEmployee(id) {
+            editingEmployeeId = id;
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const emp = db.find(e => e.id === id);
+            if (!emp) return alert('Employee not found');
+
+            // Populate modal with existing data
+            document.getElementById('empName').value = emp.name;
+            document.getElementById('empRole').value = emp.role;
+            document.getElementById('empPhone').value = emp.phone || '';
+            document.getElementById('empEmail').value = emp.email || '';
+            document.getElementById('empLoginId').value = emp.loginId;
+            document.getElementById('empPassword').value = emp.password;
+
+            // Set city and area
+            document.getElementById('modalCity').value = emp.city || '';
+            updateModalAreaDropdown();
+            document.getElementById('modalArea').value = emp.area || '';
+
+            // Update modal title to indicate edit mode
+            document.querySelector('#employeeModal h3').innerText = 'Edit Employee';
+            document.querySelector('#employeeModal p').innerText = 'Update employee details and assigned location.';
+
+            // Restore permissions
+            selectedPermissions.clear();
+            if (emp.permissions && Array.isArray(emp.permissions)) {
+                emp.permissions.forEach(p => selectedPermissions.add(p));
+            }
+            renderPermissions();
+            document.querySelectorAll('.permission-item').forEach((el, idx) => {
+                if (selectedPermissions.has(allPermissions[idx].id)) {
+                    el.classList.add('selected');
+                    el.querySelector('.checkbox-ui').innerHTML = '<i data-lucide="check" class="w-3 h-3 text-white"></i>';
+                    el.querySelector('.checkbox-ui').classList.add('bg-purple-600');
+                }
+            });
+            lucide.createIcons();
+
+            document.getElementById('employeeModal').classList.remove('hidden');
+        }
+
+        function deleteEmp(id) {
+            if(!confirm("Delete?")) return;
+            let db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            db = db.filter(e => e.id !== id);
+            localStorage.setItem('roomhy_employees', JSON.stringify(db));
+            applyFilters();
+            updateCounts();
+        }
+
+        function openEmployeeModal() {
+            editingEmployeeId = null; // Clear edit mode
+            generateCreds();
+            clearPerms();
+            
+            // Reset modal title back to "Add Employee"
+            document.querySelector('#employeeModal h3').innerText = 'Add Employee';
+            document.querySelector('#employeeModal p').innerText = 'Create a new user with specific role and location access.';
+
+            // Clear form fields
+            document.getElementById('empName').value = '';
+            document.getElementById('empPhone').value = '';
+            document.getElementById('empEmail').value = '';
+            document.getElementById('modalCity').value = '';
+            document.getElementById('modalArea').innerHTML = '<option value="">Select Area</option>';
+            
+            if(currentTeamFilter !== 'All') document.getElementById('empRole').value = currentTeamFilter;
+            document.getElementById('employeeModal').classList.remove('hidden');
+        }
+        function closeEmployeeModal() { 
+            editingEmployeeId = null;
+            document.getElementById('employeeModal').classList.add('hidden'); 
+        }
+        function viewCredentials(id, pass) {
+            document.getElementById('viewLoginId').innerText = id;
+            document.getElementById('viewPassword').innerText = pass;
+            document.getElementById('viewCredModal').classList.remove('hidden');
+        }
+
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                if(chevron) chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                if(chevron) chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        function copyText(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
+            alert("Copied!");
+        }
+    </script>
+</body>
+</html>

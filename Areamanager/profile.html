@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Area Manager Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../sessionManager.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link { color: #9ca3af; font-weight: 500; transition: all 0.2s ease; display: flex; align-items: center; padding: 0.75rem 1.5rem; font-size: 0.9rem; border-left: 3px solid transparent; cursor: pointer; }
+        .sidebar-link:hover { color: #f3f4f6; background-color: #1f2937; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="shield" class="w-5 h-5 text-white"></i></div>
+                    <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">AREA ADMIN</span></div>
+                </div>
+            </div>
+            <nav class="flex-1 py-6 space-y-1">
+                <a href="areaadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                <a href="profile.html" class="sidebar-link active"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+                <a href="setting.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+                <a href="areachat.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <h2 class="text-lg font-semibold text-slate-800">Area Manager Profile</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">AM</div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-50">
+                            <a href="setting.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Profile Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                        <div class="h-32 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+                        
+                        <div class="px-6 pb-6">
+                            <div class="flex flex-col md:flex-row md:items-end gap-6 -mt-16 mb-6 relative z-10">
+                                <div class="w-32 h-32 rounded-xl border-4 border-white bg-blue-100 flex items-center justify-center text-blue-600 text-4xl font-bold shadow-lg">AM</div>
+                                <div class="flex-1">
+                                    <h1 class="text-2xl font-bold text-gray-800">Area Manager</h1>
+                                    <p class="text-gray-500">Regional Management</p>
+                                </div>
+                                <button class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                    <i data-lucide="edit" class="w-4 h-4 inline mr-2"></i> Edit Profile
+                                </button>
+                            </div>
+
+                            <!-- Profile Information -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-8 border-t border-gray-200">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+                                    <p class="text-gray-800 font-medium" id="profileName">Manager Name</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                                    <p class="text-gray-800 font-medium">manager@roomhy.com</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Assigned Area</label>
+                                    <p class="text-gray-800 font-medium" id="profileArea">Area Name</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Role</label>
+                                    <p class="text-gray-800 font-medium">Area Manager</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-2xl font-bold text-blue-600">12</div>
+                            <p class="text-sm text-gray-600">Properties</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-2xl font-bold text-green-600">48</div>
+                            <p class="text-sm text-gray-600">Active Tenants</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-gray-200">
+                            <div class="text-2xl font-bold text-orange-600">₹2.4L</div>
+                            <p class="text-sm text-gray-600">Monthly Revenue</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 pb-4 border-b border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                                <div class="flex-1">
+                                    <p class="text-gray-800 font-medium">Property verified</p>
+                                    <p class="text-sm text-gray-500">Today at 2:30 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // Auth check
+        const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
+        if (!user || (user.role !== 'areamanager' && user.role !== 'employee')) {
+            window.location.href = '../index.html';
+        }
+
+        // Populate profile from session
+        if (user) {
+            document.getElementById('profileName').innerText = user.name || 'Manager Name';
+            document.getElementById('profileArea').innerText = user.area || user.areaName || 'Area Name';
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            try { sessionStorage.removeItem('manager_user'); sessionStorage.removeItem('user'); } catch(_) {}
+            try { localStorage.removeItem('manager_user'); localStorage.removeItem('user'); } catch(_) {}
+            window.location.href = '../index.html';
+        });
+    </script>
+</body>
+</html>

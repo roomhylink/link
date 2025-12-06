@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - All Properties</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* --- Sidebar Styling --- */
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link {
+            display: flex; align-items: center; padding: 0.75rem 1.5rem; 
+            color: #9ca3af; font-weight: 500; font-size: 0.9rem;
+            transition: all 0.2s; border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: #1f2937; color: #f3f4f6; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+
+        /* Submenu Styling */
+        .submenu { background-color: #0f172a; overflow: hidden; transition: max-height 0.3s ease-in-out; max-height: 0; }
+        .submenu.open { max-height: 500px; }
+        .submenu a { padding-left: 3.5rem; font-size: 0.85rem; }
+        
+        .excel-table th { background: #f9fafb; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; text-align: left; }
+        .excel-table td { border-bottom: 1px solid #e5e7eb; padding: 12px; background: white; font-size: 0.875rem; vertical-align: middle; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+        /* Modal Transitions */
+        .modal { transition: opacity 0.25s ease; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar (Standard Super Admin) -->
+          <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="building-2" class="w-5 h-5 text-white"></i></div>
+                     <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">SUPER ADMIN</span></div>
+                 </div>
+            </div>
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers</a>
+                <a href="owner.html" class="sidebar-link"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners</a>
+                <!-- Active Page -->
+                <a href="properties.html" class="sidebar-link active"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="tenant.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                 <a href="kyc_verification.html" class="sidebar-link"><i data-lucide="file-badge" class="w-5 h-5 mr-3"></i> KYC Verification</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link"><i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                <a href="enquiry.html" class="sidebar-link"><i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                <a href="booking.html" class="sidebar-link"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                <a href="reviews.html" class="sidebar-link"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                <a href="complaint-history.html" class="sidebar-link"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Finance</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link">Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link">Commissions</a>
+                        <a href="refund.html" class="sidebar-link">Refunds</a>
+                        <a href="payment_disputes.html" class="sidebar-link">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                 <a href="location.html" class="sidebar-link"><i data-lucide="globe" class="w-5 h-5 mr-3"></i> Locations</a>
+                 
+                 <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link">Logs</a>
+                        <a href="security.html" class="sidebar-link">Security</a>
+                         <a href="backup.html" class="sidebar-link">Backup</a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium">Management</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-slate-400"></i>
+                        <span class="text-slate-800 font-semibold">Properties</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="demoMode" class="hidden px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">Demo Mode</div>
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                         <div>
+                             <h1 class="text-2xl font-bold text-slate-800">Properties List</h1>
+                             <p class="text-sm text-gray-500 mt-1">Manage all properties, view room details, and track occupancy.</p>
+                         </div>
+                         <div class="flex gap-2 w-full md:w-auto">
+                             <div class="relative flex-1 md:w-64">
+                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                                 <input type="text" id="propertySearch" placeholder="Search Name, Owner, Loc..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none w-full" onkeyup="filterProperties()">
+                             </div>
+                             <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center shadow-sm">
+                                <i data-lucide="sheet" class="w-4 h-4 mr-2"></i> Export
+                             </button>
+                         </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse excel-table" id="propertiesTable">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center w-16">Images</th>
+                                        <th>Property Name</th>
+                                        <th>Location Code</th>
+                                        <th>Address</th>
+                                        <th>Owner</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Details</th>
+                                        <th class="text-center w-16">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="propertiesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <!-- Mobile Sidebar -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="superadmin.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
+                 <a href="properties.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Properties</a>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- Image Gallery Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] backdrop-blur-sm" onclick="closeImageModal()">
+        <div class="relative w-full max-w-4xl p-4" onclick="event.stopPropagation()">
+            <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300"><i data-lucide="x" class="w-8 h-8"></i></button>
+            <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[80vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Property Details Modal (Rooms > Beds > Tenants) -->
+    <div id="detailsModal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl p-0 h-[85vh] flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i data-lucide="building-2" class="w-5 h-5 text-purple-600"></i>
+                        <span id="modal-prop-name">Property Name</span>
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+                        <span id="modal-owner-name" class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">Owner ID</span>
+                        <span class="text-gray-300">|</span>
+                        <span id="modal-location" class="text-xs">Location</span>
+                    </p>
+                </div>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-red-500 bg-white p-1 rounded-full hover:bg-red-50 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar bg-gray-100 p-6">
+                <div id="rooms-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Rooms will be injected here -->
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-white px-6 py-3 border-t border-gray-200 flex justify-end flex-shrink-0">
+                <button onclick="closeDetailsModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const token = localStorage.getItem('token');
+        const isPreview = window.location.protocol === 'blob:' || window.location.href.includes('scf.usercontent');
+        if (isPreview) document.getElementById('demoMode').classList.remove('hidden');
+
+        let currentPropertiesData = [];
+
+        // --- Sidebar Functions ---
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+
+        // --- Load Data ---
+        async function loadProperties() {
+            // Try backend first: fetch approved visits (which represent approved properties)
+            let visits = [];
+            try {
+                const res = await fetch('/api/admin/visits?status=approved');
+                if (res.ok) {
+                    // API returns an array of visits
+                    visits = await res.json();
+                } else {
+                    console.warn('Backend visits fetch returned', res.status);
+                }
+            } catch (err) {
+                console.warn('Failed to fetch approved visits from backend, falling back to localStorage', err);
+            }
+
+            // If backend returned nothing, fallback to localStorage
+            if (!visits || visits.length === 0) {
+                const localVisits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+                visits = localVisits.filter(v => v.status === 'approved');
+            }
+
+            const approvedProps = visits.map(v => ({
+                id: v._id,
+                title: v.propertyInfo ? v.propertyInfo.name : (v.title || 'Property'),
+                locationCode: v.propertyInfo ? v.propertyInfo.locationCode : (v.locationCode || 'NA'),
+                address: v.propertyInfo ? (v.propertyInfo.address || '-') : (v.address || '-'),
+                ownerName: v.propertyInfo ? (v.propertyInfo.ownerName || 'Unknown') : (v.ownerName || 'Unknown'),
+                ownerPhone: v.propertyInfo ? v.propertyInfo.contactPhone : v.ownerPhone,
+                ownerLoginId: v.generatedCredentials ? v.generatedCredentials.loginId : (v.ownerLoginId || null),
+                photos: v.photos || [],
+                imageBase64: v.imageBase64,
+                status: 'active'
+            }));
+
+            renderProperties(approvedProps);
+        }
+
+        function renderProperties(props) {
+            const tbody = document.getElementById('propertiesTableBody');
+            tbody.innerHTML = '';
+            currentPropertiesData = []; // For export
+
+            if (props.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">No properties found. Approve visits in Enquiry page first.</td></tr>`;
+                return;
+            }
+
+            // Group by Area Code
+            const groups = {};
+            props.forEach(p => {
+                const code = (p.locationCode || 'NA').toUpperCase();
+                if(!groups[code]) groups[code] = [];
+                groups[code].push(p);
+                
+                currentPropertiesData.push({
+                    "Property": p.title,
+                    "Location": p.locationCode,
+                    "Address": p.address,
+                    "Owner": p.ownerName,
+                    "Phone": p.ownerPhone,
+                    "OwnerID": p.ownerLoginId,
+                    "Status": "Active"
+                });
+            });
+
+            Object.keys(groups).sort().forEach(code => {
+                tbody.innerHTML += `<tr class="bg-gray-50"><td colspan="8" class="font-bold text-slate-700 px-4 py-2 text-xs uppercase tracking-wider border-b border-gray-200">Zone: ${code}</td></tr>`;
+                
+                groups[code].forEach(p => {
+                    // Image Logic
+                    let thumbnail = '<div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400 mx-auto"><i data-lucide="image-off" class="w-4 h-4"></i></div>';
+                    let photos = p.photos || [];
+                    if(p.imageBase64) photos.unshift(p.imageBase64);
+
+                    if(photos.length > 0) {
+                        thumbnail = `
+                            <div class="relative group cursor-pointer w-10 h-10 mx-auto" onclick='openGallery(${JSON.stringify(photos)})'>
+                                <img src="${photos[0]}" class="w-full h-full rounded object-cover border border-gray-200 shadow-sm">
+                                <div class="absolute inset-0 bg-black/50 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="text-white text-[9px] font-bold">+${photos.length}</span>
+                                </div>
+                            </div>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-50 border-b border-gray-100 property-row">
+                            <td class="text-center align-middle py-3">${thumbnail}</td>
+                            <td class="font-medium text-slate-800 property-name">${p.title}</td>
+                            <td><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-mono font-bold">${p.locationCode}</span></td>
+                            <td class="text-sm text-gray-600 max-w-xs truncate" title="${p.address}">${p.address}</td>
+                            <td class="text-sm text-gray-600 property-owner">
+                                <div class="font-medium text-gray-900">${p.ownerName}</div>
+                                <div class="text-xs text-gray-400">${p.ownerLoginId || '-'}</div>
+                            </td>
+                            <td><span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">Active</span></td>
+                            <td class="text-right">
+                                <button onclick="viewDetails('${p.ownerLoginId}', '${p.title}', '${p.locationCode}')" class="text-purple-600 hover:text-purple-800 text-xs font-medium border border-purple-200 px-3 py-1.5 rounded hover:bg-purple-50 transition-colors">
+                                    View Details
+                                </button>
+                            </td>
+                            <td class="text-center">
+                                <button onclick="deleteProperty('${p.id}')" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded transition-colors" title="Delete">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+            lucide.createIcons();
+        }
+        
+        // --- View Details Functionality ---
+        function viewDetails(ownerId, propName, location) {
+            if(!ownerId) {
+                alert("Owner ID not found for this property.");
+                return;
+            }
+
+            document.getElementById('modal-prop-name').innerText = propName;
+            document.getElementById('modal-owner-name').innerText = `Owner: ${ownerId}`;
+            document.getElementById('modal-location').innerText = location;
+            
+            // Try backend first: GET /api/owners/:ownerId/rooms
+            let propRooms = [];
+            try {
+                const roomsRes = await fetch(`/api/owners/${encodeURIComponent(ownerId)}/rooms`);
+                if (roomsRes.ok) {
+                    const payload = await roomsRes.json();
+                    propRooms = payload.rooms || [];
+                } else {
+                    console.warn('Rooms fetch returned', roomsRes.status);
+                }
+            } catch (err) {
+                console.warn('Rooms fetch failed, falling back to localStorage', err);
+            }
+
+            // Fallback to localStorage if no rooms found from backend
+            if (!propRooms || propRooms.length === 0) {
+                const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
+                propRooms = allRooms.filter(r => r.ownerId === ownerId);
+            }
+            
+            const container = document.getElementById('rooms-container');
+            container.innerHTML = '';
+
+            if(propRooms.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 flex flex-col items-center justify-center py-12 text-center bg-white rounded-xl border border-dashed border-gray-300">
+                        <div class="bg-gray-50 p-4 rounded-full mb-3"><i data-lucide="bed-double" class="w-8 h-8 text-gray-400"></i></div>
+                        <h3 class="text-gray-800 font-medium">No Rooms Configured</h3>
+                        <p class="text-gray-500 text-sm mt-1">The owner hasn't added any rooms to this property yet.</p>
+                    </div>`;
+            } else {
+                propRooms.forEach(room => {
+                    let bedsHtml = '';
+                    const beds = room.beds || [];
+                    const totalBeds = beds.length;
+                    const occupied = beds.filter(b => b.tenant).length;
+                    
+                    // Progress bar calculation
+                    const percent = totalBeds > 0 ? (occupied / totalBeds) * 100 : 0;
+                    const barColor = percent === 100 ? 'bg-red-500' : (percent > 50 ? 'bg-yellow-500' : 'bg-green-500');
+
+                    if(beds.length > 0) {
+                        beds.forEach(bed => {
+                            const isOccupied = !!bed.tenant;
+                            const statusClass = isOccupied ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100';
+                            const iconColor = isOccupied ? 'text-red-500' : 'text-green-500';
+                            const icon = isOccupied ? 'user' : 'check-circle';
+                            
+                            let tenantHtml = `<span class="text-green-700 font-bold text-xs">Vacant</span>`;
+                            if(isOccupied) {
+                                tenantHtml = `
+                                    <div>
+                                        <p class="text-red-700 font-bold text-xs flex items-center"><i data-lucide="user" class="w-3 h-3 mr-1"></i> ${bed.tenant.name}</p>
+                                        <p class="text-gray-500 text-[10px]">${bed.tenant.phone}</p>
+                                    </div>`;
+                            }
+
+                            bedsHtml += `
+                                <div class="flex items-center justify-between p-2.5 border rounded-md mb-2 bg-white shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center text-gray-600 font-bold text-xs border border-gray-200">${bed.bedNo}</div>
+                                        <div class="text-sm">${tenantHtml}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        bedsHtml = `<p class="text-xs text-gray-400 italic p-2">No beds added to this room.</p>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full">
+                            <div class="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-start">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-bold text-gray-800 text-lg">${room.roomNo}</h4>
+                                        <span class="px-2 py-0.5 bg-white border text-xs rounded text-gray-500 font-medium">${room.type}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1 font-medium">Rent: <span class="text-slate-800">₹${room.rent}</span></p>
+                                </div>
+                                <div class="text-right">
+                                     <div class="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Occupancy</div>
+                                     <div class="text-sm font-bold ${percent === 100 ? 'text-red-600' : 'text-green-600'}">${occupied}/${totalBeds}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Occupancy Bar -->
+                            <div class="h-1.5 w-full bg-gray-100">
+                                <div class="h-full ${barColor}" style="width: ${percent}%"></div>
+                            </div>
+
+                            <div class="p-4 flex-1 bg-slate-50/50">
+                                <h5 class="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-wider">Bed Configuration & Tenants</h5>
+                                ${bedsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            lucide.createIcons();
+            const modal = document.getElementById('detailsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDetailsModal() {
+            const modal = document.getElementById('detailsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // --- Delete Function ---
+        function deleteProperty(id) {
+            if(!confirm("Are you sure? This will remove the property from the system.")) return;
+            let visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+            const newVisits = visits.filter(v => v._id !== id);
+            localStorage.setItem('roomhy_visits', JSON.stringify(newVisits));
+            
+            // Also cleanup rooms if needed (optional for demo)
+            
+            const row = document.getElementById(`row-${id}`);
+            if(row) row.remove();
+            alert("Property deleted.");
+            loadProperties();
+        }
+
+        // --- Excel Export ---
+        function exportToExcel() {
+            if(currentPropertiesData.length === 0) return alert("No data to export.");
+            const ws = XLSX.utils.json_to_sheet(currentPropertiesData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Properties");
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Roomhy_Properties_${date}.xlsx`);
+        }
+        
+        // --- Search Filter ---
+        function filterProperties() {
+            const input = document.getElementById('propertySearch');
+            const filter = input.value.toUpperCase();
+            const rows = document.querySelectorAll(".property-row");
+            
+            rows.forEach(row => {
+                const title = row.querySelector(".property-name")?.innerText.toUpperCase() || "";
+                const owner = row.querySelector(".property-owner")?.innerText.toUpperCase() || "";
+                
+                if (title.includes(filter) || owner.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        function openGallery(photos) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = '';
+            photos.forEach(src => {
+                grid.innerHTML += `<img src="${src}" class="w-full h-48 object-cover rounded-lg border border-gray-600 shadow-lg hover:scale-105 transition-transform">`;
+            });
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.getElementById('imageModal').classList.add('flex');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('imageModal').classList.remove('flex');
+        }
+
+        loadProperties();
+    </script>
+</body>
+</html>

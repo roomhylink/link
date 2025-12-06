@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roomhy - All Tenants</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link {
+            color: #9ca3af; font-weight: 500; transition: all 0.2s ease;
+            display: flex; align-items: center; padding: 0.75rem 1.5rem;
+            font-size: 0.9rem; border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: #1f2937; color: #f3f4f6; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+        
+        .submenu { background-color: #0f172a; overflow: hidden; transition: max-height 0.3s ease-in-out; max-height: 0; }
+        .submenu.open { max-height: 500px; }
+        .submenu a { padding-left: 3.5rem; font-size: 0.85rem; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+        /* Table Styling */
+        .data-table th { background-color: #f9fafb; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; text-align: left; }
+        .data-table td { border-bottom: 1px solid #e5e7eb; padding: 12px; font-size: 0.875rem; vertical-align: middle; }
+
+        /* KYC Modal specific styles */
+        .doc-tab-btn { border-bottom: 2px solid transparent; color: #6b7280; }
+        .doc-tab-btn.active { border-bottom-color: #9333ea; color: #9333ea; font-weight: 600; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="building-2" class="w-5 h-5 text-white"></i></div>
+                     <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">SUPER ADMIN</span></div>
+                 </div>
+            </div>
+            
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers</a>
+                <a href="owner.html" class="sidebar-link"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners</a>
+                <a href="properties.html" class="sidebar-link"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="tenant.html" class="sidebar-link active"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link"><i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                <a href="enquiry.html" class="sidebar-link"><i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                <a href="booking.html" class="sidebar-link"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                <a href="reviews.html" class="sidebar-link"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Finance</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link">Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link">Commissions</a>
+                        <a href="refund.html" class="sidebar-link">Refunds</a>
+                        <a href="payment_disputes.html" class="sidebar-link">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reports</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('reports-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Reports</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="reports-submenu" class="submenu">
+                        <a href="platform_reports.html" class="sidebar-link">Platform Reports</a>
+                        <a href="monthly.html" class="sidebar-link">Monthly Revenue</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                 <a href="location.html" class="sidebar-link"><i data-lucide="globe" class="w-5 h-5 mr-3"></i> Locations</a>
+                 
+                 <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link">Logs</a>
+                        <a href="security.html" class="sidebar-link">Security</a>
+                        <a href="backup.html" class="sidebar-link">Backup</a>
+                    </div>
+                </div>
+                <div class="h-20"></div>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium">Management</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-slate-400"></i>
+                        <span class="text-slate-800 font-semibold">Tenants & KYC</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <input type="text" id="areaSearch" placeholder="Search by Area/Property..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none w-64" onkeyup="filterTenants()">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-semibold text-gray-700">Super Admin</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-800">All Tenants</h1>
+                            <p class="text-sm text-slate-500 mt-1">Manage tenants and verify their KYC documents here.</p>
+                        </div>
+                        <button onclick="exportToExcel()" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export List
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table" id="tenantTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant Info</th>
+                                        <th>Property Details</th>
+                                        <th>KYC Status</th>
+                                        <th>Move In/Out</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="all-tenants-body">
+                                    <!-- JS populates this -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Enhanced KYC Review Modal (Layout based on image_cc5f40.png) -->
+    <div id="kycModal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-[60]" onclick="closeKycModal()">
+        <div class="relative w-full max-w-5xl bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
+                <h3 class="text-lg font-bold text-gray-800">Review KYC Documents</h3>
+                <button onclick="closeKycModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+
+            <div class="flex flex-col lg:flex-row h-[600px]">
+                <!-- Left Side: Document Viewer -->
+                <div class="flex-1 bg-gray-50 flex flex-col border-r border-gray-200">
+                    <!-- Doc Tabs -->
+                    <div class="flex border-b border-gray-200 bg-white px-4">
+                        <button class="doc-tab-btn active px-4 py-3 text-sm font-medium" onclick="switchDocTab('aadhaar_front')">Aadhaar Front</button>
+                        <button class="doc-tab-btn px-4 py-3 text-sm font-medium" onclick="switchDocTab('aadhaar_back')">Aadhaar Back</button>
+                        <button class="doc-tab-btn px-4 py-3 text-sm font-medium" onclick="switchDocTab('pan_card')">PAN Card</button>
+                    </div>
+                    <!-- Doc Canvas -->
+                    <div class="flex-1 p-6 flex items-center justify-center relative bg-slate-100">
+                        <img id="docPreviewImg" src="" class="max-h-full max-w-full object-contain shadow-lg rounded-md bg-white" alt="Document Preview">
+                        <div id="noDocPlaceholder" class="hidden text-gray-400 flex flex-col items-center">
+                            <i data-lucide="file-x" class="w-12 h-12 mb-2"></i>
+                            <span>No document uploaded for this category</span>
+                        </div>
+                        <!-- Zoom Controls -->
+                         <div class="absolute bottom-4 right-4 flex gap-2 bg-white p-1 rounded shadow border border-gray-200">
+                            <button class="p-1.5 hover:bg-gray-100 rounded"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                            <button class="p-1.5 hover:bg-gray-100 rounded"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                         </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Details & Actions -->
+                <div class="w-full lg:w-80 bg-white flex flex-col">
+                    <div class="flex-1 overflow-y-auto p-6">
+                        
+                        <!-- Applicant Details Block -->
+                        <div class="bg-purple-50 rounded-lg p-4 border border-purple-100 mb-6">
+                            <h4 class="text-xs font-bold text-purple-700 uppercase mb-3 tracking-wider">Applicant Details</h4>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Name</span>
+                                    <span class="font-semibold text-gray-800 text-right" id="detailName">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Phone</span>
+                                    <span class="font-medium text-gray-800 text-right" id="detailPhone">-</span>
+                                </div>
+                                 <div class="flex justify-between">
+                                    <span class="text-gray-500">Login ID</span>
+                                    <span class="font-mono text-xs bg-white px-1 rounded border text-right" id="detailLoginId">-</span>
+                                </div>
+                                <div class="border-t border-purple-200 pt-2 mt-2">
+                                     <div class="mb-1">
+                                        <p class="text-xs text-gray-500">Aadhaar Number</p>
+                                        <p class="font-medium text-gray-800 tracking-wide" id="detailAadhaar">-</p>
+                                     </div>
+                                     <div>
+                                        <p class="text-xs text-gray-500">Guardian Contact</p>
+                                        <p class="font-medium text-gray-800" id="detailGuardian">-</p>
+                                     </div>
+                                     <div class="mt-2">
+                                         <p class="text-xs text-gray-500">Date of Joining</p>
+                                         <p class="font-medium text-gray-800" id="detailJoinDate">-</p>
+                                     </div>
+                                      <div class="mt-2">
+                                         <p class="text-xs text-gray-500">Property</p>
+                                         <p class="font-medium text-gray-800" id="detailProperty">-</p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verification Checklist -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-bold text-gray-800 mb-3">Verification Checklist</h4>
+                            <div class="space-y-2">
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500">
+                                    <span class="text-sm text-gray-600">Name matches documents</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500">
+                                    <span class="text-sm text-gray-600">Photo is clear & visible</span>
+                                </label>
+                                <label class="flex items-start gap-2 cursor-pointer">
+                                    <input type="checkbox" class="mt-1 w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500">
+                                    <span class="text-sm text-gray-600">ID Numbers match input</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Rejection Reason -->
+                        <div>
+                            <label class="block text-sm font-bold text-gray-800 mb-2">Rejection Reason (Optional)</label>
+                            <textarea id="rejectReason" rows="3" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" placeholder="Enter reason if rejecting..."></textarea>
+                        </div>
+
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+                        <button id="approveBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Approve
+                        </button>
+                        <button id="rejectBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i> Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentTenantId = null;
+        let currentTenantData = null;
+
+        // Sidebar Toggle
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        function toggleMobileMenu() {
+            // Mobile menu logic (simplified for this file block)
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+             e.preventDefault();
+             window.location.href = '../index.html';
+        });
+
+        // Load Tenants
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTenants();
+        });
+
+        function loadTenants() {
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const tbody = document.getElementById('all-tenants-body');
+            tbody.innerHTML = '';
+            
+            // Filter Logic
+            const search = document.getElementById('areaSearch').value.toLowerCase();
+            const filteredTenants = tenants.filter(t => {
+                const prop = (t.property || '').toLowerCase();
+                const area = (t.address || '').toLowerCase(); // Assuming address contains area info from profile
+                return prop.includes(search) || area.includes(search);
+            });
+
+            if(filteredTenants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No tenants found matching criteria.</td></tr>';
+                return;
+            }
+
+            filteredTenants.forEach(t => {
+                let kycBadge = '';
+                let actionButtons = '';
+
+                // Badge Logic
+                if(t.kycStatus === 'submitted') {
+                    kycBadge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">Review Pending</span>';
+                    actionButtons = `
+                        <button onclick="openVerifyModal('${t.loginId}')" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-1">
+                            Review KYC
+                        </button>
+                    `;
+                } else if(t.kycStatus === 'verified') {
+                    kycBadge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">Verified</span>';
+                    actionButtons = '<span class="text-xs text-green-600 font-medium flex items-center justify-end"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Approved</span>';
+                } else if(t.kycStatus === 'rejected') {
+                    kycBadge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">Rejected</span>';
+                    actionButtons = '<span class="text-xs text-red-600 font-medium">Rejected</span>';
+                } else {
+                    kycBadge = '<span class="px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">Not Submitted</span>';
+                    actionButtons = '<span class="text-xs text-gray-400">Waiting for upload</span>';
+                }
+
+                let propDisplay = t.property || 'Unknown Property';
+                let moveIn = t.moveInDate ? new Date(t.moveInDate).toLocaleDateString() : '-';
+                let moveOut = t.moveOutDate ? new Date(t.moveOutDate).toLocaleDateString() : '<button onclick="moveOutTenant(\'' + t.loginId + '\')" class="text-xs text-red-600 hover:underline">Move Out</button>';
+                
+                // If moved out, show status
+                if(t.status === 'moved_out') {
+                    moveOut = `<span class="text-red-600 font-medium text-xs">Left: ${t.moveOutDate ? new Date(t.moveOutDate).toLocaleDateString() : '-'}</span>`;
+                }
+
+                const row = `
+                    <tr class="hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                        <td>
+                            <div class="flex items-center">
+                                <div class="h-9 w-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold mr-3 text-sm border border-purple-200 shadow-sm">${t.name.charAt(0)}</div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">${t.name}</div>
+                                    <div class="text-xs text-gray-500">${t.phone}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="text-sm text-gray-800 font-medium">${propDisplay}</span>
+                                <span class="text-xs text-gray-500">Room ${t.roomNo}, Bed ${t.bedNo}</span>
+                            </div>
+                        </td>
+                        <td>${kycBadge}</td>
+                        <td>
+                            <div class="text-xs text-gray-600">
+                                <div class="mb-1"><strong>In:</strong> ${moveIn}</div>
+                                <div><strong>Out:</strong> ${moveOut}</div>
+                            </div>
+                        </td>
+                        <td class="text-right flex items-center justify-end gap-2 py-4">
+                            ${actionButtons}
+                            <button onclick="deleteTenant('${t.loginId}')" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition" title="Delete Tenant">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            lucide.createIcons();
+        }
+
+        function filterTenants() {
+            loadTenants();
+        }
+
+        // --- Actions Logic ---
+
+        function moveOutTenant(loginId) {
+            if(!confirm("Are you sure you want to move out this tenant? This will block their login access.")) return;
+            
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const idx = tenants.findIndex(t => t.loginId === loginId);
+            
+            if(idx !== -1) {
+                tenants[idx].status = 'moved_out'; // Block Access
+                tenants[idx].moveOutDate = new Date().toISOString();
+                // Also block login capability
+                tenants[idx].password = null; // Or a flag like isBlocked = true
+                
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                loadTenants();
+                alert("Tenant moved out successfully.");
+            }
+        }
+
+        function deleteTenant(loginId) {
+            if(!confirm("Permanently delete this tenant record?")) return;
+             
+            let tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            tenants = tenants.filter(t => t.loginId !== loginId);
+            localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+            
+            loadTenants();
+        }
+
+        // --- Enhanced Modal Logic ---
+
+        function openVerifyModal(loginId) {
+            currentTenantId = loginId;
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const tenant = tenants.find(t => t.loginId === loginId);
+            currentTenantData = tenant;
+            
+            if(tenant) {
+                // Fill Applicant Details Sidebar
+                document.getElementById('detailName').innerText = tenant.name;
+                document.getElementById('detailPhone').innerText = tenant.phone;
+                document.getElementById('detailLoginId').innerText = tenant.loginId;
+                document.getElementById('detailAadhaar').innerText = (tenant.kyc && tenant.kyc.aadhar) ? tenant.kyc.aadhar : 'N/A';
+                document.getElementById('detailGuardian').innerText = tenant.emergencyContact || 'Not Provided';
+                document.getElementById('detailJoinDate').innerText = tenant.moveInDate ? new Date(tenant.moveInDate).toLocaleDateString() : '-';
+                document.getElementById('detailProperty').innerText = `${tenant.property} (Rm ${tenant.roomNo})`;
+
+                // Load Image
+                updateDocView('aadhaar_front');
+                
+                // Setup Actions
+                document.getElementById('approveBtn').onclick = () => processKYC(loginId, 'verified');
+                document.getElementById('rejectBtn').onclick = () => processKYC(loginId, 'rejected');
+
+                document.getElementById('kycModal').classList.remove('hidden');
+                document.getElementById('kycModal').classList.add('flex');
+            }
+        }
+
+        function switchDocTab(tabName) {
+            document.querySelectorAll('.doc-tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateDocView(tabName);
+        }
+
+        function updateDocView(tabName) {
+            const img = document.getElementById('docPreviewImg');
+            const placeholder = document.getElementById('noDocPlaceholder');
+            
+            let imgSrc = null;
+            if (tabName === 'aadhaar_front' && currentTenantData.kyc && currentTenantData.kyc.idProofFile) {
+                imgSrc = currentTenantData.kyc.idProofFile;
+            } 
+            // Add logic for other docs if implemented
+
+            if (imgSrc) {
+                img.src = imgSrc;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                placeholder.querySelector('span').innerText = `No document uploaded for ${tabName.replace('_', ' ')}`;
+            }
+        }
+
+        function closeKycModal() {
+            document.getElementById('kycModal').classList.add('hidden');
+            document.getElementById('kycModal').classList.remove('flex');
+            currentTenantId = null;
+        }
+
+        function processKYC(loginId, status) {
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const index = tenants.findIndex(t => t.loginId === loginId);
+            
+            if (index !== -1) {
+                tenants[index].kycStatus = status;
+                if(status === 'verified' && tenants[index].agreementSigned) {
+                    tenants[index].status = 'active';
+                }
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                alert(`Tenant KYC has been ${status.toUpperCase()}.`);
+                closeKycModal();
+                loadTenants();
+            }
+        }
+
+        function exportToExcel() {
+            alert("Exporting data...");
+        }
+
+    </script>
+</body>
+</html>

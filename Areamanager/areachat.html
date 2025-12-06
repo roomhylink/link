@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Manager Communication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; }
+        .sidebar-link { transition: all 0.2s; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: #1f2937; color: white; }
+        .active-tab { background-color: #f3e8ff; color: #7e22ce; border-color: #7e22ce; }
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen overflow-hidden flex">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+        <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="map" class="w-5 h-5 text-white"></i></div>
+                    <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">AREA ADMIN</span></div>
+                </div>
+        </div>
+        <nav class="flex-1 py-6 space-y-1">
+            <a href="areaadmin.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+            <a href="areaproperty.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+            <a href="visit.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Visit Reports</a>
+            <a href="areatenant.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+            <a href="areaowner.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Owners</a>
+            <a href="areachat.html" class="sidebar-link active flex items-center px-6 py-3 text-white bg-gray-800 border-l-4 border-purple-500"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
+            <a href="profile.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+            <a href="setting.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+        <!-- Chat Layout -->
+        <div class="flex flex-1 overflow-hidden">
+            
+            <!-- Left Panel: Chat List -->
+            <div class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-gray-50 h-full">
+                
+                <!-- Search & Header -->
+                <div class="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">Area Chats</h2>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="mgrSearch" placeholder="Search owners..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-transparent focus:bg-white focus:ring-2 focus:ring-purple-500 rounded-lg text-sm outline-none">
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="px-2 py-2 bg-white border-b border-gray-200 flex justify-between gap-1">
+                    <button class="flex-1 py-2 text-xs font-medium bg-purple-100 text-purple-700 rounded text-center border border-purple-200">Owners</button>
+                    <!-- Future: Tenants Tab -->
+                </div>
+
+                <!-- List -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar" id="mgrChatList">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+
+            <!-- Right Panel: Chat Window -->
+            <div class="hidden md:flex flex-1 flex-col h-full relative bg-[#f8fafc]">
+                
+                <!-- Chat Header -->
+                <div class="h-16 px-6 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0 shadow-sm z-10" id="mgrChatHeader">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500" id="headerAvatar">-</div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800" id="headerName">Select a chat</h2>
+                            <div class="text-xs text-gray-500" id="headerSub">Property Owner</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto p-6 chat-scroll flex flex-col gap-4 bg-slate-50" id="mgrMessages">
+                    <div class="text-center mt-20 text-gray-400">Select an owner from the left to start chatting.</div>
+                </div>
+
+                <!-- Input -->
+                <div class="p-4 bg-white border-t border-gray-200 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <input type="text" id="mgrInput" placeholder="Type a message..." class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-purple-500 outline-none">
+                        <button id="mgrSendBtn" class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
+        if (!user || user.role !== 'areamanager') {
+            // alert("Access Denied");
+            // window.location.href = '../index.html'; // Adjust redirect in real app
+        }
+
+        const managerId = user.loginId || 'MGR001'; 
+        const areaCode = user.areaCode || 'KO'; // Filter by area
+        let currentChatId = null;
+
+        const ownersDb = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+        const chatMessages = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOwnerList();
+        });
+
+        function loadOwnerList() {
+            const list = document.getElementById('mgrChatList');
+            const search = document.getElementById('mgrSearch').value.toLowerCase();
+            list.innerHTML = '';
+
+            // Filter owners by Area Code prefix (e.g. KO starts with KO)
+            const areaOwners = Object.keys(ownersDb).filter(id => id.startsWith(areaCode));
+
+            if (areaOwners.length === 0) {
+                list.innerHTML = `<div class="p-4 text-center text-sm text-gray-500">No owners found in ${areaCode}.</div>`;
+                return;
+            }
+
+            areaOwners.forEach(ownerId => {
+                const owner = ownersDb[ownerId].profile || { name: 'Unknown', loginId: ownerId };
+                if (!owner.name.toLowerCase().includes(search) && !ownerId.toLowerCase().includes(search)) return;
+
+                const lastMsg = getLastMessage(ownerId);
+
+                const item = document.createElement('div');
+                item.className = 'p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition flex items-center gap-3';
+                item.onclick = () => openChat(ownerId, owner.name);
+                
+                item.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">${owner.name.charAt(0)}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <h3 class="text-sm font-semibold text-slate-800 truncate">${owner.name}</h3>
+                            <span class="text-[10px] text-gray-400">${lastMsg.time}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 truncate">${lastMsg.text || 'Click to chat'}</p>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function getLastMessage(contactId) {
+            const thread = chatMessages.filter(m => 
+                (m.from === managerId && m.to === contactId) || 
+                (m.from === contactId && m.to === managerId)
+            );
+            if (thread.length === 0) return { text: '', time: '' };
+            const last = thread[thread.length - 1];
+            return {
+                text: last.message.substring(0, 20) + '...',
+                time: new Date(last.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+            };
+        }
+
+        function openChat(id, name) {
+            currentChatId = id;
+            document.getElementById('headerAvatar').innerText = name.charAt(0);
+            document.getElementById('headerName').innerText = name;
+            document.getElementById('headerSub').innerText = `Owner ID: ${id}`;
+            renderMessages();
+        }
+
+        function renderMessages() {
+            if(!currentChatId) return;
+            const container = document.getElementById('mgrMessages');
+            container.innerHTML = '';
+
+            const msgs = chatMessages.filter(m => 
+                (m.from === managerId && m.to === currentChatId) || 
+                (m.from === currentChatId && m.to === managerId)
+            );
+
+            if(msgs.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 mt-10">No history. Start chatting!</div>`;
+            }
+
+            msgs.forEach(msg => {
+                const isMe = msg.from === managerId;
+                const bubble = document.createElement('div');
+                bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+                bubble.innerHTML = `
+                    <div class="max-w-[70%] ${isMe ? 'bg-purple-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white border border-gray-200 rounded-r-xl rounded-tl-xl'} p-3 shadow-sm text-sm">
+                        <p>${msg.message}</p>
+                        <span class="text-[9px] block text-right mt-1 opacity-70">${new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                `;
+                container.appendChild(bubble);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        document.getElementById('mgrSendBtn').addEventListener('click', sendMessage);
+        document.getElementById('mgrInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage() });
+        document.getElementById('mgrSearch').addEventListener('input', loadOwnerList);
+
+        function sendMessage() {
+            if(!currentChatId) return;
+            const input = document.getElementById('mgrInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const newMsg = {
+                from: managerId,
+                to: currentChatId,
+                message: text,
+                timestamp: new Date().toISOString()
+            };
+
+            chatMessages.push(newMsg);
+            localStorage.setItem('roomhy_chat_messages', JSON.stringify(chatMessages));
+            input.value = '';
+            renderMessages();
+            loadOwnerList(); // Refresh preview
+        }
+
+    </script>
+</body>
+</html>

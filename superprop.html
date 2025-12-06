@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Admin Property Owners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background for the main content area */
+        }
+        .sidebar {
+            background-color: #111827; /* Dark gray for sidebar */
+        }
+        .sidebar-link {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #374151; /* Slightly lighter gray on hover/active */
+            color: #ffffff;
+        }
+        /* Dropdown transition */
+        .profile-dropdown {
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+        }
+         
+        /* Table styles - Excel Look */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse; /* Makes borders connect like Excel */
+        }
+        .styled-table th {
+            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider;
+            background-color: #f0fdfa; /* Light teal background */
+            border: 1px solid #e5e7eb; /* Gray border for all cells */
+        }
+        .styled-table td {
+             @apply px-6 py-5 whitespace-nowrap text-sm text-gray-800; /* Increased py-5 */
+             border: 1px solid #e5e7eb; /* Gray border for all cells */
+        }
+         .styled-table tbody tr:hover {
+            background-color: #f9fafb; /* Lightest gray on hover */
+        }
+        
+        .action-icon {
+             @apply p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition;
+        }
+        
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
+        .modal-body {
+             max-height: 70vh;
+             overflow-y: auto;
+        }
+
+        .status-badge {
+            @apply px-2.5 py-0.5 rounded-full text-xs font-medium inline-block;
+        }
+        .status-active {
+            @apply bg-green-100 text-green-800;
+        }
+        .status-inactive {
+            @apply bg-gray-100 text-gray-800;
+        }
+        
+    </style>
+</head>
+<body class="text-gray-900">
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 flex-shrink-0 text-gray-300 hidden md:flex flex-col">
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-700">
+                 <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+                <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Overview</div>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="user-check" class="w-5 h-5 mr-3"></i> Roles & Permissions
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Team Members
+                </a>
+                <a href="#" class="sidebar-link active flex items-center px-6 py-3 text-white">
+                    <i data-lucide="building" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="mail" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">RoomHy Location</div>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> City
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="map" class="w-5 h-5 mr-3"></i> Area
+                </a>
+                 <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Settings</div>
+                <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Initial Booking Amount
+                </a>
+                 <a href="#" class="sidebar-link flex items-center px-6 py-3">
+                    <i data-lucide="archive" class="w-5 h-5 mr-3"></i> Collections
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30">
+                <div class="flex items-center">
+                    <button id="mobile-menu-button" class="md:hidden mr-4 p-2 text-gray-600 hover:text-gray-900">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <!-- Breadcrumbs -->
+                     <nav class="text-sm font-medium hidden sm:flex items-center space-x-2">
+                        <a href="#" class="text-gray-500 hover:text-gray-700">Dashboard</a>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                        <span class="text-gray-800">Property Owner</span>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-500 hover:text-gray-800"><i data-lucide="bell" class="w-6 h-6"></i></button>
+                    <!-- Profile Dropdown -->
+                    <div class="relative">
+                        <button id="profile-button" class="block">
+                            <img src="https://i.pravatar.cc/150?u=admin" alt="Admin Avatar" class="w-10 h-10 rounded-full border-2 border-purple-300 hover:border-purple-500 transition">
+                        </button>
+                        <div id="profile-dropdown" class="profile-dropdown hidden absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-xl overflow-hidden origin-top-right transform scale-95 opacity-0">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <p class="text-sm font-semibold text-gray-800">Ajay Kumar</p>
+                                <p class="text-xs text-gray-500">ajay@gmail.com</p>
+                            </div>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4 mr-3 text-gray-500"></i> Profile
+                            </a>
+                            <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100">
+                                <i data-lucide="log-out" class="w-4 h-4 mr-3 text-gray-500"></i> Log out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+             <!-- Mobile Sidebar -->
+            <div id="mobile-menu" class="md:hidden fixed inset-0 z-50 flex hidden">
+                <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" id="mobile-menu-overlay"></div>
+                <aside class="sidebar w-64 flex-shrink-0 text-gray-300 flex flex-col relative z-10">
+                    <div class="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+                         <a href="#" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Roomhy Admin</a>
+                         <button id="close-mobile-menu" class="p-2 text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+                     <nav class="flex-1 overflow-y-auto py-4">
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Overview</div>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="user-check" class="w-5 h-5 mr-3"></i> Roles & Permissions</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Team Members</a>
+                        <a href="#" class="sidebar-link active flex items-center px-6 py-3 text-white"><i data-lucide="building" class="w-5 h-5 mr-3"></i> Property Owners</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Tenants</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="mail" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">RoomHy Location</div>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> City</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="map" class="w-5 h-5 mr-3"></i> Area</a>
+                        <div class="mt-4 px-6 text-xs font-semibold uppercase text-gray-500">Settings</div>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Initial Booking Amount</a>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3"><i data-lucide="archive" class="w-5 h-5 mr-3"></i> Collections</a>
+                    </nav>
+                </aside>
+            </div>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="mb-8 flex flex-col sm:flex-row justify-between items-center">
+                    <div>
+                         <h2 class="text-3xl font-bold text-gray-800">Property Owner</h2>
+                         <p class="text-gray-500 mt-1">You have total of 13 property owners</p>
+                    </div>
+                     <button id="add-owner-button" class="bg-green-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-green-600 flex items-center mt-4 sm:mt-0 shadow hover:shadow-md transition">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add New Owner
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="mb-6 bg-white p-4 rounded-xl shadow flex items-center">
+                     <div class="relative w-full max-w-sm">
+                        <input type="text" placeholder="Search by Name" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm w-full">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-700 ml-3">Search</button>
+                </div>
+                
+                <!-- Property Owners Table -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full styled-table excel-table"> <!-- Using excel-table class -->
+                            <thead class="bg-teal-50/50" style="background-color: #f0fdfa;"> <!-- Light teal background -->
+                                <tr>
+                                    <th>Property Owner Name</th>
+                                    <th>Contact</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-owner-id="1" data-name="Ajay Kumar" data-email="ajay@gmail.com" data-phone="8787878787" data-address="Kota" data-status="Active">
+                                    <td class="font-medium text-gray-900">Ajay Kumar</td>
+                                    <td>
+                                        <div>ajay@gmail.com</div>
+                                        <div class="text-xs text-gray-500">8787878787</div>
+                                    </td>
+                                    <td>Kota</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="action-icon open-edit-owner-modal" title="Edit Owner"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+                                    </td>
+                                </tr>
+                                 <tr data-owner-id="2" data-name="john wick" data-email="john@gmail.com" data-phone="8779127712" data-address="kota,rajasthan" data-status="Active">
+                                    <td class="font-medium text-gray-900">john wick</td>
+                                    <td>
+                                        <div>john@gmail.com</div>
+                                        <div class="text-xs text-gray-500">8779127712</div>
+                                    </td>
+                                    <td>kota,rajasthan</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="action-icon open-edit-owner-modal" title="Edit Owner"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+                                    </td>
+                                </tr>
+                                 <tr data-owner-id="3" data-name="Akshay Kumar" data-email="ak@gmail.com" data-phone="8778787878" data-address="kota" data-status="Active">
+                                    <td class="font-medium text-gray-900">Akshay Kumar</td>
+                                    <td>
+                                        <div>ak@gmail.com</div>
+                                        <div class="text-xs text-gray-500">8778787878</div>
+                                    </td>
+                                    <td>kota</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="action-icon open-edit-owner-modal" title="Edit Owner"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                 <!-- Pagination -->
+                 <div class="mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
+                    <div class="mb-4 md:mb-0">
+                        Showing 1 to 3 of 13 entries
+                    </div>
+                     <div class="flex items-center space-x-2">
+                         <span>Rows per page:</span>
+                        <select class="border border-gray-300 rounded px-2 py-1">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                         <span class="ml-4">Page 1 of 2</span>
+                         <div class="flex items-center space-x-1 ml-4">
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevrons-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-400 cursor-not-allowed rounded hover:bg-gray-200"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                            <button class="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-200"><i data-lucide="chevrons-right" class="w-5 h-5"></i></button>
+                         </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Owner Modal -->
+    <div id="owner-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 invisible">
+        <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-lg transform scale-95 opacity-0 max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 flex-shrink-0">
+                <h3 id="owner-modal-title" class="text-xl font-semibold text-gray-800">Add New Property Owner</h3>
+                <button class="close-modal-button text-gray-400 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <form id="owner-form" class="p-6 space-y-4 overflow-y-auto flex-grow modal-body">
+                <input type="hidden" id="edit-owner-id" name="edit-owner-id">
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                        <input type="text" id="owner-name" name="owner-name" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., Prakash Jain">
+                    </div>
+                    <div>
+                        <label for="owner-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                        <input type="tel" id="owner-phone" name="owner-phone" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., 9876500001">
+                    </div>
+                </div>
+                <div>
+                    <label for="owner-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                    <input type="email" id="owner-email" name="owner-email" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="e.g., prakash@gmail.com">
+                </div>
+                 <div>
+                    <label for="owner-role" class="block text-sm font-medium text-gray-700 mb-1">Role *</label>
+                    <input type="text" id="owner-role" name="owner-role" required class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100" value="Property Owner" readonly>
+                </div>
+                <div>
+                    <label for="owner-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="owner-password" name="owner-password" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm" placeholder="Leave blank to keep unchanged">
+                </div>
+            </form>
+            <!-- Modal Footer -->
+            <div class="flex justify-end p-5 border-t border-gray-200 bg-gray-50 rounded-b-xl space-x-3 flex-shrink-0">
+                <button class="cancel-modal-button px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                 <button type="submit" form="owner-form" id="save-owner-button" class="px-5 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition">Add Owner</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        lucide.createIcons();
+        
+        // --- Reusable Modal Logic ---
+        const openModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            const modalContent = modal.querySelector('.modal-content');
+            modal.classList.remove('hidden', 'invisible');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        const closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden', 'invisible');
+                const form = modal.querySelector('form');
+                if (form) form.reset();
+                 if (modalId === 'owner-modal') {
+                    document.getElementById('owner-modal-title').textContent = 'Add New Property Owner';
+                    document.getElementById('save-owner-button').textContent = 'Add Owner';
+                    document.getElementById('edit-owner-id').value = '';
+                    document.getElementById('owner-password').placeholder = "Set a password";
+                 }
+            }, 300);
+        };
+
+        // --- Add Event Listeners for Modal Buttons ---
+        document.querySelectorAll('.close-modal-button, .cancel-modal-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                if (modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        // Close modal when clicking overlay
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        const closeMobileMenuButton = document.getElementById('close-mobile-menu');
+
+        const openMobileMenu = () => mobileMenu.classList.remove('hidden');
+        const closeMobileMenu = () => mobileMenu.classList.add('hidden');
+
+        mobileMenuButton.addEventListener('click', openMobileMenu);
+        closeMobileMenuButton.addEventListener('click', closeMobileMenu);
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMobileMenu));
+
+        // --- Profile Dropdown Toggle ---
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        profileButton.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            const isHidden = profileDropdown.classList.contains('hidden');
+            if(isHidden) {
+                profileDropdown.classList.remove('hidden', 'scale-95', 'opacity-0');
+                profileDropdown.classList.add('scale-100', 'opacity-100');
+            } else {
+                 profileDropdown.classList.add('scale-95', 'opacity-0');
+                 setTimeout(() => profileDropdown.classList.add('hidden'), 200); 
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (profileButton && !profileButton.contains(event.target) && profileDropdown && !profileDropdown.contains(event.target)) {
+                 if(!profileDropdown.classList.contains('hidden')) {
+                     profileDropdown.classList.add('scale-95', 'opacity-0');
+                     setTimeout(() => profileDropdown.classList.add('hidden'), 200);
+                 }
+            }
+        });
+        
+        
+        // --- Add Owner Modal ---
+        document.getElementById('add-owner-button').addEventListener('click', () => {
+             document.getElementById('owner-modal-title').textContent = 'Add New Property Owner';
+             document.getElementById('save-owner-button').textContent = 'Add Owner';
+             document.getElementById('edit-owner-id').value = '';
+             document.getElementById('owner-form').reset();
+             document.getElementById('owner-password').placeholder = "Set a password";
+             openModal('owner-modal');
+        });
+
+        // --- Edit Owner Modal ---
+        document.querySelectorAll('.open-edit-owner-modal').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const row = event.target.closest('tr');
+                const ownerId = row.dataset.ownerId;
+                const name = row.dataset.name;
+                const email = row.dataset.email;
+                const phone = row.dataset.phone;
+                const role = row.dataset.role;
+
+                // Populate the modal
+                document.getElementById('owner-modal-title').textContent = `Edit Owner: ${name}`;
+                document.getElementById('save-owner-button').textContent = 'Save Changes';
+                document.getElementById('edit-owner-id').value = ownerId;
+                document.getElementById('owner-name').value = name;
+                document.getElementById('owner-email').value = email;
+                document.getElementById('owner-phone').value = phone;
+                document.getElementById('owner-role').value = role;
+                document.getElementById('owner-password').placeholder = "Leave blank to keep unchanged";
+                
+                openModal('owner-modal');
+            });
+        });
+
+    </script>
+</body>
+</html>
+

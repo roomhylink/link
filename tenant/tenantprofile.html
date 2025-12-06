@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Tenant Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="text-slate-800">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+            <div class="flex items-center gap-2">
+                <div class="bg-purple-600 text-white p-1.5 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
+                <h1 class="text-xl font-bold text-slate-800">Roomhy Tenant Onboarding</h1>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-3xl mx-auto">
+                
+                <!-- Stepper -->
+                <div class="flex items-center justify-center mb-8">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold mb-1">1</div>
+                        <span class="text-xs font-bold text-purple-600">Profile</span>
+                    </div>
+                    <div class="w-20 h-1 bg-gray-200 mx-2 rounded"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold mb-1">2</div>
+                        <span class="text-xs font-medium text-gray-400">KYC</span>
+                    </div>
+                    <div class="w-20 h-1 bg-gray-200 mx-2 rounded"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold mb-1">3</div>
+                        <span class="text-xs font-medium text-gray-400">Agreement</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Personal Information</h2>
+                    
+                    <form onsubmit="event.preventDefault(); saveProfile();" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input type="text" id="full-name" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="text" id="phone" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-500" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
+                                <input type="date" id="dob" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact <span class="text-red-500">*</span></label>
+                                <input type="tel" id="emergency" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Parent/Guardian Phone" required>
+                            </div>
+                             <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Permanent Address <span class="text-red-500">*</span></label>
+                                <textarea id="address" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter your full permanent address" required></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-4">
+                            <button type="submit" class="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors flex items-center shadow-lg">
+                                Save & Proceed to KYC <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const user = JSON.parse(localStorage.getItem('tenant_user') || localStorage.getItem('user') || 'null');
+        if (!user || user.role !== 'tenant') {
+            try { window.location.href = 'tenantlogin.html'; } catch(e) {}
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if(!user) return;
+            document.getElementById('full-name').value = user.name || '';
+            document.getElementById('phone').value = user.phone || '';
+            
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const me = tenants.find(t => t.loginId === user.loginId);
+            
+            if(me) {
+                if(me.dob) document.getElementById('dob').value = me.dob;
+                if(me.emergencyContact) document.getElementById('emergency').value = me.emergencyContact;
+                if(me.address) document.getElementById('address').value = me.address;
+            }
+        });
+
+        function saveProfile() {
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const idx = tenants.findIndex(t => t.loginId === user.loginId);
+            
+            if(idx > -1) {
+                tenants[idx].dob = document.getElementById('dob').value;
+                tenants[idx].emergencyContact = document.getElementById('emergency').value;
+                tenants[idx].address = document.getElementById('address').value;
+                tenants[idx].profileFilled = true; // MARK COMPLETE
+                
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                window.location.href = 'tenantkyc.html';
+            }
+        }
+    </script>
+</body>
+</html>

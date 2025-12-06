@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Tenant KYC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .file-upload-box { border: 2px dashed #d1d5db; transition: border-color 0.3s; }
+        .file-upload-box:hover { border-color: #9333ea; background-color: #f3e8ff; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+            <div class="flex items-center gap-2">
+                <div class="bg-purple-600 text-white p-1.5 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
+                <h1 class="text-xl font-bold text-slate-800">Roomhy Tenant Onboarding</h1>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-3xl mx-auto">
+                
+                <!-- Stepper -->
+                <div class="flex items-center justify-center mb-8">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold mb-1"><i data-lucide="check" class="w-5 h-5"></i></div>
+                        <span class="text-xs font-medium text-green-600">Profile</span>
+                    </div>
+                    <div class="w-20 h-1 bg-green-500 mx-2 rounded"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold mb-1">2</div>
+                        <span class="text-xs font-bold text-purple-600">KYC</span>
+                    </div>
+                    <div class="w-20 h-1 bg-gray-200 mx-2 rounded"></div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full border-2 border-gray-300 text-gray-400 flex items-center justify-center font-bold mb-1">3</div>
+                        <span class="text-xs font-medium text-gray-400">Agreement</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Identity Verification</h2>
+                    
+                    <form onsubmit="event.preventDefault(); submitKYC();" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Aadhar Number <span class="text-red-500">*</span></label>
+                            <input type="text" id="aadhar" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none tracking-widest" placeholder="0000 0000 0000" maxlength="14" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload ID Proof <span class="text-red-500">*</span></label>
+                            <label class="file-upload-box block p-8 text-center cursor-pointer rounded-xl bg-gray-50">
+                                <input type="file" class="hidden" id="id-proof" accept=".pdf,.jpg,.png" required>
+                                <div id="upload-content">
+                                    <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto text-purple-500 mb-3"></i>
+                                    <span class="text-purple-600 font-semibold text-sm">Click to upload Aadhar / PAN</span>
+                                </div>
+                                <div id="file-preview" class="hidden text-green-600 font-medium text-sm"></div>
+                            </label>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center shadow-lg">
+                                Submit & View Agreement <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let base64Image = "";
+        const user = JSON.parse(localStorage.getItem('tenant_user') || localStorage.getItem('user') || 'null');
+        if (!user || user.role !== 'tenant') try { window.location.href = 'tenantlogin.html'; } catch(e) {}
+
+        document.getElementById('aadhar').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '').substring(0, 12);
+            let formattedValue = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) formattedValue += ' ';
+                formattedValue += value[i];
+            }
+            e.target.value = formattedValue;
+        });
+
+        document.getElementById('id-proof').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file) {
+                document.getElementById('upload-content').classList.add('hidden');
+                document.getElementById('file-preview').classList.remove('hidden');
+                document.getElementById('file-preview').innerText = `Selected: ${file.name}`;
+                const reader = new FileReader();
+                reader.onload = function(evt) { base64Image = evt.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function submitKYC() {
+            const aadhar = document.getElementById('aadhar').value.replace(/\s/g, '');
+            if(aadhar.length !== 12) return alert("Invalid Aadhar Number");
+            if(!base64Image) return alert("Please upload document");
+
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const idx = tenants.findIndex(t => t.loginId === user.loginId);
+            
+            if(idx > -1) {
+                tenants[idx].kyc = { aadhar, idProofFile: base64Image, uploadedAt: new Date().toISOString() };
+                tenants[idx].kycStatus = 'submitted'; // MARK SUBMITTED
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                window.location.href = 'tenantagreement.html';
+            }
+        }
+    </script>
+</body>
+</html>

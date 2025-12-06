@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Owner Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fc; color: #1F2937; }
+        .light-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="light-card w-full max-w-md p-8 text-center relative overflow-hidden">
+        <div class="text-3xl font-bold text-blue-600 mb-2">Roomhy</div>
+        
+        <!-- DYNAMIC TEST CREDENTIALS BOX -->
+        <div id="test-creds-box" class="hidden bg-yellow-50 border border-yellow-200 rounded p-3 mb-6 text-xs text-yellow-800 text-left shadow-sm">
+            <p class="font-bold flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Use Latest Credentials:</p>
+            <div class="mt-2 grid grid-cols-2 gap-2 font-mono bg-white p-2 rounded border border-yellow-100">
+                <div>
+                    <span class="text-gray-400 text-[10px] block uppercase">Login ID</span>
+                    <span id="hint-id" class="font-bold text-blue-600 select-all">---</span>
+                </div>
+                <div>
+                    <span class="text-gray-400 text-[10px] block uppercase">Password</span>
+                    <span id="hint-pass" class="font-bold text-green-600 select-all">---</span>
+                </div>
+            </div>
+            <button onclick="fillCreds()" class="mt-2 w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-[10px] font-bold py-1 rounded transition-colors">
+                Tap to Autofill
+            </button>
+        </div>
+
+        <!-- STEP 1: Initial Login -->
+        <div id="step-1" class="fade-in">
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Portal Login</h1>
+            <p class="text-gray-500 mb-6">Enter your Owner ID generated from Enquiry.</p>
+
+            <form onsubmit="event.preventDefault(); verifyCredentials();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 text-left mb-2">Login ID</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="user" class="w-5 h-5"></i></span>
+                        <input type="text" id="login-id" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 transition-colors" placeholder="e.g. ROOMHY001" required>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 text-left mb-2">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="key" class="w-5 h-5"></i></span>
+                        <input type="password" id="password" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 transition-colors" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors flex justify-center items-center gap-2">
+                    Login <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+        
+        <!-- STEP 2: Set Password (Only for Owners on first login with temp pass) -->
+        <div id="step-2" class="hidden fade-in">
+            <div class="flex justify-center mb-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="lock" class="w-8 h-8 text-green-600"></i></div></div>
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Set New Password</h1>
+            <p class="text-gray-500 mb-6">This is your first login. Please set a new password.</p>
+
+            <form onsubmit="event.preventDefault(); finalizeOwnerLogin();">
+                <div class="mb-4 text-left">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">New Password</label>
+                    <input type="password" id="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" placeholder="Min 6 chars" required>
+                </div>
+                <div class="mb-6 text-left">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition" placeholder="Confirm Password" required>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors flex justify-center items-center gap-2">
+                    Update & Continue <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentUserPayload = null;
+
+        // --- 1. LOAD TEST CREDENTIALS FROM ENQUIRY/DB ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+            
+            // Find the MOST RECENT approved visit with generated credentials
+            const recent = visits
+                .filter(v => v.status === 'approved' && v.generatedCredentials)
+                .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
+
+            if (recent) {
+                document.getElementById('hint-id').innerText = recent.generatedCredentials.loginId;
+                document.getElementById('hint-pass').innerText = recent.generatedCredentials.tempPassword;
+                document.getElementById('test-creds-box').classList.remove('hidden');
+            } else {
+                // Fallback: Seed a test user if nothing exists (for pure testing)
+                seedTestUser();
+            }
+        });
+
+        function seedTestUser() {
+             // If no real enquiry data exists, show the static test user
+             document.getElementById('hint-id').innerText = 'TEST01';
+             document.getElementById('hint-pass').innerText = 'temp123';
+             document.getElementById('test-creds-box').classList.remove('hidden');
+
+             // Ensure TEST01 exists in DB so it works
+             const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+             if (!db['TEST01']) {
+                 db['TEST01'] = {
+                     profile: { name: 'Test Owner', email: 'test@roomhy.com' },
+                     credentials: { password: 'temp123', firstTime: true },
+                     kyc: { status: 'pending' }
+                 };
+                 localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+             }
+        }
+
+        function fillCreds() {
+            document.getElementById('login-id').value = document.getElementById('hint-id').innerText;
+            document.getElementById('password').value = document.getElementById('hint-pass').innerText;
+        }
+
+        async function verifyCredentials() {
+            const loginId = document.getElementById('login-id').value.trim().toUpperCase();
+            const password = document.getElementById('password').value.trim();
+
+            console.log("Login attempt:", { loginId, password });
+
+            // 1. MANAGER LOGIN
+            if (loginId.startsWith("MGR")) {
+                const managers = JSON.parse(localStorage.getItem('roomhy_areamanagers_db') || '[]');
+                const manager = managers.find(m => m.loginId === loginId && m.password === password);
+                if (manager) {
+                    localStorage.setItem('manager_user', JSON.stringify(manager));
+                    window.location.href = '../Areamanager/areaadmin.html'; 
+                    return;
+                }
+            }
+
+            // 2. OWNER LOGIN CHECK
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+
+            // PRIORITY 1: Check Visits (For newly approved enquiries via Enquiry.html)
+            const visitMatch = visits.find(v => 
+                v.status === 'approved' &&
+                v.generatedCredentials && 
+                v.generatedCredentials.loginId === loginId && 
+                v.generatedCredentials.tempPassword === password
+            );
+
+            if (visitMatch) {
+                console.log("✅ Match found in Visits DB (First Time Login)");
+                currentUserPayload = {
+                    loginId: loginId,
+                    ownerId: loginId,
+                    name: visitMatch.propertyInfo.ownerName,
+                    phone: visitMatch.propertyInfo.contactPhone,
+                    address: visitMatch.propertyInfo.address,
+                    locationCode: visitMatch.propertyInfo.locationCode,
+                    role: 'owner'
+                };
+                
+                // Ensure entry exists in Owners DB for future use
+                if(!db[loginId]) {
+                     db[loginId] = {
+                        profile: currentUserPayload,
+                        credentials: { password: password, firstTime: true },
+                        kyc: { status: 'pending' }
+                    };
+                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                }
+
+                showSetPasswordScreen();
+                return;
+            }
+
+            // PRIORITY 2: Check Main Owner DB
+            if (db[loginId] && db[loginId].credentials) {
+                const storedPass = db[loginId].credentials.password;
+                const isFirstTime = db[loginId].credentials.firstTime;
+
+                if (storedPass === password) {
+                    if (isFirstTime) {
+                        // First time login from DB record
+                        currentUserPayload = { loginId: loginId, ...db[loginId].profile, role: 'owner' };
+                        showSetPasswordScreen();
+                    } else {
+                        // Normal Login (Password already set)
+                        proceedToDashboard(loginId, db[loginId]);
+                    }
+                    return;
+                }
+            }
+
+            alert("Invalid Credentials! Please check the ID and Password.");
+        }
+
+        function showSetPasswordScreen() {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            document.getElementById('test-creds-box').classList.add('hidden'); // Hide hint box
+        }
+
+        function proceedToDashboard(loginId, ownerData) {
+            const user = { loginId: loginId, ownerId: loginId, ...ownerData.profile, role: 'owner' };
+            
+            // Set Session
+            localStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('owner_session', JSON.stringify(user));
+
+            // Check Onboarding Status
+            const hasProfile = ownerData.profileFilled;
+            const kycStatus = ownerData.kyc ? ownerData.kyc.status : 'pending';
+
+            if (!hasProfile) {
+                window.location.href = 'ownerprofile.html';
+            } else if (kycStatus === 'pending') {
+                window.location.href = 'ownerkyc.html';
+            } else {
+                window.location.href = 'admin.html';
+            }
+        }
+
+        // Finalize: Set Password -> Go to Profile
+        function finalizeOwnerLogin() {
+            const newPass = document.getElementById('new-password').value.trim();
+            const confirm = document.getElementById('confirm-password').value.trim();
+
+            if (newPass.length < 6) {
+                alert("Password must be at least 6 characters.");
+                return;
+            }
+            if (newPass !== confirm) {
+                alert("Passwords do not match");
+                return;
+            }
+
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const loginId = currentUserPayload.loginId;
+            
+            // Update DB
+            if (!db[loginId]) db[loginId] = { profile: currentUserPayload, credentials: {}, kyc: { status: 'pending' } };
+            
+            db[loginId].credentials.password = newPass;
+            db[loginId].credentials.firstTime = false;
+            db[loginId].passwordSet = true;
+            
+            localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+            // Set Session & Redirect
+            const user = { loginId: loginId, ownerId: loginId, ...currentUserPayload, role: 'owner' };
+            localStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('owner_session', JSON.stringify(user));
+
+            alert("🎉 Password Set Successfully! Proceeding to Profile Setup...");
+            window.location.href = 'ownerprofile.html';
+        }
+    </script>
+</body>
+</html>

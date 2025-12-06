@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Tenant Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-dark': '#0f172a',     // Sidebar bg
+                        'brand-blue': '#2563eb',     // Rent card bg
+                        'brand-purple': '#9333ea',   // Accents
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Sidebar Styles */
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 24px;
+            color: #94a3b8; /* Slate-400 */
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            text-decoration: none; /* For a tags */
+        }
+        .sidebar-item:hover {
+            background-color: #1e293b; /* Slate-800 */
+            color: #f8fafc;
+        }
+        .sidebar-item.active {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-left-color: #9333ea; /* Purple border */
+        }
+        .sidebar-item i { margin-right: 12px; width: 18px; height: 18px; }
+
+        .sidebar-section-title {
+            padding: 16px 24px 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b; /* Slate-500 */
+            font-weight: 700;
+        }
+
+        /* Card Styles */
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .rent-banner {
+            background-color: #2563eb; /* Bright Blue */
+            background-image: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        /* Custom Scrollbar for Sidebar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
+        
+        /* Modal */
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Static Sidebar (Dark Theme) -->
+        <aside class="w-64 bg-brand-dark flex-shrink-0 hidden md:flex flex-col transition-all duration-300">
+            <!-- Logo Area -->
+            <div class="h-20 flex items-center px-6 border-b border-slate-800">
+                <div class="bg-purple-600 p-2 rounded-lg mr-3">
+                    <i data-lucide="home" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight">RoomHy</h1>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-wider">TENANT PORTAL</p>
+                </div>
+            </div>
+
+            <!-- Navigation with New Content -->
+            <nav class="flex-1 py-2 overflow-y-auto custom-scrollbar">
+                
+                <a href="tenantdashboard.html" class="sidebar-item active">
+                    Dashboard
+                </a>
+
+                <div class="sidebar-section-title">Account & Actions</div>
+                <button onclick="openModal('payRentModal')" class="sidebar-item">
+                    Make Payment
+                </button>
+                <button onclick="manageRentReminder()" class="sidebar-item">
+                    Manage Rent Reminders
+                </button>
+                <a href="tenantchat.html" class="sidebar-item">
+                    Live Chat with Owner
+                </a>
+
+                <div class="sidebar-section-title">Information Hub</div>
+                <a href="tenantcomplints.html" class="sidebar-item">
+                    View My Requests/Complaints
+                </a>
+                <button onclick="scrollToTab('documents')" class="sidebar-item">
+                    Documents & Bills
+                </button>
+                <button onclick="scrollToTab('activity')" class="sidebar-item">
+                    Activity Timeline
+                </button>
+
+                <div class="sidebar-section-title">Support</div>
+                <!-- No Icon here as requested -->
+                <button onclick="viewEmergency()" class="sidebar-item text-red-400 hover:text-red-300">
+                    Emergency Contacts
+                </button>
+
+            </nav>
+
+            <!-- Logout (Fixed Link) -->
+            <div class="p-4 border-t border-slate-800">
+                <a href="tenantlogin.html" onclick="clearSession()" class="flex items-center text-slate-400 hover:text-white w-full px-4 py-2 text-sm font-medium transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+            
+            <!-- Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 border-b border-slate-200 flex-shrink-0">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <h2 class="text-lg font-bold text-slate-800">Dashboard</h2>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+                    <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm cursor-pointer" id="headerAvatar">
+                        T
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Canvas -->
+            <main class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50">
+                <div class="max-w-5xl mx-auto space-y-8">
+
+                    <!-- Greeting -->
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900 flex items-center">
+                            Hi, <span id="welcome-name" class="mx-2">Tenant</span> <span class="text-3xl">👋</span>
+                        </h1>
+                    </div>
+
+                    <!-- Rent Card (Blue) -->
+                    <div class="rent-banner p-8 shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl"></div>
+                        <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-black opacity-5 rounded-full blur-2xl"></div>
+
+                        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div>
+                                <div class="flex items-center gap-2 text-blue-100 mb-2">
+                                    <i data-lucide="receipt" class="w-5 h-5"></i>
+                                    <span class="font-medium">Rent Due - Current Month</span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <h2 class="text-5xl font-bold text-white" id="rent-amount">₹ --</h2>
+                                </div>
+                                <div class="flex items-center gap-3 mt-4 text-sm">
+                                    <span class="text-blue-100">Due by: 5th of Month</span>
+                                    <span class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
+                                        <i data-lucide="bell" class="w-3 h-3 mr-1.5"></i> Unpaid
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <button onclick="openModal('payRentModal')" class="bg-white text-brand-blue hover:bg-blue-50 px-8 py-3.5 rounded-lg font-bold shadow-md transition-transform hover:scale-105 flex items-center">
+                                Pay Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Stay Card -->
+                    <div class="dashboard-card p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <i data-lucide="home" class="w-5 h-5 text-brand-blue"></i> Your Current Stay
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-y-6 gap-x-12">
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="map-pin" class="w-5 h-5 text-red-500"></i></div>
+                                <div>
+                                    <p class="text-sm text-slate-500 font-medium">Property</p>
+                                    <p class="text-base font-semibold text-slate-800" id="prop-name">Loading...</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="bed-double" class="w-5 h-5 text-brand-blue"></i></div>
+                                <div>
+                                    <p class="text-sm text-slate-500 font-medium">Room/Bed</p>
+                                    <p class="text-base font-semibold text-slate-800" id="room-info">Loading...</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="user-check" class="w-5 h-5 text-green-500"></i></div>
+                                <div>
+                                    <p class="text-sm text-slate-500 font-medium">Login ID</p>
+                                    <p class="text-base font-semibold text-slate-800 font-mono" id="login-id">--</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1"><i data-lucide="calendar" class="w-5 h-5 text-orange-500"></i></div>
+                                <div>
+                                    <p class="text-sm text-slate-500 font-medium">Move-in</p>
+                                    <p class="text-base font-semibold text-slate-800" id="move-in-date">--</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100">
+                            <a href="#" class="text-brand-blue text-sm font-medium hover:underline flex items-center">
+                                View All Details & Rules <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Access Tools -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <a href="tenantcomplaints.html" class="dashboard-card p-4 flex flex-col items-center justify-center hover:border-brand-blue transition-colors cursor-pointer group">
+                            <div class="bg-red-50 p-3 rounded-full mb-3 group-hover:bg-red-100 transition-colors">
+                                <i data-lucide="flag" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">Lodge Complaint</span>
+                        </a>
+                        <a href="tenantchat.html" class="dashboard-card p-4 flex flex-col items-center justify-center hover:border-brand-blue transition-colors cursor-pointer group">
+                             <div class="bg-blue-50 p-3 rounded-full mb-3 group-hover:bg-blue-100 transition-colors">
+                                <i data-lucide="message-circle" class="w-6 h-6 text-brand-blue"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">Chat Owner</span>
+                        </a>
+                        <button onclick="scrollToTab('documents')" class="dashboard-card p-4 flex flex-col items-center justify-center hover:border-brand-blue transition-colors cursor-pointer group">
+                             <div class="bg-purple-50 p-3 rounded-full mb-3 group-hover:bg-purple-100 transition-colors">
+                                <i data-lucide="file-text" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">My Docs</span>
+                        </button>
+                         <button onclick="viewEmergency()" class="dashboard-card p-4 flex flex-col items-center justify-center hover:border-brand-blue transition-colors cursor-pointer group">
+                             <div class="bg-green-50 p-3 rounded-full mb-3 group-hover:bg-green-100 transition-colors">
+                                <i data-lucide="phone-call" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">Emergency</span>
+                        </button>
+                    </div>
+
+                    <!-- Information Hub Content (Hidden Sections for Scroll) -->
+                     <div id="documents" class="dashboard-card p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                             <i data-lucide="folder-open" class="w-5 h-5 text-purple-600"></i> Documents & Bills
+                        </h3>
+                         <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-purple-200 transition">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-purple-100 p-2 rounded text-purple-600"><i data-lucide="file-text" class="w-4 h-4"></i></div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">Rental Agreement</p>
+                                        <p class="text-xs text-slate-500">Signed on Oct 01, 2025</p>
+                                    </div>
+                                </div>
+                                <button class="text-purple-600 hover:text-purple-800"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            </div>
+                             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-green-200 transition">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-green-100 p-2 rounded text-green-600"><i data-lucide="receipt" class="w-4 h-4"></i></div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">Oct 2025 Rent Receipt</p>
+                                        <p class="text-xs text-slate-500">Paid via UPI</p>
+                                    </div>
+                                </div>
+                                <button class="text-green-600 hover:text-green-800"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="activity" class="dashboard-card p-6">
+                         <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                             <i data-lucide="activity" class="w-5 h-5 text-blue-600"></i> Activity Timeline
+                        </h3>
+                         <div class="relative border-l-2 border-slate-100 ml-3 space-y-6 pl-6 py-2">
+                            <div class="relative">
+                                <div class="absolute -left-[29px] top-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white ring-2 ring-green-100"></div>
+                                <p class="text-sm font-semibold text-slate-800">Rent Paid Successfully</p>
+                                <p class="text-xs text-slate-500 mt-0.5">Oct 2025 • ₹ 8,500</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-brand-dark z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+            <div class="h-20 flex items-center px-6 border-b border-slate-800">
+                <h1 class="text-xl font-bold text-white">RoomHy</h1>
+                <button onclick="toggleMobileMenu()" class="ml-auto text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <!-- Mobile Navigation Items -->
+                <a href="tenantdashboard.html" class="sidebar-item active text-white">Dashboard</a>
+                
+                <div class="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Account</div>
+                <button onclick="openModal('payRentModal'); toggleMobileMenu()" class="sidebar-item text-slate-300">Make Payment</button>
+                <button onclick="manageRentReminder(); toggleMobileMenu()" class="sidebar-item text-slate-300">Manage Reminders</button>
+                <a href="tenantchat.html" class="sidebar-item text-slate-300">Live Chat</a>
+                
+                <div class="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Info</div>
+                <a href="tenantcomplaints.html" class="sidebar-item text-slate-300">View Requests</a>
+                <button onclick="scrollToTab('documents'); toggleMobileMenu()" class="sidebar-item text-slate-300">Documents</button>
+                
+                <div class="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">Support</div>
+                <button onclick="viewEmergency(); toggleMobileMenu()" class="sidebar-item text-red-400">Emergency Contacts</button>
+                
+                <div class="mt-4 border-t border-slate-800 pt-4">
+                     <a href="tenantlogin.html" onclick="clearSession()" class="sidebar-item text-slate-400">Logout</a>
+                </div>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payRentModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center backdrop-blur-sm" onclick="closeModal('payRentModal')">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">Make Payment</h3>
+                <button onclick="closeModal('payRentModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="text-center mb-8">
+                <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold">Total Payable</p>
+                <p class="text-4xl font-bold text-brand-blue mt-2" id="modal-amount">₹ 0</p>
+            </div>
+
+            <div class="space-y-3">
+                <button class="w-full p-4 border border-slate-200 rounded-xl flex items-center hover:border-brand-blue hover:bg-blue-50 transition group">
+                    <i data-lucide="smartphone" class="w-5 h-5 mr-4 text-brand-purple"></i>
+                    <span class="font-semibold text-slate-700">UPI / QR Code</span>
+                </button>
+                <button class="w-full p-4 border border-slate-200 rounded-xl flex items-center hover:border-brand-blue hover:bg-blue-50 transition group">
+                    <i data-lucide="credit-card" class="w-5 h-5 mr-4 text-brand-blue"></i>
+                    <span class="font-semibold text-slate-700">Credit / Debit Card</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Session Modal -->
+    <div id="sessionModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="lock" class="w-6 h-6 text-red-600"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Session Expired</h3>
+            <p class="text-sm text-slate-500 mb-6">Please login again to access your dashboard.</p>
+            <a href="tenantlogin.html" class="block w-full bg-brand-blue text-white font-bold py-2 rounded-lg hover:bg-blue-700">Go to Login</a>
+        </div>
+    </div>
+
+    <!-- Generic Modal -->
+    <div id="genericModal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center backdrop-blur-sm" onclick="closeModal('genericModal')">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="genericModalTitle" class="text-lg font-bold text-slate-900">Title</h3>
+                <button onclick="closeModal('genericModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="genericModalBody"></div>
+            <div id="genericModalFooter" class="mt-4 pt-4 border-t border-slate-100 text-right"></div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Auth & Data Loading ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('tenant_user') || localStorage.getItem('user') || 'null');
+            if (!user || user.role !== 'tenant') {
+                // Show Session Modal instead of redirecting immediately (fixes URL error in some envs)
+                document.getElementById('sessionModal').classList.remove('hidden');
+                document.getElementById('sessionModal').classList.add('flex');
+                return;
+            }
+
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const tenantRecord = tenants.find(t => t.loginId === user.loginId);
+
+            // Populate UI
+            document.getElementById('welcome-name').innerText = user.name.split(' ')[0];
+            document.getElementById('headerAvatar').innerText = user.name.charAt(0).toUpperCase();
+
+            if (tenantRecord) {
+                const rent = tenantRecord.agreedRent || 0;
+                const propName = tenantRecord.property || 'Roomhy Property';
+                const roomInfo = `Room ${tenantRecord.roomNo || '-'} (${tenantRecord.bedNo || '-'})`;
+                
+                document.getElementById('rent-amount').innerText = `₹ ${rent.toLocaleString()}`;
+                document.getElementById('modal-amount').innerText = `₹ ${rent.toLocaleString()}`;
+                
+                document.getElementById('prop-name').innerText = propName;
+                document.getElementById('room-info').innerText = roomInfo;
+                document.getElementById('login-id').innerText = tenantRecord.loginId;
+                document.getElementById('move-in-date').innerText = tenantRecord.moveInDate ? new Date(tenantRecord.moveInDate).toLocaleDateString('en-IN') : '-';
+            }
+        });
+
+        // --- Mobile Menu ---
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+
+        // --- Modal Logic ---
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        // --- Feature Functions ---
+        function manageRentReminder() {
+            const body = `
+                <p class="text-sm text-slate-600 mb-4">You receive automatic reminders 3 days before the 1st of every month.</p>
+                <div class="p-3 bg-blue-50 rounded-lg flex justify-between items-center mb-4 border border-blue-100">
+                    <p class="font-medium text-sm text-blue-800">Status</p>
+                    <span class="font-bold text-green-600 text-sm bg-white px-2 rounded">ACTIVE</span>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-sm font-medium mb-1 text-slate-700">Remind me before:</label>
+                    <select class="w-full p-2 border rounded-lg text-sm bg-white">
+                        <option value="3" selected>3 Days</option>
+                        <option value="5">5 Days</option>
+                        <option value="7">7 Days</option>
+                    </select>
+                </div>
+            `;
+            const footer = '<button class="bg-brand-blue text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-blue-700" onclick="closeModal(\'genericModal\')">Save Settings</button>';
+            
+            document.getElementById('genericModalTitle').innerText = "Manage Rent Reminders";
+            document.getElementById('genericModalBody').innerHTML = body;
+            document.getElementById('genericModalFooter').innerHTML = footer;
+            openModal('genericModal');
+        }
+
+        function viewEmergency() {
+             const body = `
+                <div class="space-y-3">
+                    <div class="p-3 bg-red-50 rounded-lg border border-red-100">
+                        <p class="font-bold text-red-700 text-sm">Property Manager</p>
+                        <p class="text-lg font-bold text-red-900 mt-1">+91 98765 43210</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p class="font-medium text-slate-700 text-sm">Local Police</p>
+                        <p class="text-lg font-bold text-slate-900 mt-1">100</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p class="font-medium text-slate-700 text-sm">Ambulance</p>
+                        <p class="text-lg font-bold text-slate-900 mt-1">108</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('genericModalTitle').innerText = "Emergency Contacts";
+            document.getElementById('genericModalBody').innerHTML = body;
+            document.getElementById('genericModalFooter').innerHTML = '<button class="text-slate-500 text-sm hover:underline" onclick="closeModal(\'genericModal\')">Close</button>';
+            openModal('genericModal');
+        }
+
+        function scrollToTab(tabName) {
+            // Scroll to corresponding section
+            const element = document.getElementById(tabName);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        function clearSession() {
+            // Clear both tenant and generic user sessions for safety
+            try {
+                localStorage.removeItem('tenant_user');
+            } catch(e) {}
+            try {
+                localStorage.removeItem('user');
+            } catch(e) {}
+            // Redirect to tenant login to complete logout
+            window.location.href = 'tenantlogin.html';
+        }
+    </script>
+</body>
+</html>

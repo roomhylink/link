@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            background-color: #111827;
+            color: #9ca3af;
+        }
+        .sidebar-link {
+            color: #9ca3af;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .sidebar-link:hover {
+            color: #f3f4f6; 
+            background-color: #1f2937;
+        }
+        .sidebar-link.active {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-left-color: #a855f7; /* Purple-500 */
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #9333ea;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #9333ea;
+        }
+        
+        /* Settings Nav Item */
+        .settings-nav-item.active {
+            background-color: #f3f4f6;
+            color: #9333ea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+       <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="map" class="w-5 h-5 text-white"></i>
+                     </div>
+                     <div>
+                        <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
+                        <span class="text-[10px] text-gray-500 font-medium tracking-wider">AREA ADMIN</span>
+                     </div>
+                 </div>
+            </div>
+            
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="areaadmin.html" class="sidebar-link active">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="areaproperty.html" class="sidebar-link">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="visit.html" class="sidebar-link">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Visit Reports
+                </a>
+                <a href="areatenant.html" class="sidebar-link">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                <a href="areaowner.html" class="sidebar-link">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Owners
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="areapayment.html" class="sidebar-link">
+                    <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payments
+                </a>
+                <a href="complaint.html" class="sidebar-link">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints & Maint.
+                </a>
+                <a href="areakyc.html" class="sidebar-link">
+                    <i data-lucide="file-check" class="w-5 h-5 mr-3"></i> KYC Verification
+                </a>
+                 <a href="areaenq.html" class="sidebar-link">
+                    <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Communication</div>
+                <a href="areachat.html" class="sidebar-link">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="arealoc.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> RoomHy Location</a>
+                 <a href="areareport.html" class="sidebar-link"><i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Reports</a>
+                 <a href="profile.html" class="sidebar-link"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+                 <a href="setting.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Top Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10 border-b border-gray-200">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium">Area:</span>
+                        <span class="ml-2 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wide">Koramangala</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600 relative">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=areaadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-semibold text-gray-700">Vikram Singh</p>
+                                <p class="text-[10px] text-gray-500">Area Manager</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Workspace Content -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8">
+                <div class="max-w-[1600px] mx-auto">
+                    
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-bold text-slate-800">Settings</h1>
+                        <p class="text-sm text-slate-500 mt-1">Manage your account settings and preferences.</p>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-8">
+                        
+                        <!-- Left Side: Settings Menu -->
+                        <div class="w-full lg:w-64 flex-shrink-0">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <nav class="flex flex-col p-2 space-y-1">
+                                    <a href="#" class="settings-nav-item active flex items-center px-4 py-3 text-sm rounded-lg transition-colors">
+                                        <i data-lucide="user" class="w-4 h-4 mr-3"></i> Profile
+                                    </a>
+                                    <a href="#" class="settings-nav-item text-slate-600 hover:bg-gray-50 flex items-center px-4 py-3 text-sm rounded-lg transition-colors">
+                                        <i data-lucide="bell" class="w-4 h-4 mr-3"></i> Notifications
+                                    </a>
+                                    <a href="#" class="settings-nav-item text-slate-600 hover:bg-gray-50 flex items-center px-4 py-3 text-sm rounded-lg transition-colors">
+                                        <i data-lucide="lock" class="w-4 h-4 mr-3"></i> Security
+                                    </a>
+                                    <a href="#" class="settings-nav-item text-slate-600 hover:bg-gray-50 flex items-center px-4 py-3 text-sm rounded-lg transition-colors">
+                                        <i data-lucide="globe" class="w-4 h-4 mr-3"></i> System
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Settings Content -->
+                        <div class="flex-1 space-y-6">
+
+                            <!-- Profile Section -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-gray-100 pb-2">Profile Information</h2>
+                                
+                                <div class="flex items-center gap-6 mb-6">
+                                    <div class="relative group">
+                                        <img src="https://i.pravatar.cc/150?u=areaadmin" class="w-20 h-20 rounded-full border-4 border-gray-100 object-cover">
+                                        <button class="absolute bottom-0 right-0 bg-purple-600 p-1.5 rounded-full text-white border-2 border-white hover:bg-purple-700 transition shadow-sm">
+                                            <i data-lucide="camera" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-slate-800">Vikram Singh</h3>
+                                        <p class="text-xs text-gray-500">Area Manager - Koramangala</p>
+                                        <p class="text-xs text-gray-400 mt-1">Employee ID: EMP-8821</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+                                        <input type="text" value="Vikram Singh" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none bg-gray-50" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                                        <input type="email" value="vikram.singh@roomhy.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                                        <input type="text" value="+91 98765 43210" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Assigned Zone</label>
+                                        <input type="text" value="Koramangala, Bangalore" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 bg-gray-100 cursor-not-allowed" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6 flex justify-end">
+                                    <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Notifications Section -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-gray-100 pb-2">Notifications</h2>
+                                
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-slate-800">New Tenant Enquiries</h4>
+                                            <p class="text-xs text-gray-500">Get notified when a new lead comes in.</p>
+                                        </div>
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" name="toggle" id="toggle1" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-purple-600"/>
+                                            <label for="toggle1" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer checked:bg-purple-600"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-slate-800">High Priority Complaints</h4>
+                                            <p class="text-xs text-gray-500">Immediate alerts for maintenance escalations.</p>
+                                        </div>
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" name="toggle" id="toggle2" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                            <label for="toggle2" class="toggle-label block overflow-hidden h-5 rounded-full bg-purple-600 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-slate-800">Monthly Report Summary</h4>
+                                            <p class="text-xs text-gray-500">Email digest of your area's performance.</p>
+                                        </div>
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" name="toggle" id="toggle3" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                            <label for="toggle3" class="toggle-label block overflow-hidden h-5 rounded-full bg-purple-600 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Section -->
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                                <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-gray-100 pb-2">Security</h2>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Current Password</label>
+                                        <input type="password" placeholder="••••••••" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+                                    <div></div> <!-- Spacer -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">New Password</label>
+                                        <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Confirm Password</label>
+                                        <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                    <div>
+                                        <h4 class="text-sm font-medium text-slate-800">Two-Factor Authentication</h4>
+                                        <p class="text-xs text-gray-500">Add an extra layer of security to your account.</p>
+                                    </div>
+                                    <button class="text-purple-600 text-sm font-medium hover:underline">Enable 2FA</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="dashboard.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Settings</a>
+            </nav>
+        </aside>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleMobileMenu() {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
+            
+            if (isClosed) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+
+        // Simple Navigation Logic for Settings Tab (Visual Only)
+        const navItems = document.querySelectorAll('.settings-nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                // In a real app, this would smooth scroll to the section or switch tab content
+            });
+        });
+    </script>
+</body>
+</html>

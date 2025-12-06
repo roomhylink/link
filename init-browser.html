@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RoomHy - Data Initializer</title>
+</head>
+<body>
+    <h1>RoomHy Data Initialization</h1>
+    <p>Initializing demo data...</p>
+    
+    <script>
+        console.log('🌱 RoomHy Seeder Starting...');
+
+        // Check if already seeded
+        if (localStorage.getItem('roomhy_superadmin_db')) {
+            console.log('⏭️  Data already seeded. Skipping.');
+            document.body.innerHTML += '<p style="color: green;">✅ Data already initialized. You can go to <a href="unifiedlogin.html">Unified Login</a></p>';
+        } else {
+            // Super Admin
+            const superadminDb = {
+                id: 'SUPER_ADMIN',
+                email: 'roomhyadmin@gmail.com',
+                password: 'admin@123',
+                name: '',
+                phone: '',
+                org: '',
+                needsPasswordSetup: true,
+                needsProfileSetup: false,
+                role: 'superadmin',
+                createdAt: new Date().toISOString()
+            };
+
+            localStorage.setItem('roomhy_superadmin_db', JSON.stringify(superadminDb));
+            console.log('✅ Super Admin initialized');
+            console.log('   Email: ' + superadminDb.email);
+            console.log('   Password: ' + superadminDb.password);
+
+            // Area Managers
+            const areaManagers = [
+                {
+                    loginId: 'MGRKO001',
+                    name: 'Vikram Singh',
+                    email: 'vikram@roomhy.com',
+                    phone: '9876543210',
+                    password: 'manager@123',
+                    areaCode: 'KO',
+                    areaName: 'Koramangala',
+                    role: 'areamanager',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    loginId: 'MGRKO002',
+                    name: 'Priya Sharma',
+                    email: 'priya@roomhy.com',
+                    phone: '9876543211',
+                    password: 'manager@123',
+                    areaCode: 'KO',
+                    areaName: 'Koramangala',
+                    role: 'areamanager',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    loginId: 'MGRKOL001',
+                    name: 'Arjun Patel',
+                    email: 'arjun@roomhy.com',
+                    phone: '9876543212',
+                    password: 'manager@123',
+                    areaCode: 'KOL',
+                    areaName: 'Kolkata',
+                    role: 'areamanager',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+
+            localStorage.setItem('roomhy_areamanagers_db', JSON.stringify(areaManagers));
+            console.log('✅ Area Managers initialized (3 managers)');
+
+            // Empty Databases
+            localStorage.setItem('roomhy_owners_db', JSON.stringify({}));
+            console.log('✅ Owners DB initialized');
+
+            localStorage.setItem('roomhy_tenants', JSON.stringify([]));
+            console.log('✅ Tenants DB initialized');
+
+            localStorage.setItem('roomhy_visits', JSON.stringify([]));
+            console.log('✅ Visits DB initialized');
+
+            localStorage.setItem('roomhy_properties', JSON.stringify([]));
+            console.log('✅ Properties DB initialized');
+
+            localStorage.setItem('roomhy_complaints', JSON.stringify([]));
+            console.log('✅ Complaints DB initialized');
+
+            localStorage.setItem('roomhy_chat_messages', JSON.stringify([]));
+            localStorage.setItem('roomhy_superadmin_chat_messages', JSON.stringify([]));
+            console.log('✅ Chat Messages DB initialized');
+
+            localStorage.setItem('roomhy_notifications', JSON.stringify([]));
+            console.log('✅ Notifications DB initialized');
+
+            console.log('\n' + '='.repeat(60));
+            console.log('🎉 SEEDING COMPLETE!');
+            console.log('='.repeat(60));
+            console.log('\n📋 Demo Credentials:\n');
+            console.log('🔴 SUPER ADMIN: roomhyadmin@gmail.com / admin@123');
+            console.log('🔵 MANAGER 1: MGRKO001 / manager@123');
+            console.log('🔵 MANAGER 2: MGRKO002 / manager@123');
+            console.log('🔵 MANAGER 3: MGRKOL001 / manager@123');
+
+            document.body.innerHTML = `
+                <div style="font-family: Arial; padding: 20px; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: green;">✅ Data Initialized Successfully!</h2>
+                    <h3>Demo Credentials:</h3>
+                    <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Role</th>
+                            <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Login ID / Email</th>
+                            <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Password</th>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Super Admin</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">roomhyadmin@gmail.com</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">admin@123</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Area Manager</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">MGRKO001</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">manager@123</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Area Manager</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">MGRKO002</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">manager@123</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 10px;">Area Manager</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">MGRKOL001</td>
+                            <td style="border: 1px solid #ddd; padding: 10px;">manager@123</td>
+                        </tr>
+                    </table>
+                    <h3>Next Steps:</h3>
+                    <ol>
+                        <li><a href="unifiedlogin.html">Go to Unified Login Page</a></li>
+                        <li>Select your role and login</li>
+                        <li>Super Admin: First login will ask to set password + complete profile</li>
+                    </ol>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

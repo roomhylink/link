@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Backup Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* --- Sidebar Styling (Dark Theme) --- */
+        .sidebar {
+            background-color: #111827;
+            color: #9ca3af;
+        }
+        .sidebar-link {
+            color: #9ca3af;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .sidebar-link:hover {
+            color: #f3f4f6; 
+            background-color: #1f2937;
+        }
+        .sidebar-link.active {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-left-color: #a855f7; /* Purple-500 */
+        }
+
+        /* Submenu Styling */
+        .submenu {
+            background-color: #0f172a;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            max-height: 0;
+        }
+        .submenu.open {
+            max-height: 500px;
+        }
+        .submenu a {
+            padding-left: 3.5rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Modal Transitions */
+        .modal { transition: opacity 0.25s ease; }
+
+        /* Table Styling */
+        .data-table th {
+            background-color: #f9fafb;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            text-align: left;
+        }
+        .data-table td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+        .data-table tr:hover td {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+       <!-- Sidebar -->
+          <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="building-2" class="w-5 h-5 text-white"></i>
+                     </div>
+                     <div>
+                        <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
+                        <span class="text-[10px] text-gray-500 font-medium tracking-wider">ADMIN PANEL</span>
+                     </div>
+                 </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link active">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link">
+                    <i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers
+                </a>
+                <a href="owner.html" class="sidebar-link">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners
+                </a>
+                <a href="properties.html" class="sidebar-link">
+                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties
+                </a>
+                <a href="tenant.html" class="sidebar-link">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants
+                </a>
+                 <a href="kyc_verification.html" class="sidebar-link">
+                    <i data-lucide="file-badge" class="w-5 h-5 mr-3"></i> KYC Verification
+                </a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link">
+                    <i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records
+                </a>
+                <a href="enquiry.html" class="sidebar-link">
+                    <i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries
+                </a>
+                <a href="booking.html" class="sidebar-link">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings
+                </a>
+                <a href="reviews.html" class="sidebar-link">
+                    <i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews
+                </a>
+                <a href="complaint-history.html" class="sidebar-link">
+                    <i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History
+                </a>
+
+                <!-- Dropdown: Payment & Finance -->
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Payment & Finance
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link text-sm hover:text-white">All Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link text-sm hover:text-white">Platform Commissions</a>
+                        <a href="refund.html" class="sidebar-link text-sm hover:text-white">Refund Approvals</a>
+                        <a href="payment_disputes.html" class="sidebar-link text-sm hover:text-white">Payment Disputes</a>
+                    </div>
+                </div>
+
+                <!-- Dropdown: Reports -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('reports-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Reports
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="reports-submenu" class="submenu">
+                        <a href="platform_reports.html" class="sidebar-link text-sm hover:text-white">Platform-wide Reports</a>
+                        <a href="monthly.html" class="sidebar-link text-sm hover:text-white">Monthly Revenue</a>
+                        <a href="#" class="sidebar-link text-sm hover:text-white text-purple-400 flex items-center"><i data-lucide="download" class="w-3 h-3 mr-2"></i> Export PDF/Excel</a>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats
+                </a>
+                 <a href="profile.html" class="sidebar-link">
+                    <i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile
+                </a>
+                 <a href="settings.html" class="sidebar-link">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings
+                </a>
+                 <a href="location.html" class="sidebar-link">
+                    <i data-lucide="globe" class="w-5 h-5 mr-3"></i> RoomHy Location
+                </a>
+
+                <!-- 3-Dot Menu / Settings Section -->
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('settings-submenu', this)">
+                        <div class="flex items-center">
+                            <i data-lucide="more-horizontal" class="w-5 h-5 mr-3"></i> System Settings
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="settings-submenu" class="submenu">
+                        <a href="log.html" class="sidebar-link text-sm hover:text-white">Login Logs</a>
+                        <a href="security.html" class="sidebar-link text-sm hover:text-white">Security Settings</a>
+                        <a href="backup.html" class="sidebar-link active text-sm hover:text-white">Backup Settings</a>
+                    </div>
+                </div>
+                
+                <div class="h-20"></div> <!-- Spacer -->
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <!-- Top Header -->
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium">System Settings</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 mx-2 text-slate-400"></i>
+                        <span class="text-slate-800 font-semibold">Backups</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <!-- Page Header -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-800">Data Backup & Recovery</h1>
+                            <p class="text-sm text-slate-500 mt-1">Manage automated backups and manual data snapshots.</p>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleModal('manualBackupModal')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center shadow-sm transition-all">
+                                <i data-lucide="database" class="w-4 h-4 mr-2"></i> Create Backup Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Backup Settings Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        
+                        <!-- Automated Schedule -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 lg:col-span-2">
+                            <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100">
+                                <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                                    <i data-lucide="clock" class="w-5 h-5 text-blue-600 mr-2"></i> Automated Schedule
+                                </h3>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" checked name="toggle" id="autoBackupToggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/>
+                                    <label for="autoBackupToggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-green-500 cursor-pointer"></label>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                                        <select class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-purple-500 focus:border-purple-500">
+                                            <option>Daily</option>
+                                            <option selected>Weekly</option>
+                                            <option>Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Time (UTC)</label>
+                                        <input type="time" value="02:00" class="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-purple-500 focus:border-purple-500">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Data to Include</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500">
+                                            <span>Payment Records</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500">
+                                            <span>Property Owners</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500">
+                                            <span>Tenant Records</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <input type="checkbox" class="rounded text-purple-600 focus:ring-purple-500">
+                                            <span>System Logs</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                                <button class="text-purple-600 hover:text-purple-800 text-sm font-medium">Save Schedule</button>
+                            </div>
+                        </div>
+
+                        <!-- Storage Info -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <i data-lucide="hard-drive" class="w-5 h-5 text-gray-600 mr-2"></i> Storage
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="font-medium text-gray-700">Used Space</span>
+                                        <span class="text-gray-500">2.4 GB / 10 GB</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 24%"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <p class="text-xs text-blue-700">
+                                        <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                                        Backups are retained for 30 days automatically. Older backups are deleted to save space.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backup History Table -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-md font-semibold text-gray-800">Backup History</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Created</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                        <th>Modules Included</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Backup 1 -->
+                                    <tr>
+                                        <td class="text-sm text-gray-700">Oct 24, 2025 • 02:00 AM</td>
+                                        <td><span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Automated</span></td>
+                                        <td class="font-mono text-xs text-gray-600">128 MB</td>
+                                        <td class="text-xs text-gray-500">Payments, Users, Properties</td>
+                                        <td>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Completed
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="text-purple-600 hover:text-purple-800 mx-1" title="Download"><i data-lucide="download" class="w-4 h-4"></i></button>
+                                            <button class="text-blue-600 hover:text-blue-800 mx-1" title="Restore"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Backup 2 -->
+                                    <tr>
+                                        <td class="text-sm text-gray-700">Oct 17, 2025 • 02:00 AM</td>
+                                        <td><span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Automated</span></td>
+                                        <td class="font-mono text-xs text-gray-600">125 MB</td>
+                                        <td class="text-xs text-gray-500">Payments, Users, Properties</td>
+                                        <td>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Completed
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="text-purple-600 hover:text-purple-800 mx-1" title="Download"><i data-lucide="download" class="w-4 h-4"></i></button>
+                                            <button class="text-blue-600 hover:text-blue-800 mx-1" title="Restore"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+
+                                     <!-- Backup 3 -->
+                                    <tr>
+                                        <td class="text-sm text-gray-700">Oct 15, 2025 • 04:30 PM</td>
+                                        <td><span class="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">Manual</span></td>
+                                        <td class="font-mono text-xs text-gray-600">124 MB</td>
+                                        <td class="text-xs text-gray-500">Full System Backup</td>
+                                        <td>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Completed
+                                            </span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="text-purple-600 hover:text-purple-800 mx-1" title="Download"><i data-lucide="download" class="w-4 h-4"></i></button>
+                                            <button class="text-blue-600 hover:text-blue-800 mx-1" title="Restore"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-gray-800 sticky top-0 bg-[#111827]">
+                 <h1 class="text-xl font-bold text-white">RoomHy</h1>
+                 <button id="mobile-menu-close"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
+            </div>
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="superadmin.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Settings</a>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- Manual Backup Modal -->
+    <div id="manualBackupModal" class="modal fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="toggleModal('manualBackupModal')"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex justify-between items-center mb-4">
+                         <h3 class="text-lg leading-6 font-bold text-gray-900">Initiate Manual Backup</h3>
+                         <button onclick="toggleModal('manualBackupModal')" class="text-gray-400 hover:text-gray-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 mb-4">This will create a complete snapshot of your database. This process may take a few minutes.</p>
+                    
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Modules</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500 mr-2">
+                                    <span class="text-sm text-gray-700">All Payment Data</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500 mr-2">
+                                    <span class="text-sm text-gray-700">Property Owners & Properties</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="rounded text-purple-600 focus:ring-purple-500 mr-2">
+                                    <span class="text-sm text-gray-700">Tenant Records & Documents</span>
+                                </label>
+                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Backup Label (Optional)</label>
+                            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="e.g. Pre-Update Snapshot">
+                        </div>
+                    </form>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none sm:w-auto sm:text-sm">
+                        Start Backup
+                    </button>
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:w-auto sm:text-sm" onclick="toggleModal('manualBackupModal')">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Sidebar Submenu
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        // Mobile Menu
+        function toggleMobileMenu() {
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
+            
+            if (isClosed) {
+                mobileSidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+            } else {
+                mobileSidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+        document.getElementById('mobile-menu-close')?.addEventListener('click', toggleMobileMenu);
+
+        // Modal Logic
+        function toggleModal(modalID){
+            const modal = document.getElementById(modalID);
+            if(modal.classList.contains('hidden')){
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+    </script>
+</body>
+</html>

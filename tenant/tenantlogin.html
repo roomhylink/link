@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Tenant Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .light-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); border: 1px solid #e5e7eb; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="light-card w-full max-w-md p-8">
+        <div class="text-center mb-8">
+            <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="home" class="w-6 h-6 text-purple-600"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Roomhy</h1>
+            <p class="text-xs text-gray-500 mt-1">TENANT PORTAL</p>
+        </div>
+
+        <!-- STEP 1: Verify Temporary Password -->
+        <div id="step-1" class="fade-in">
+            <h2 class="text-xl font-semibold text-gray-800 mb-1">Welcome, Tenant!</h2>
+            <p class="text-sm text-gray-600 mb-6">Enter your login credentials to get started.</p>
+
+            <form onsubmit="event.preventDefault(); verifyTenantTemp();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tenant ID</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="user" class="w-5 h-5"></i></span>
+                        <input type="text" id="login-id" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="e.g. TNT-KO-001" required>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Temporary Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i data-lucide="key" class="w-5 h-5"></i></span>
+                        <input type="password" id="temp-password" class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 text-white font-bold py-3 rounded-lg hover:bg-purple-700 transition-colors flex justify-center items-center gap-2">
+                    Verify <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <p class="text-xs text-gray-500 text-center mt-6">Don't have credentials? <br> Contact your property owner or manager.</p>
+        </div>
+
+        <!-- STEP 2: Set New Password -->
+        <div id="step-2" class="hidden fade-in">
+            <div class="flex justify-center mb-4">
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i data-lucide="lock" class="w-8 h-8 text-green-600"></i>
+                </div>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-1 text-center">Create Your Password</h2>
+            <p class="text-sm text-gray-600 mb-6 text-center">Set a secure password for your account.</p>
+
+            <form onsubmit="event.preventDefault(); setTenantPassword();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <input type="password" id="new-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Min. 8 characters" required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input type="password" id="confirm-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Confirm password" required>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors flex justify-center items-center gap-2">
+                    Continue <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+        
+        <!-- Error Modal -->
+        <div id="error-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-lg shadow-xl max-w-sm p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-red-100 p-2 rounded-full">
+                        <i data-lucide="alert-circle" class="w-6 h-6 text-red-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Error</h3>
+                </div>
+                <p id="error-message" class="text-gray-700 mb-4">An error occurred.</p>
+                <button onclick="closeErrorModal()" class="w-full bg-gray-200 text-gray-800 font-medium py-2 rounded-lg hover:bg-gray-300">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let tenantPayload = null;
+
+        // 1. Check if already logged in and redirect based on state
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('tenant_user') || localStorage.getItem('user') || 'null');
+            if(user && user.role === 'tenant') {
+                // Check progress
+                const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+                const me = tenants.find(t => t.loginId === user.loginId);
+                if(me) {
+                    if(!me.profileFilled) window.location.href = 'tenantprofile.html';
+                    else if(me.kycStatus === 'pending') window.location.href = 'tenantkyc.html';
+                    else if(!me.agreementSigned) window.location.href = 'tenantagreement.html';
+                    else window.location.href = 'tenantdashboard.html';
+                }
+            }
+        });
+
+        // 2. Verify Credentials
+        async function verifyTenantTemp() {
+            const loginId = document.getElementById('login-id').value.trim().toUpperCase();
+            const tempPassword = document.getElementById('temp-password').value.trim();
+
+            // Fallback: Check localStorage (Demo Mode)
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            
+            // Active Tenant Login (case-insensitive ID match)
+            const activeTenant = tenants.find(t => (t.loginId && t.loginId.toUpperCase() === loginId) && (t.password === tempPassword));
+            if(activeTenant) {
+                createSession(activeTenant);
+                return;
+            }
+
+            // First Time Login
+            const pendingTenant = tenants.find(t => 
+                t.loginId && t.loginId.toUpperCase() === loginId && 
+                t.tempPassword === tempPassword &&
+                (t.status === 'pending' || !t.passwordSet)
+            );
+
+            if (pendingTenant) {
+                tenantPayload = pendingTenant;
+                showStep2();
+            } else {
+                showError('Invalid Tenant ID or Password.');
+            }
+        }
+
+        // 3. Set New Password
+        async function setTenantPassword() {
+            const newPassword = document.getElementById('new-password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+            if (newPassword.length < 6) return showError('Password must be at least 6 characters.');
+            if (newPassword !== confirmPassword) return showError('Passwords do not match.');
+
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const idx = tenants.findIndex(t => t.loginId && t.loginId.toUpperCase() === (tenantPayload.loginId || '').toUpperCase());
+
+            if (idx > -1) {
+                tenants[idx].password = newPassword;
+                tenants[idx].tempPassword = null;
+                tenants[idx].passwordSet = true; // Flag for progress
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+
+                const user = {
+                    name: tenants[idx].name,
+                    phone: tenants[idx].phone,
+                    email: tenants[idx].email,
+                    loginId: tenants[idx].loginId,
+                    role: 'tenant',
+                    tenantId: tenants[idx].id,
+                    passwordSet: true
+                };
+                localStorage.setItem('tenant_user', JSON.stringify(user));
+
+                // Redirect to Step 1 of Onboarding
+                alert("Password Set! Proceeding to Profile Setup.");
+                window.location.href = 'tenantprofile.html';
+            } else {
+                showError('System error: Tenant record not found.');
+            }
+        }
+        
+        function createSession(tenant) {
+            const user = {
+                name: tenant.name,
+                phone: tenant.phone,
+                email: tenant.email,
+                loginId: tenant.loginId,
+                role: 'tenant',
+                tenantId: tenant.id,
+                passwordSet: true
+            };
+            localStorage.setItem('tenant_user', JSON.stringify(user));
+            
+            // Redirect to where they left off
+            if(!tenant.profileFilled) window.location.href = 'tenantprofile.html';
+            else if(tenant.kycStatus === 'pending') window.location.href = 'tenantkyc.html';
+            else if(!tenant.agreementSigned) window.location.href = 'tenantagreement.html';
+            else window.location.href = 'tenantdashboard.html';
+        }
+
+        function showStep2() {
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').innerText = message;
+            document.getElementById('error-modal').classList.remove('hidden');
+        }
+        function closeErrorModal() {
+            document.getElementById('error-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

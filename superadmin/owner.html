@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roomhy - Property Owners</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link {
+            display: flex; align-items: center; padding: 0.75rem 1.5rem; 
+            color: #9ca3af; font-weight: 500; font-size: 0.9rem;
+            transition: all 0.2s; border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: #1f2937; color: #f3f4f6; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+
+        .submenu { background-color: #0f172a; overflow: hidden; transition: max-height 0.3s ease-in-out; max-height: 0; }
+        .submenu.open { max-height: 500px; }
+        .submenu a { padding-left: 3.5rem; font-size: 0.85rem; }
+        
+        .excel-table th { background: #f9fafb; padding: 12px; font-size: 0.75rem; text-transform: uppercase; color: #6b7280; font-weight: 600; text-align: left; }
+        .excel-table td { border-bottom: 1px solid #e5e7eb; padding: 12px; background: white; font-size: 0.875rem; vertical-align: middle; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+                 <div class="flex items-center gap-3">
+                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="building-2" class="w-5 h-5 text-white"></i></div>
+                     <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">SUPER ADMIN</span></div>
+                 </div>
+            </div>
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="superadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Management</div>
+                <a href="manager.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Area Managers</a>
+                <a href="owner.html" class="sidebar-link active"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Property Owners</a>
+                <a href="properties.html" class="sidebar-link"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="tenant.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                <a href="kyc_verification.html" class="sidebar-link"><i data-lucide="file-badge" class="w-5 h-5 mr-3"></i> KYC Verification</a>
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Operations</div>
+                <a href="tenant_rec.html" class="sidebar-link"><i data-lucide="folder-open" class="w-5 h-5 mr-3"></i> Tenant Records</a>
+                <a href="enquiry.html" class="sidebar-link"><i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                <a href="booking.html" class="sidebar-link"><i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i> Bookings</a>
+                <a href="reviews.html" class="sidebar-link"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
+                <a href="complaint-history.html" class="sidebar-link"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaint History</a>
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Finance</div>
+                <div class="group">
+                    <div class="sidebar-link justify-between" onclick="toggleSubmenu('finance-submenu', this)">
+                        <div class="flex items-center"><i data-lucide="wallet" class="w-5 h-5 mr-3"></i> Finance</div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </div>
+                    <div id="finance-submenu" class="submenu">
+                        <a href="rentcollection.html" class="sidebar-link text-sm hover:text-white">Rent Collections</a>
+                        <a href="platform.html" class="sidebar-link text-sm hover:text-white">Commissions</a>
+                        <a href="refund.html" class="sidebar-link text-sm hover:text-white">Refunds</a>
+                    </div>
+                </div>
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                 <a href="chatadmin.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
+                 <a href="location.html" class="sidebar-link"><i data-lucide="globe" class="w-5 h-5 mr-3"></i> Locations</a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
+            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <h2 class="text-lg font-semibold text-slate-800">All Property Owners</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
+                    <div class="relative group">
+                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
+                            <img src="https://i.pravatar.cc/150?u=superadmin" alt="Admin" class="w-8 h-8 rounded-full border border-slate-200">
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                         <div>
+                             <h1 class="text-2xl font-bold text-slate-800">Property Owners List</h1>
+                         </div>
+                         
+                         <!-- Filters and Search -->
+                         <div class="flex gap-2 w-full md:w-auto">
+                             <select id="areaFilter" class="border border-gray-300 rounded-md text-sm px-3 py-2 focus:ring-purple-500 focus:border-purple-500 outline-none" onchange="loadOwners()">
+                                 <option value="all">All Areas</option>
+                                 <option value="KO">Koramangala (KO)</option>
+                                 <option value="IN">Indiranagar (IN)</option>
+                                 <option value="HS">HSR Layout (HS)</option>
+                             </select>
+                             <div class="relative flex-1 md:w-64">
+                                 <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                                 <input type="text" id="ownerSearch" placeholder="Search Name/ID" class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none w-full" onkeyup="loadOwners()">
+                             </div>
+                             <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center shadow-sm">
+                                <i data-lucide="sheet" class="w-4 h-4 mr-2"></i> Export Excel
+                             </button>
+                         </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse excel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Owner ID / Login ID</th>
+                                        <th>Name & Contact</th>
+                                        <th>Address</th> <!-- Address Column -->
+                                        <th>Password</th> <!-- Password Column -->
+                                        <th>Area</th>
+                                        <th>KYC Status</th>
+                                        <th>Docs</th>
+                                        <th class="text-center w-16">Delete</th> <!-- Trash Column -->
+                                    </tr>
+                                </thead>
+                                <tbody id="ownersTableBody">
+                                    <tr><td colspan="8" class="text-center py-8 text-gray-500">Loading owners...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Document Modal -->
+    <div id="docModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 backdrop-blur-sm" onclick="closeModal()">
+        <div class="bg-white p-2 rounded-lg max-w-3xl w-full relative" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300"><i data-lucide="x" class="w-8 h-8"></i></button>
+            <img id="docImage" src="" class="w-full h-auto max-h-[80vh] object-contain rounded">
+            <div class="p-4 bg-white flex justify-between items-center">
+                <h3 class="font-bold">KYC Document</h3>
+                <div class="flex gap-2">
+                    <button onclick="verifyOwner()" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Verify</button>
+                    <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded text-sm">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentViewingId = null;
+        let currentOwnersData = []; // For Excel Export
+
+        function toggleSubmenu(id, element) {
+            const submenu = document.getElementById(id);
+            const chevron = element.querySelector('.lucide-chevron-down');
+            if (submenu.classList.contains('open')) {
+                submenu.classList.remove('open');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('open');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        async function loadOwners() {
+            const tbody = document.getElementById('ownersTableBody');
+            const filterArea = document.getElementById('areaFilter').value;
+            const searchText = document.getElementById('ownerSearch').value.toUpperCase();
+            tbody.innerHTML = '';
+
+            // Try backend first
+            let owners = [];
+            try {
+                const res = await fetch('/api/owners');
+                if (res.ok) {
+                    owners = await res.json();
+                } else {
+                    console.warn('Owners API returned', res.status);
+                }
+            } catch (err) {
+                console.warn('Failed to fetch owners from backend, falling back to localStorage', err);
+            }
+
+            // Fallback to localStorage shaped data
+            if (!owners || owners.length === 0) {
+                const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                owners = Object.keys(db).map(id => ({ loginId: id, ...db[id] }));
+            }
+
+            // Apply filters
+            const filtered = owners.filter(o => {
+                const id = o.loginId || o._id || '';
+                const name = (o.name || o.profile?.name || '').toUpperCase();
+                const areaMatch = (filterArea === 'all') || id.startsWith(filterArea) || (o.locationCode && o.locationCode.startsWith(filterArea));
+                const searchMatch = id.toUpperCase().includes(searchText) || name.includes(searchText);
+                return areaMatch && searchMatch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">No owners found.</td></tr>`;
+                return;
+            }
+
+            currentOwnersData = filtered.map(o => ({
+                "Owner ID": o.loginId || o._id,
+                "Name": o.name || o.profile?.name || 'Unknown',
+                "Phone": o.phone || o.profile?.phone || '-',
+                "Address": o.address || o.profile?.address || '-',
+                "Password": o.credentials?.password || '-',
+                "Area": o.locationCode || o.profile?.locationCode || '-',
+                "Aadhar": o.kyc?.aadharNumber || '-',
+                "Status": o.kyc?.status || 'Pending'
+            }));
+
+            filtered.forEach(o => {
+                const id = o.loginId || o._id || '';
+                const profileName = o.name || o.profile?.name || 'Unknown';
+                const phone = o.phone || o.profile?.phone || '-';
+                const address = o.address || o.profile?.address || '-';
+                const credsPassword = o.credentials?.password || '-';
+                const areaCode = o.locationCode || o.profile?.locationCode || '-';
+                const kyc = o.kyc || {};
+
+                let kycBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">Not Submitted</span>`;
+                let docBtn = `<span class="text-gray-400 text-xs">No Docs</span>`;
+                if (kyc.status === 'pending') kycBadge = `<span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded font-bold">Pending</span>`;
+                if (kyc.status === 'verified') kycBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-bold">Verified</span>`;
+                if (kyc.documentImage) docBtn = `<button onclick="viewDoc('${id}')" class="text-purple-600 hover:text-purple-800 text-xs font-bold flex items-center justify-center w-full"><i data-lucide="eye" class="w-3 h-3 mr-1"></i> View</button>`;
+
+                const row = `
+                    <tr class="hover:bg-gray-50 border-b border-gray-100" id="row-${id}">
+                        <td class="font-mono font-bold text-purple-700 bg-purple-50 px-2 py-1 w-fit rounded text-xs">${id}</td>
+                        <td>
+                            <p class="font-bold text-slate-800">${profileName}</p>
+                            <p class="text-xs text-gray-500">${phone}</p>
+                        </td>
+                        <td class="text-sm text-gray-600 max-w-xs truncate" title="${address}">${address}</td>
+                        <td><code class="text-xs font-mono bg-gray-100 px-2 py-1 rounded border border-gray-200 text-red-500">${credsPassword}</code></td>
+                        <td><span class="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100">${areaCode}</span></td>
+                        <td>${kycBadge}</td>
+                        <td class="text-center">${docBtn}</td>
+                        <td class="text-center">
+                            <button onclick="deleteOwner('${id}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition" title="Delete Owner">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            lucide.createIcons();
+        }
+
+        // --- Delete Function ---
+        function deleteOwner(id) {
+            if(!confirm(`Are you sure you want to delete owner ${id}? This action cannot be undone.`)) return;
+
+            // Remove from DB
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            if (db[id]) {
+                delete db[id];
+                localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                
+                // Remove from UI immediately
+                const row = document.getElementById(`row-${id}`);
+                if(row) row.remove();
+                
+                // Also remove from visits if needed to keep sync (optional)
+                let visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+                visits = visits.filter(v => !(v.generatedCredentials && v.generatedCredentials.loginId === id));
+                localStorage.setItem('roomhy_visits', JSON.stringify(visits));
+
+                alert("Owner deleted successfully.");
+                // Reload to refresh list/export data
+                loadOwners(); 
+            }
+        }
+
+        // --- Excel Export Function ---
+        function exportToExcel() {
+            if(currentOwnersData.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+            
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(currentOwnersData);
+            
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Owners");
+            
+            // Generate file name with date
+            const date = new Date().toISOString().split('T')[0];
+            const fileName = `Roomhy_Owners_List_${date}.xlsx`;
+            
+            // Download
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function viewDoc(id) {
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            const kyc = db[id]?.kyc;
+            if(kyc && kyc.documentImage) {
+                currentViewingId = id;
+                document.getElementById('docImage').src = kyc.documentImage;
+                document.getElementById('docModal').classList.remove('hidden');
+                document.getElementById('docModal').classList.add('flex');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('docModal').classList.add('hidden');
+            document.getElementById('docModal').classList.remove('flex');
+        }
+
+        function verifyOwner() {
+            if(!currentViewingId) return;
+            const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+            (async () => {
+                try {
+                    // Try backend PATCH first to set kyc.status = 'verified'
+                    const res = await fetch(`/api/owners/${encodeURIComponent(currentViewingId)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ kyc: { status: 'verified', verifiedAt: new Date().toISOString() } })
+                    });
+
+                    if (res.ok) {
+                        const updated = await res.json();
+                        // Update local fallback store
+                        db[currentViewingId] = db[currentViewingId] || {};
+                        db[currentViewingId].kyc = updated.kyc || { status: 'verified', verifiedAt: new Date().toISOString() };
+                        localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+
+                        // Notify other tabs/pages that this owner's KYC changed
+                        try {
+                            localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: currentViewingId, ts: Date.now() }));
+                        } catch (e) { /* ignore storage errors */ }
+
+                        alert('Owner Verified Successfully!');
+                        closeModal();
+                        loadOwners();
+                        return;
+                    } else {
+                        // Backend failed; fallback to local change
+                        let bodyText = '';
+                        try { bodyText = await res.text(); } catch (e) { bodyText = '<unreadable>'; }
+                        console.warn('Owner verify PATCH failed:', res.status, bodyText);
+                    }
+                } catch (err) {
+                    console.warn('Owner verify request failed, falling back to local update:', err && err.message);
+                }
+
+                // Fallback: update localStorage only
+                if(db[currentViewingId] && db[currentViewingId].kyc) {
+                    db[currentViewingId].kyc.status = 'verified';
+                    db[currentViewingId].kyc.verifiedAt = new Date().toISOString();
+                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                    try { localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: currentViewingId, ts: Date.now() })); } catch (e) {}
+                    alert('Owner Verified (local fallback)');
+                    closeModal();
+                    loadOwners();
+                }
+            })();
+        }
+
+        loadOwners();
+    </script>
+</body>
+</html>
