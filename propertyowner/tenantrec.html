@@ -208,8 +208,34 @@
             loadTenantRecords();
         });
 
-        function loadTenantRecords() {
+        async function loadTenantRecords() {
             const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            // Build a property map so we can resolve property IDs to names/location codes
+            let propMap = {};
+            try {
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/api/properties', { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    const props = (data && data.success && Array.isArray(data.properties)) ? data.properties : (data.properties || []);
+                    props.forEach(p => {
+                        const id = p._id || p.id || p.propertyId || p.name || p.title;
+                        propMap[id] = p;
+                    });
+                }
+            } catch (err) {
+                // ignore and fallback to localStorage below
+            }
+
+            // Merge local properties as fallback
+            try {
+                const localProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+                localProps.forEach(lp => {
+                    const id = lp.id || lp._id || lp.propertyId || lp.title || lp.name;
+                    if (!propMap[id]) propMap[id] = lp;
+                });
+            } catch (err) {}
             const tbody = document.getElementById('all-tenants-body');
             tbody.innerHTML = '';
 
@@ -230,14 +256,29 @@
             });
             
             // Update global variable for export
-            tenantsForExport = filteredTenants;
+            // Resolve property references for display/export: if tenant.property is an id string, replace with object from propMap
+            const resolved = filteredTenants.map(t => {
+                const copy = Object.assign({}, t);
+                if (copy.property && typeof copy.property === 'string') {
+                    // Try by id first
+                    if (propMap[copy.property]) {
+                        copy.property = propMap[copy.property];
+                    } else {
+                        // Try to match by title/name
+                        const byTitle = Object.values(propMap).find(p => (p.title || p.name) === copy.property);
+                        if (byTitle) copy.property = byTitle;
+                    }
+                }
+                return copy;
+            });
+            tenantsForExport = resolved;
 
             if (filteredTenants.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">No records found.</td></tr>';
                 return;
             }
 
-            filteredTenants.forEach(t => {
+            resolved.forEach(t => {
                 // Dates
                 const moveIn = t.moveInDate ? new Date(t.moveInDate).toLocaleDateString() : '-';
                 
