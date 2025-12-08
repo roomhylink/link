@@ -4,6 +4,7 @@ const Owner = require('../models/Owner');
 const Property = require('../models/Property');
 const Room = require('../models/Room');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const ownerController = require('../controllers/ownercontroller');
 
 // 1. Create new owner (Preserved from original - used by enquiry approval/import)
 router.post('/', async (req, res) => {
@@ -35,90 +36,13 @@ router.post('/', async (req, res) => {
 
 // 2. List all owners (Updated for Dashboard & Area Manager Filtering)
 // Supports: ?locationCode=KO (prefix match), ?kycStatus=verified, ?search=...
-router.get('/', protect, async (req, res) => {
-    try {
-        const { locationCode, kycStatus, kyc, search } = req.query;
-        let query = {};
-
-        // Support both query param names for backward compatibility
-        const statusFilter = kycStatus || kyc;
-
-        // Area Based Filtering (Regex for prefix match, e.g., 'KO' matches 'KO01')
-        if (locationCode) {
-            query.locationCode = { $regex: `^${locationCode}`, $options: 'i' };
-        }
-
-        // KYC Status Filtering
-        if (statusFilter) {
-            query['kyc.status'] = statusFilter;
-        }
-
-        // Search functionality
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { loginId: { $regex: search, $options: 'i' } },
-                { phone: { $regex: search, $options: 'i' } },
-                { 'profile.name': { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        const owners = await Owner.find(query).sort({ createdAt: -1 }).lean();
-        // Wrap in object to match some frontend expectations, or return array if legacy
-        res.json({ success: true, owners }); 
-    } catch (err) {
-        console.error('❌ Owner LIST error:', err.message);
-        res.status(500).json({ error: err.message });
-    }
-});
+router.get('/', protect, ownerController.getAllOwners);
 
 // 3. Get owner by loginId (Preserved)
-router.get('/:loginId', protect, async (req, res) => {
-    try {
-        const owner = await Owner.findOne({ loginId: req.params.loginId });
-        if (!owner) {
-            return res.status(404).json({ error: 'Owner not found', loginId: req.params.loginId });
-        }
-        res.json(owner);
-    } catch (err) {
-        console.error('❌ Owner GET error:', err.message);
-        res.status(500).json({ error: err.message });
-    }
-});
+router.get('/:loginId', protect, ownerController.getOwnerById);
 
 // 4. Update Owner KYC Status (NEW - Super Admin Only)
-router.patch('/:id/kyc', protect, authorize('superadmin'), async (req, res) => {
-    try {
-        const { id } = req.params; // Can be _id or loginId
-        const { status } = req.body; // 'verified' or 'rejected'
-
-        if (!['verified', 'rejected'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid status' });
-        }
-
-        // Find by either Mongo ID or custom Login ID
-        const owner = await Owner.findOne({ $or: [{ _id: id }, { loginId: id }] });
-        if (!owner) return res.status(404).json({ message: 'Owner not found' });
-
-        // Update Status
-        if (!owner.kyc) owner.kyc = {};
-        owner.kyc.status = status;
-        
-        if (status === 'verified') {
-            owner.kyc.verifiedAt = new Date();
-            owner.isActive = true; // Activate owner on verification
-        } else {
-            owner.isActive = false;
-        }
-
-        await owner.save();
-
-        res.json({ success: true, message: `Owner KYC ${status}`, owner });
-    } catch (err) {
-        console.error('KYC Update Error:', err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
+router.patch('/:id/kyc', protect, authorize('superadmin'), ownerController.updateOwnerKyc);
 
 // 5. Update owner by loginId (Preserved - Used for Password Updates)
 router.patch('/:loginId', async (req, res) => {
