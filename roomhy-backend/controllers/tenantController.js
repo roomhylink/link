@@ -63,8 +63,8 @@ exports.assignTenant = async (req, res) => {
             kycStatus: 'pending'
         });
 
-        // Populate for response
-        await tenant.populate('property', 'title roomType');
+        // Populate for response (include locationCode and owner info)
+        await tenant.populate('property', 'title roomType locationCode owner ownerLoginId');
 
         // Log notification for super admin
         console.log(`[TENANT ASSIGNED] ${name} (${loginId}) assigned to ${property.title}, Room ${roomNo}`);
@@ -128,7 +128,7 @@ exports.getTenantsByOwner = async (req, res) => {
 
         // Get tenants assigned to these properties
         const tenants = await Tenant.find({ property: { $in: propertyIds } })
-            .populate('property', 'title roomType')
+            .populate('property', 'title roomType locationCode owner ownerLoginId')
             .populate('user', 'name email phone')
             .sort({ createdAt: -1 });
 

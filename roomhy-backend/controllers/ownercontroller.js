@@ -1,5 +1,6 @@
 const Owner = require('../models/Owner');
 const Notification = require('../models/Notification');
+const Property = require('../models/Property');
 
 // List Owners with Filtering (Area, KYC Status)
 exports.getAllOwners = async (req, res) => {
@@ -28,6 +29,21 @@ exports.getAllOwners = async (req, res) => {
         }
 
         const owners = await Owner.find(query).sort({ createdAt: -1 }).lean();
+
+        // Attach property counts per owner for frontend display
+        const ownerLoginIds = owners.map(o => o.loginId).filter(Boolean);
+        if (ownerLoginIds.length > 0) {
+            const counts = await Property.aggregate([
+                { $match: { ownerLoginId: { $in: ownerLoginIds } } },
+                { $group: { _id: '$ownerLoginId', count: { $sum: 1 } } }
+            ]);
+            const countMap = {};
+            counts.forEach(c => { countMap[c._id] = c.count; });
+            owners.forEach(o => { o.propertyCount = countMap[o.loginId] || 0; });
+        } else {
+            owners.forEach(o => { o.propertyCount = 0; });
+        }
+
         res.json({ success: true, owners });
     } catch (err) {
         console.error('Get Owners Error:', err);

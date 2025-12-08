@@ -307,7 +307,11 @@
 
                         <!-- 4. Room Info -->
                         <td>
-                            <div class="text-sm text-gray-800 font-medium">${t.property || 'Unknown Property'}</div>
+                            <div class="text-sm text-gray-800 font-medium">${
+                                (typeof t.property === 'object' && t.property !== null)
+                                    ? `${t.property.title || t.property.name || 'Property'}${t.property.locationCode ? ' (' + t.property.locationCode + ')' : ''}`
+                                    : (t.property || 'Unknown Property')
+                            }</div>
                             <div class="text-xs text-gray-500">Room ${t.roomNo}, Bed ${t.bedNo}</div>
                             <div class="text-xs font-medium text-green-600 mt-0.5">Rent: ₹${t.agreedRent}</div>
                         </td>
@@ -388,7 +392,7 @@
                 "Guardian Contact": t.emergencyContact || '-',
                 "DOB": t.dob || '-',
                 "Address": t.address || '-',
-                "Property": t.property,
+                "Property": (typeof t.property === 'object' && t.property !== null) ? (t.property.title || t.property.name) + (t.property.locationCode ? ` (${t.property.locationCode})` : '') : (t.property || '-'),
                 "Room": t.roomNo,
                 "Bed": t.bedNo,
                 "Rent Amount": t.agreedRent,

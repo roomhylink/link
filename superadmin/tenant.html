@@ -345,6 +345,8 @@
                 tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No tenants found matching criteria.</td></tr>';
                 return;
             }
+            // expose filtered set for export
+            window.tenantsForExport = filteredTenants;
 
             filteredTenants.forEach(t => {
                 let kycBadge = '';
@@ -369,7 +371,9 @@
                     actionButtons = '<span class="text-xs text-gray-400">Waiting for upload</span>';
                 }
 
-                let propDisplay = t.property || 'Unknown Property';
+                let propDisplay = (typeof t.property === 'object' && t.property !== null)
+                    ? `${t.property.title || t.property.name}${t.property.locationCode ? ' (' + t.property.locationCode + ')' : ''}`
+                    : (t.property || 'Unknown Property');
                 let moveIn = t.moveInDate ? new Date(t.moveInDate).toLocaleDateString() : '-';
                 let moveOut = t.moveOutDate ? new Date(t.moveOutDate).toLocaleDateString() : '<button onclick="moveOutTenant(\'' + t.loginId + '\')" class="text-xs text-red-600 hover:underline">Move Out</button>';
                 
@@ -447,6 +451,27 @@
             localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
             
             loadTenants();
+        }
+
+        function exportToExcel() {
+            const list = window.tenantsForExport || JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            if (!list || list.length === 0) return alert('No data to export.');
+            const data = list.map(t => ({
+                'Tenant Name': t.name,
+                'Login ID': t.loginId,
+                'Phone': t.phone,
+                'Property': (typeof t.property === 'object' && t.property !== null) ? `${t.property.title || t.property.name}${t.property.locationCode ? ' ('+t.property.locationCode+')' : ''}` : (t.property || '-'),
+                'Room': t.roomNo || '-',
+                'Bed': t.bedNo || '-',
+                'KYC Status': t.kycStatus || '-',
+                'Move In': t.moveInDate ? new Date(t.moveInDate).toLocaleDateString() : '-',
+                'Move Out': t.moveOutDate ? new Date(t.moveOutDate).toLocaleDateString() : '-'
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Tenants');
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Roomhy_Tenants_${date}.xlsx`);
         }
 
         // --- Enhanced Modal Logic ---
