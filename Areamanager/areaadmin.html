@@ -267,6 +267,21 @@
                                 <h1 class="text-2xl font-bold text-slate-800">Welcome, <span id="welcomeName">User</span>!</h1>
                                 <p class="text-sm text-slate-500 mt-1">Accessing <span id="welcomeArea" class="font-semibold text-purple-600">Dashboard</span>.</p>
                             </div>
+                                <!-- Area Stats Row (populated from /api/admin/stats?areaCode=...) -->
+                                <div id="areaStatsRow" class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
+                                        <p class="text-sm text-gray-500">Total Properties</p>
+                                        <h3 id="totalPropertiesCountArea" class="text-2xl font-bold text-slate-800">-</h3>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
+                                        <p class="text-sm text-gray-500">Pending Approvals</p>
+                                        <h3 id="pendingApprovalsCountArea" class="text-2xl font-bold text-slate-800">-</h3>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
+                                        <p class="text-sm text-gray-500">Active Owners</p>
+                                        <h3 id="activeOwnersCountArea" class="text-2xl font-bold text-slate-800">-</h3>
+                                    </div>
+                                </div>
                             <div id="salaryBadge" class="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 text-right hidden md:block">
                                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Current Salary</p>
                                 <p class="text-lg font-bold text-green-600">₹ --</p>
@@ -341,6 +356,25 @@
             }
         }
         document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+    </script>
+    <script>
+        async function loadAreaStats() {
+            const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
+            const areaCode = user?.areaCode || user?.area || '';
+            if (!areaCode) return;
+            try {
+                const res = await fetch(`/api/admin/stats?areaCode=${encodeURIComponent(areaCode)}`);
+                if (!res.ok) throw new Error('Stats fetch failed');
+                const stats = await res.json();
+                document.getElementById('totalPropertiesCountArea').innerText = stats.totalProperties || 0;
+                document.getElementById('pendingApprovalsCountArea').innerText = stats.pendingApprovals || stats.enquiryCount || 0;
+                document.getElementById('activeOwnersCountArea').innerText = stats.activeOwners || 0;
+            } catch (err) {
+                console.warn('Failed to load area stats:', err && err.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { loadAreaStats(); });
     </script>
 </body>
 </html>

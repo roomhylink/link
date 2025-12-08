@@ -203,7 +203,8 @@
                 try {
                     let owners = [];
                     if (myAreaCode) {
-                        const res = await fetch(`/api/owners?locationCode=${encodeURIComponent(myAreaCode)}`);
+                        // Only fetch verified owners for the area manager
+                        const res = await fetch(`/api/owners?locationCode=${encodeURIComponent(myAreaCode)}&kycStatus=verified`);
                         if (res.ok) owners = await res.json();
                     }
 

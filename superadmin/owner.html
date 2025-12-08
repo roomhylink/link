@@ -149,7 +149,8 @@
             <div class="p-4 bg-white flex justify-between items-center">
                 <h3 class="font-bold">KYC Document</h3>
                 <div class="flex gap-2">
-                    <button onclick="verifyOwner()" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Verify</button>
+                    <button onclick="approveOwner()" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Approve</button>
+                    <button onclick="rejectOwner()" class="px-4 py-2 bg-red-600 text-white rounded text-sm">Reject</button>
                     <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded text-sm">Close</button>
                 </div>
             </div>
@@ -328,55 +329,61 @@
             document.getElementById('docModal').classList.remove('flex');
         }
 
-        function verifyOwner() {
+        async function callKycEndpoint(action, reason) {
             if(!currentViewingId) return;
             const db = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
-            (async () => {
-                try {
-                    // Try backend PATCH first to set kyc.status = 'verified'
-                    const res = await fetch(`/api/owners/${encodeURIComponent(currentViewingId)}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ kyc: { status: 'verified', verifiedAt: new Date().toISOString() } })
-                    });
+            try {
+                const res = await fetch(`/api/owners/${encodeURIComponent(currentViewingId)}/kyc`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(action === 'approve' ? { status: 'verified' } : { status: 'rejected', rejectionReason: reason || '' })
+                });
 
-                    if (res.ok) {
-                        const updated = await res.json();
-                        // Update local fallback store
+                if (res.ok) {
+                    const payload = await res.json();
+                    // Update local fallback store with returned owner if present
+                    if (payload.owner) {
                         db[currentViewingId] = db[currentViewingId] || {};
-                        db[currentViewingId].kyc = updated.kyc || { status: 'verified', verifiedAt: new Date().toISOString() };
+                        db[currentViewingId].kyc = payload.owner.kyc || db[currentViewingId].kyc || { status: payload.owner.kyc?.status };
+                        db[currentViewingId].isActive = payload.owner.isActive || db[currentViewingId].isActive;
                         localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
-
-                        // Notify other tabs/pages that this owner's KYC changed
-                        try {
-                            localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: currentViewingId, ts: Date.now() }));
-                        } catch (e) { /* ignore storage errors */ }
-
-                        alert('Owner Verified Successfully!');
-                        closeModal();
-                        loadOwners();
-                        return;
-                    } else {
-                        // Backend failed; fallback to local change
-                        let bodyText = '';
-                        try { bodyText = await res.text(); } catch (e) { bodyText = '<unreadable>'; }
-                        console.warn('Owner verify PATCH failed:', res.status, bodyText);
                     }
-                } catch (err) {
-                    console.warn('Owner verify request failed, falling back to local update:', err && err.message);
-                }
 
-                // Fallback: update localStorage only
-                if(db[currentViewingId] && db[currentViewingId].kyc) {
-                    db[currentViewingId].kyc.status = 'verified';
-                    db[currentViewingId].kyc.verifiedAt = new Date().toISOString();
-                    localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
                     try { localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: currentViewingId, ts: Date.now() })); } catch (e) {}
-                    alert('Owner Verified (local fallback)');
+
+                    alert(action === 'approve' ? 'Owner Verified Successfully!' : 'Owner Rejected');
                     closeModal();
                     loadOwners();
+                    return;
+                } else {
+                    const text = await res.text().catch(() => '');
+                    console.warn('KYC endpoint returned', res.status, text);
                 }
-            })();
+            } catch (err) {
+                console.warn('KYC request failed, falling back to local update:', err && err.message);
+            }
+
+            // Fallback local update
+            if (db[currentViewingId]) {
+                db[currentViewingId].kyc = db[currentViewingId].kyc || {};
+                db[currentViewingId].kyc.status = action === 'approve' ? 'verified' : 'rejected';
+                if (action === 'approve') db[currentViewingId].kyc.verifiedAt = new Date().toISOString();
+                if (action === 'reject') db[currentViewingId].kyc.rejectionReason = reason || '';
+                if (action === 'approve') db[currentViewingId].isActive = true; else db[currentViewingId].isActive = false;
+                localStorage.setItem('roomhy_owners_db', JSON.stringify(db));
+                try { localStorage.setItem('owner_kyc_updated', JSON.stringify({ loginId: currentViewingId, ts: Date.now() })); } catch (e) {}
+                alert(action === 'approve' ? 'Owner Verified (local fallback)' : 'Owner Rejected (local fallback)');
+                closeModal();
+                loadOwners();
+            }
+        }
+
+        function approveOwner() { callKycEndpoint('approve'); }
+
+        function rejectOwner() {
+            const reason = prompt('Enter rejection reason (optional):');
+            if (reason === null) return; // user cancelled
+            callKycEndpoint('reject', reason || '');
         }
 
         loadOwners();
