@@ -35,7 +35,16 @@ router.post('/', async (req, res) => {
 // List all owners (for admin interfaces)
 router.get('/', async (req, res) => {
     try {
-        const owners = await Owner.find({}).lean();
+        // Support query params for filtering: ?kyc=pending|verified, ?locationCode=KO, ?search=term
+        const q = {};
+        if (req.query.kyc) q['kyc.status'] = req.query.kyc;
+        if (req.query.locationCode) q.locationCode = { $regex: `^${req.query.locationCode}`, $options: 'i' };
+        if (req.query.search) {
+            const term = req.query.search;
+            q.$or = [ { loginId: { $regex: term, $options: 'i' } }, { name: { $regex: term, $options: 'i' } }, { 'profile.name': { $regex: term, $options: 'i' } } ];
+        }
+
+        const owners = await Owner.find(q).lean();
         res.json(owners);
     } catch (err) {
         console.error('❌ Owner LIST error:', err.message);

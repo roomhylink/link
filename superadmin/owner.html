@@ -182,7 +182,10 @@
             // Try backend first
             let owners = [];
             try {
-                const res = await fetch('/api/owners');
+                // Prefer backend with optional locationCode filter
+                let url = '/api/owners';
+                if (filterArea && filterArea !== 'all') url += `?locationCode=${encodeURIComponent(filterArea)}`;
+                const res = await fetch(url);
                 if (res.ok) {
                     owners = await res.json();
                 } else {

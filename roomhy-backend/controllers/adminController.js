@@ -82,3 +82,48 @@ exports.rejectVisit = async (req, res) => {
         return res.status(500).json({ success: false, message: err.message });
     }
 };
+
+// Dashboard / Stats endpoint
+exports.getStats = async (req, res) => {
+    try {
+        const areaCode = req.query.areaCode;
+
+        const propFilter = {};
+        const ownerFilter = {};
+        const visitFilter = {};
+        const tenantFilter = {};
+
+        if (areaCode) {
+            propFilter.locationCode = { $regex: `^${areaCode}`, $options: 'i' };
+            ownerFilter.locationCode = { $regex: `^${areaCode}`, $options: 'i' };
+            visitFilter['propertyInfo.locationCode'] = { $regex: `^${areaCode}`, $options: 'i' };
+            tenantFilter.locationCode = { $regex: `^${areaCode}`, $options: 'i' };
+        }
+
+        const totalProperties = await Property.countDocuments(propFilter);
+        const pendingApprovals = await VisitReport.countDocuments({ status: 'submitted', ...visitFilter });
+        const activeOwners = await Owner.countDocuments({ 'kyc.status': 'verified', ...ownerFilter });
+        const pendingOwners = await Owner.countDocuments({ 'kyc.status': 'pending', ...ownerFilter });
+        const activeTenants = await require('../models/Tenant').countDocuments(tenantFilter);
+        const enquiryCount = await VisitReport.countDocuments(visitFilter);
+
+        // Area-wise breakdown (simple aggregation)
+        const areaAggregation = await Property.aggregate([
+            { $match: propFilter },
+            { $group: { _id: '$locationCode', properties: { $sum: 1 } } }
+        ]);
+
+        res.json({
+            totalProperties,
+            pendingApprovals,
+            activeOwners,
+            pendingOwners,
+            activeTenants,
+            enquiryCount,
+            areaAggregation
+        });
+    } catch (err) {
+        console.error('Stats Error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

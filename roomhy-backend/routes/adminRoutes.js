@@ -21,4 +21,7 @@ router.post('/approve-visit/:id', adminController.approveVisit);
 // Route to reject visit
 router.post('/reject-visit/:id', adminController.rejectVisit);
 
+// Dashboard stats
+router.get('/stats', adminController.getStats);
+
 module.exports = router;
