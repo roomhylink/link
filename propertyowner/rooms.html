@@ -278,6 +278,23 @@
         </div>
     </div>
 
+        <!-- 5. Select Property Modal (when no property context is available) -->
+        <div id="select-property-modal" class="modal fixed inset-0 bg-black/60 z-[62] flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl transform transition-all max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Select Property</h3>
+                <button aria-label="Close select property" title="Close" onclick="closeModal('select-property-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+                <p class="text-sm text-gray-600 mb-3">We couldn't determine which property to use. Please select the property to assign this tenant to.</p>
+                <div id="property-selection-list" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="mt-4 text-right">
+                    <button onclick="closeModal('select-property-modal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
+                </div>
+            </div>
+        </div>
+
     <script src="../sessionManager.js"></script>
     <script>
         lucide.createIcons();
@@ -681,10 +698,15 @@
                 const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
                 const room = allRooms.find(r => r.id === roomId);
 
-                // TODO: Get propertyId from room context (for now, use demo value)
-                // In production, propertyId should come from current property context
-                // Use currentPropertyId (from query param or inferred) as the propertyId for tenant assignment
-                const propertyId = currentPropertyId || 'prop_demo_001';
+                // Ensure we have a proper propertyId (try to infer or prompt the owner)
+                const propertyId = await ensurePropertyContext();
+                if (!propertyId) {
+                    alert('Please select a property to assign this tenant to.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-1"></i> Assign Tenant';
+                    lucide.createIcons();
+                    return;
+                }
 
                 // Try backend API first
                 try {
@@ -756,7 +778,7 @@
                     email,
                     loginId,
                     tempPassword,
-                    property: propertyId,
+                    property: currentPropertyTitle || propertyId,
                     roomNo: room.roomNo,
                     bedNo: room.beds.find(b => b.id === bedId).bedNo,
                     moveInDate,
@@ -820,6 +842,107 @@
             }).catch(err => console.error('Copy failed:', err));
         }
 
+        // Ensure we have a property context before trying to assign a tenant.
+        async function ensurePropertyContext() {
+            if (currentPropertyId) return currentPropertyId;
+            // Try to infer from backend
+            try {
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/api/properties', { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    const props = (data && data.success && Array.isArray(data.properties)) ? data.properties : (data.properties || []);
+                    const mine = props.find(p => {
+                        if (!p.owner) return false;
+                        return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
+                    });
+                    if (mine) {
+                        currentPropertyId = mine._id || mine.id;
+                        currentPropertyTitle = mine.title || mine.name || currentPropertyTitle;
+                        if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
+                        return currentPropertyId;
+                    }
+                }
+            } catch (err) {
+                // ignore
+            }
+
+            // Fallback to localStorage
+            const allProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+            const myFirst = allProps.find(p => (p.ownerId === ownerId) || (p.ownerLoginId === ownerId));
+            if (myFirst) {
+                currentPropertyId = myFirst.id || myFirst._id || myFirst.propertyId;
+                currentPropertyTitle = myFirst.name || myFirst.title || currentPropertyTitle;
+                if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
+                return currentPropertyId;
+            }
+
+            // No property found - prompt owner to select one
+            await loadPropertySelection();
+            openModal('select-property-modal');
+            return null;
+        }
+
+        // Populate property selection modal with available properties
+        async function loadPropertySelection() {
+            const container = document.getElementById('property-selection-list');
+            container.innerHTML = '<p class="text-xs text-gray-500">Loading properties...</p>';
+            let props = [];
+            try {
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/api/properties', { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    props = (data && data.success && Array.isArray(data.properties)) ? data.properties : (data.properties || []);
+                }
+            } catch (err) {
+                // ignore
+            }
+
+            // Merge with localStorage as fallback
+            const localProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+            props = props.concat(localProps.filter(lp => !props.find(p => (p._id === lp.id) || (p.id === lp.id) || (p.title === lp.title))));
+
+            // Filter to owner's properties
+            const ownerProps = props.filter(p => {
+                if (!p) return false;
+                if (p.owner) return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
+                // local structure fallback
+                return (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
+            });
+
+            if (ownerProps.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-600">No properties found. Please add a property first from the Properties page.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            ownerProps.forEach(p => {
+                const id = p._id || p.id || p.propertyId || p.id;
+                const title = p.title || p.name || id;
+                const el = document.createElement('div');
+                el.className = 'p-3 border rounded-lg hover:bg-gray-50 flex items-center justify-between';
+                el.innerHTML = `
+                    <div>
+                        <div class="font-medium text-gray-800">${title}</div>
+                        <div class="text-xs text-gray-500">${p.locationCode || ''}</div>
+                    </div>
+                    <div>
+                        <button class="px-3 py-1 bg-purple-600 text-white rounded text-sm" onclick="selectProperty('${id}','${encodeURIComponent(title)}')">Select</button>
+                    </div>`;
+                container.appendChild(el);
+            });
+        }
+
+        // Called when owner selects a property from modal
+        function selectProperty(id, encodedTitle) {
+            currentPropertyId = id;
+            try { currentPropertyTitle = decodeURIComponent(encodedTitle); } catch(_) { currentPropertyTitle = encodedTitle; }
+            if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
+            closeModal('select-property-modal');
+        }
         // Utils
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
