@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Import LocalStorage → MongoDB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-xl font-bold mb-3">Import localStorage JSON to MongoDB</h1>
+        <p class="text-sm text-gray-600 mb-4">Paste the exported localStorage JSON below (or drop a .json file) and provide the import secret. The server will upsert Owners, Visits, Tenants and Properties.</p>
+
+        <textarea id="payload" class="w-full h-56 p-3 border rounded mb-3 font-mono text-sm" placeholder='Paste localStorage JSON here'></textarea>
+        <div class="flex gap-2 mb-3">
+            <input id="importSecret" type="text" placeholder="Import secret (x-import-secret)" class="border p-2 rounded flex-1" />
+            <input id="fileInput" type="file" accept="application/json" class="border p-2 rounded" />
+        </div>
+        <div class="flex gap-2">
+            <button id="doImport" class="bg-green-600 text-white px-4 py-2 rounded font-semibold">Import</button>
+            <button id="preview" class="bg-gray-200 px-4 py-2 rounded">Preview Parsed</button>
+            <span id="status" class="text-sm text-gray-600 ml-3"></span>
+        </div>
+
+        <pre id="result" class="mt-4 p-3 bg-gray-50 border rounded text-sm max-h-72 overflow-auto"></pre>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const txt = await f.text();
+            document.getElementById('payload').value = txt;
+        });
+
+        document.getElementById('preview').addEventListener('click', () => {
+            const v = document.getElementById('payload').value.trim();
+            if (!v) return alert('Paste JSON first');
+            try {
+                const parsed = JSON.parse(v);
+                document.getElementById('result').innerText = JSON.stringify(parsed, null, 2);
+            } catch (e) { alert('Invalid JSON: ' + e.message); }
+        });
+
+        document.getElementById('doImport').addEventListener('click', async () => {
+            const v = document.getElementById('payload').value.trim();
+            const secret = document.getElementById('importSecret').value.trim();
+            if (!v) return alert('Paste JSON first');
+            let parsed;
+            try { parsed = JSON.parse(v); } catch (e) { return alert('Invalid JSON: ' + e.message); }
+
+            document.getElementById('status').innerText = 'Importing...';
+            try {
+                const res = await fetch('/api/admin/import-local', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(secret ? { 'x-import-secret': secret } : {})
+                    },
+                    body: JSON.stringify(parsed)
+                });
+
+                const body = await res.json();
+                document.getElementById('result').innerText = JSON.stringify(body, null, 2);
+                document.getElementById('status').innerText = res.ok ? 'Import completed' : 'Import failed';
+            } catch (err) {
+                document.getElementById('result').innerText = 'Import error: ' + err.message;
+                document.getElementById('status').innerText = 'Error';
+            }
+        });
+    </script>
+</body>
+</html>

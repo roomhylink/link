@@ -24,4 +24,7 @@ router.post('/reject-visit/:id', adminController.rejectVisit);
 // Dashboard stats
 router.get('/stats', adminController.getStats);
 
+// Import localStorage JSON -> MongoDB (protected). Accepts x-import-secret header OR superadmin auth
+router.post('/import-local', adminController.importLocalData);
+
 module.exports = router;

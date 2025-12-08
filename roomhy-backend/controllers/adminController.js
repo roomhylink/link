@@ -68,6 +68,72 @@ exports.approveVisit = async (req, res) => {
     }
 };
 
+// Import localStorage JSON into MongoDB (owners, visits, tenants, properties)
+exports.importLocalData = async (req, res) => {
+    try {
+        // Allow if request has valid import secret OR authenticated superadmin
+        const importSecret = req.headers['x-import-secret'];
+        const allowed = (importSecret && importSecret === process.env.IMPORT_SECRET) || (req.user && req.user.role === 'superadmin');
+        if (!allowed) return res.status(401).json({ success: false, message: 'Not authorized to import data' });
+
+        const payload = req.body || {};
+        const Owner = require('../models/Owner');
+        const VisitReport = require('../models/VisitReport');
+        const Tenant = require('../models/Tenant');
+        const Property = require('../models/Property');
+
+        let ownersInserted = 0, visitsInserted = 0, tenantsInserted = 0, propertiesInserted = 0;
+
+        // 1) Owners (expect object mapping loginId -> ownerData)
+        const ownersDb = payload.roomhy_owners_db || {};
+        for (const loginId of Object.keys(ownersDb)) {
+            const o = ownersDb[loginId];
+            const upsert = {
+                loginId: loginId,
+                name: o.profile?.name || o.name || o.profile?.ownerName || '',
+                phone: o.profile?.phone || o.phone || '',
+                address: o.profile?.address || o.address || '',
+                locationCode: o.locationCode || o.profile?.locationCode || o.ownerArea || '',
+                credentials: o.credentials || { password: o.password || '', firstTime: !!o.credentials?.firstTime },
+                kyc: o.kyc || {},
+                isActive: !!o.isActive
+            };
+            await Owner.findOneAndUpdate({ loginId }, { $set: upsert, $setOnInsert: { createdAt: new Date() } }, { upsert: true, new: true, setDefaultsOnInsert: true });
+            ownersInserted++;
+        }
+
+        // 2) Visits (array)
+        const visits = payload.roomhy_visits || [];
+        for (const v of visits) {
+            // prefer unique key generatedCredentials.loginId
+            const filter = (v.generatedCredentials && v.generatedCredentials.loginId) ? { 'generatedCredentials.loginId': v.generatedCredentials.loginId } : { 'propertyInfo.name': v.propertyInfo?.name || '', 'propertyInfo.locationCode': v.propertyInfo?.locationCode || '' };
+            await VisitReport.findOneAndUpdate(filter, { $set: v, $setOnInsert: { submittedAt: v.submittedAt || new Date() } }, { upsert: true, new: true });
+            visitsInserted++;
+        }
+
+        // 3) Tenants (array)
+        const tenants = payload.roomhy_tenants || payload.tenants || [];
+        for (const t of tenants) {
+            const tenantId = t.tenantId || t.id || t.loginId || t._id;
+            if (!tenantId) continue;
+            await Tenant.findOneAndUpdate({ $or: [{ tenantId }, { loginId: tenantId }] }, { $set: t, $setOnInsert: { createdAt: new Date() } }, { upsert: true, new: true });
+            tenantsInserted++;
+        }
+
+        // 4) Properties (array)
+        const properties = payload.roomhy_properties || payload.properties || [];
+        for (const p of properties) {
+            const filter = p._id ? { _id: p._id } : { title: p.title || p.name || '', locationCode: p.locationCode || p.location || '' };
+            await Property.findOneAndUpdate(filter, { $set: p, $setOnInsert: { createdAt: new Date() } }, { upsert: true, new: true });
+            propertiesInserted++;
+        }
+
+        return res.json({ success: true, ownersInserted, visitsInserted, tenantsInserted, propertiesInserted });
+    } catch (err) {
+        console.error('Import Error:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
 exports.rejectVisit = async (req, res) => {
     try {
         const visitId = req.params.id;
