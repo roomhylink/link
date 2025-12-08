@@ -115,6 +115,7 @@
                                         <th>Login Credentials</th>
                                         <th>Personal Details</th>
                                         <th>Room & Rent</th>
+                                        <th>Location Code</th>
                                         <th>Move In / Out</th>
                                         <th>Status</th>
                                         <th>KYC Status</th> <!-- NEW COLUMN -->
@@ -315,6 +316,7 @@
                             <div class="text-xs text-gray-500">Room ${t.roomNo}, Bed ${t.bedNo}</div>
                             <div class="text-xs font-medium text-green-600 mt-0.5">Rent: ₹${t.agreedRent}</div>
                         </td>
+                        <td class="font-mono text-sm text-gray-700">${(typeof t.property === 'object' && t.property !== null) ? (t.property.locationCode || '-') : (t.locationCode || '-')}</td>
 
                         <!-- 5. Move In/Out -->
                         <td>
@@ -392,7 +394,8 @@
                 "Guardian Contact": t.emergencyContact || '-',
                 "DOB": t.dob || '-',
                 "Address": t.address || '-',
-                "Property": (typeof t.property === 'object' && t.property !== null) ? (t.property.title || t.property.name) + (t.property.locationCode ? ` (${t.property.locationCode})` : '') : (t.property || '-'),
+                "Property": (typeof t.property === 'object' && t.property !== null) ? (t.property.title || t.property.name) : (t.property || '-'),
+                "Location Code": (typeof t.property === 'object' && t.property !== null) ? (t.property.locationCode || '-') : (t.locationCode || '-'),
                 "Room": t.roomNo,
                 "Bed": t.bedNo,
                 "Rent Amount": t.agreedRent,

@@ -125,6 +125,7 @@
                                         <th>Login ID</th>
                                         <th>Owner Name</th>
                                         <th>Address</th>
+                                        <th>Area Code</th>
                                         <th>Password</th>
                                         <th>Aadhar</th>
                                         <th>KYC Status</th>
@@ -146,8 +147,8 @@
     <!-- Document Modal -->
     <div id="kycModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 backdrop-blur-sm" onclick="closeKycModal()">
         <div class="bg-white p-2 rounded-lg max-w-2xl w-full relative" onclick="event.stopPropagation()">
-            <button onclick="closeKycModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300"><i data-lucide="x" class="w-8 h-8"></i></button>
-            <img id="kycImage" src="" class="w-full h-auto max-h-[80vh] object-contain rounded">
+            <button aria-label="Close KYC modal" onclick="closeKycModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300"><i data-lucide="x" class="w-8 h-8"></i></button>
+            <img id="kycImage" src="" alt="KYC document" class="w-full h-auto max-h-[80vh] object-contain rounded">
             <div class="p-4 text-center font-bold">KYC Document Preview</div>
         </div>
     </div>
@@ -216,9 +217,9 @@
                         if (myAreaCode) owners = owners.filter(o => (o.loginId && o.loginId.startsWith(myAreaCode)) || (o.locationCode && o.locationCode.startsWith(myAreaCode)));
                     }
 
-                    if (owners.length === 0) {
-                        const msg = myArea ? `No owners found for ${myArea} area.` : (myAreaCode ? `No owners found for ${myAreaCode} area.` : 'No owners found.');
-                        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-500">${msg}</td></tr>`;
+                            if (owners.length === 0) {
+                                const msg = myArea ? `No owners found for ${myArea} area.` : (myAreaCode ? `No owners found for ${myAreaCode} area.` : 'No owners found.');
+                                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-500">${msg}</td></tr>`;
                         return;
                     }
 
@@ -234,11 +235,14 @@
                         const passwordDisplay = (isAreaManager || canViewAllDetails) ? (creds.password || '-') : '●●●●●●●●';
                         const aadharDisplay = (isAreaManager || canViewAllDetails) ? (kyc.aadharNumber || '-') : '●●●●●●●●';
 
+                        const areaCode = data.locationCode || data.profile?.locationCode || data.area || myAreaCode || '';
+
                         currentOwnersData.push({
                             "Owner ID": id,
                             "Name": profile.name || 'Unknown',
                             "Phone": profile.phone || '-',
                             "Address": profile.address || '-',
+                            "Area": areaCode,
                             "Password": passwordDisplay,
                             "Aadhar": aadharDisplay,
                             "Status": kyc.status || 'Pending'
@@ -257,6 +261,7 @@
                                 <td class="font-mono font-bold text-slate-700">${id}</td>
                                 <td class="font-medium text-slate-800">${profile.name || 'Unknown'}<br><span class="text-xs text-gray-500">${profile.phone || '-'}</span></td>
                                 <td class="text-sm text-gray-600 max-w-xs truncate" title="${profile.address || '-'}">${profile.address || '-'}</td>
+                                <td class="text-sm text-gray-700 font-mono">${areaCode}</td>
                                 <td><code class="text-xs font-mono bg-red-50 text-red-600 px-2 py-1 rounded border border-red-100">${passwordDisplay}</code></td>
                                 <td class="font-mono text-sm text-gray-700">${aadharDisplay}</td>
                                 <td>${kycStatus}</td>
