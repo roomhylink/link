@@ -660,39 +660,88 @@
             document.getElementById('empPassword').value = Math.random().toString(36).slice(-8).toUpperCase();
         }
 
-        function saveEmployee() {
+        async function saveEmployee() {
             const name = document.getElementById('empName').value.trim();
             const role = document.getElementById('empRole').value;
             const city = document.getElementById('modalCity').value;
             const area = document.getElementById('modalArea').value;
+            // derive areaCode as first two letters (letters only) of the area
+            const areaCode = (area || '').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0,2);
             const phone = document.getElementById('empPhone').value.trim();
             const email = document.getElementById('empEmail').value.trim();
             const loginId = document.getElementById('empLoginId').value;
             const password = document.getElementById('empPassword').value;
 
             if(!name || !role || !loginId) return alert("Fill Required Fields");
+            const isEditing = !!editingEmployeeId;
             
             const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
 
+            // Prepare payload for backend
+            const payload = { name, email, phone, password, role, loginId, locationCode: areaCode };
+
             if (editingEmployeeId) {
                 // Update existing employee
-                const empIdx = db.findIndex(e => e.id === editingEmployeeId);
+                const prevEditingId = editingEmployeeId;
+                const empIdx = db.findIndex(e => e.id === prevEditingId);
                 if (empIdx >= 0) {
                     db[empIdx] = {
                         ...db[empIdx],
-                        name, role, city, area, phone, email, loginId, password,
+                        name, role, city, area, areaCode, phone, email, loginId, password,
                         permissions: Array.from(selectedPermissions)
                     };
+                }
+                // Try to update on backend (by loginId) if token available
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const res = await fetch(`/api/admin/users/${encodeURIComponent(loginId)}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            // attach db sync flag to local record
+                            const updated = db.find(e => e.loginId === loginId || e.id === prevEditingId);
+                            if (updated) { updated._synced = true; updated._dbId = data.user.id; }
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Employee update API failed, saved locally:', err.message);
                 }
                 editingEmployeeId = null;
             } else {
                 // Create new employee
                 const newEmp = {
                     id: Date.now().toString(),
-                    name, role, city, area, phone, email, loginId, password,
+                    name, role, city, area, areaCode, phone, email, loginId, password,
                     permissions: Array.from(selectedPermissions),
                     createdAt: new Date().toISOString()
                 };
+                // Try backend create first
+                let createdOnServer = null;
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const res = await fetch('/api/admin/users', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                            body: JSON.stringify(payload)
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            createdOnServer = data.user;
+                            newEmp._synced = true;
+                            newEmp._dbId = data.user.id;
+                        } else {
+                            console.warn('Employee create API returned', res.status);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Employee create API failed, saving locally:', err.message);
+                }
+
                 db.push(newEmp);
             }
 
@@ -703,7 +752,7 @@
             updateCounts();
             
             // Show Creds modal if new employee
-            if (!editingEmployeeId) {
+            if (!isEditing) {
                 document.getElementById('viewLoginId').innerText = loginId;
                 document.getElementById('viewPassword').innerText = password;
                 document.getElementById('viewCredModal').classList.remove('hidden');

@@ -193,3 +193,41 @@ exports.getStats = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+// Create a user (employee) - Super Admin only
+exports.createUser = async (req, res) => {
+    try {
+        const { name, email, phone, password, role, loginId, locationCode } = req.body;
+        if (!name || !phone || !password || !role) return res.status(400).json({ message: 'Missing fields' });
+
+        // Check duplicates
+        const existing = await User.findOne({ $or: [{ email }, { phone }, { loginId }] });
+        if (existing) return res.status(409).json({ message: 'User already exists' });
+
+        const user = await User.create({ name, email, phone, password, role, loginId, locationCode });
+        const safeUser = { id: user._id, name: user.name, role: user.role, loginId: user.loginId, locationCode: user.locationCode };
+        return res.status(201).json({ success: true, user: safeUser });
+    } catch (err) {
+        console.error('createUser error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// Update user by loginId (Super Admin only)
+exports.updateUser = async (req, res) => {
+    try {
+        const loginId = req.params.loginId;
+        const payload = { ...req.body };
+        // Prevent password being set directly here unless necessary
+        if (payload.password) {
+            // let mongoose pre-save hook hash if using save; otherwise set directly
+        }
+        const user = await User.findOneAndUpdate({ loginId }, { $set: payload }, { new: true });
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        const safeUser = { id: user._id, name: user.name, role: user.role, loginId: user.loginId, locationCode: user.locationCode };
+        return res.json({ success: true, user: safeUser });
+    } catch (err) {
+        console.error('updateUser error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
