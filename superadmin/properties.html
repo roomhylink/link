@@ -249,40 +249,64 @@
 
         // --- Load Data ---
         async function loadProperties() {
-            // Try backend first: fetch approved visits (which represent approved properties)
-            let visits = [];
+            // Try backend properties endpoint first (prefers MongoDB Atlas)
+            let props = [];
             try {
-                const res = await fetch('/api/admin/visits?status=approved');
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                const res = await fetch('/api/properties', { headers });
                 if (res.ok) {
-                    // API returns an array of visits
-                    visits = await res.json();
+                    const data = await res.json();
+                    if (data && data.success && Array.isArray(data.properties)) {
+                        props = data.properties.map(p => ({
+                            id: p._id || p.id,
+                            title: p.title || p.name || p.propertyName || 'Untitled',
+                            locationCode: p.locationCode || '-',
+                            address: p.address || '-',
+                            ownerName: p.owner ? (p.owner.name || '-') : (p.ownerName || '-'),
+                            ownerPhone: p.owner ? (p.owner.phone || '-') : (p.ownerPhone || '-'),
+                            ownerLoginId: p.owner ? (p.owner.loginId || null) : (p.ownerLoginId || null),
+                            photos: p.photos || (p.image ? [p.image] : []),
+                            imageBase64: p.imageBase64 || null,
+                            status: p.status || 'active'
+                        }));
+                    }
                 } else {
-                    console.warn('Backend visits fetch returned', res.status);
+                    console.warn('Properties API returned', res.status);
                 }
             } catch (err) {
-                console.warn('Failed to fetch approved visits from backend, falling back to localStorage', err);
+                console.warn('Failed to fetch properties from backend, falling back to visits/localStorage', err);
             }
 
-            // If backend returned nothing, fallback to localStorage
-            if (!visits || visits.length === 0) {
-                const localVisits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
-                visits = localVisits.filter(v => v.status === 'approved');
+            // Fallback: if no properties retrieved, use approved visits (legacy) or localStorage
+            if (!props || props.length === 0) {
+                let visits = [];
+                try {
+                    const res = await fetch('/api/admin/visits?status=approved');
+                    if (res.ok) visits = await res.json();
+                } catch (err) {
+                    // ignore
+                }
+                if (!visits || visits.length === 0) {
+                    const localVisits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+                    visits = localVisits.filter(v => v.status === 'approved');
+                }
+
+                props = visits.map(v => ({
+                    id: v._id,
+                    title: v.propertyInfo ? v.propertyInfo.name : (v.title || 'Property'),
+                    locationCode: v.propertyInfo ? v.propertyInfo.locationCode : (v.locationCode || 'NA'),
+                    address: v.propertyInfo ? (v.propertyInfo.address || '-') : (v.address || '-'),
+                    ownerName: v.propertyInfo ? (v.propertyInfo.ownerName || 'Unknown') : (v.ownerName || 'Unknown'),
+                    ownerPhone: v.propertyInfo ? v.propertyInfo.contactPhone : v.ownerPhone,
+                    ownerLoginId: v.generatedCredentials ? v.generatedCredentials.loginId : (v.ownerLoginId || null),
+                    photos: v.photos || [],
+                    imageBase64: v.imageBase64,
+                    status: 'active'
+                }));
             }
 
-            const approvedProps = visits.map(v => ({
-                id: v._id,
-                title: v.propertyInfo ? v.propertyInfo.name : (v.title || 'Property'),
-                locationCode: v.propertyInfo ? v.propertyInfo.locationCode : (v.locationCode || 'NA'),
-                address: v.propertyInfo ? (v.propertyInfo.address || '-') : (v.address || '-'),
-                ownerName: v.propertyInfo ? (v.propertyInfo.ownerName || 'Unknown') : (v.ownerName || 'Unknown'),
-                ownerPhone: v.propertyInfo ? v.propertyInfo.contactPhone : v.ownerPhone,
-                ownerLoginId: v.generatedCredentials ? v.generatedCredentials.loginId : (v.ownerLoginId || null),
-                photos: v.photos || [],
-                imageBase64: v.imageBase64,
-                status: 'active'
-            }));
-
-            renderProperties(approvedProps);
+            renderProperties(props);
         }
 
         function renderProperties(props) {

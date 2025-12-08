@@ -190,6 +190,9 @@
                                 <th>Description</th>
                                 <th>Address</th>
                             </tr>
+                                <td class="text-right">
+                                    <a href="rooms.html?propertyId=${p._id || p.id || p.propertyId}&propertyTitle=${encodeURIComponent(p.name || p.title || p.propertyName || '')}" class="text-purple-600 hover:text-purple-800 text-xs font-medium border border-purple-200 px-3 py-1.5 rounded hover:bg-purple-50 transition-colors">Manage Rooms</a>
+                                </td>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             <!-- Sample Row -->

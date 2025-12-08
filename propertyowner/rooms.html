@@ -80,7 +80,7 @@
                     <!-- Page Header (New Location for Add Button) -->
                     <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
                         <div>
-                            <h1 class="text-2xl font-bold text-slate-800">Manage Rooms</h1>
+                        <h1 class="text-2xl font-bold text-slate-800">Manage Rooms <span id="pagePropertyTitle" class="text-base font-normal text-gray-500"> </span></h1>
                             <p class="text-sm text-slate-500 mt-1">Add rooms, configure beds, and assign tenants.</p>
                         </div>
                         <div class="mt-4 md:mt-0">
@@ -283,6 +283,8 @@
         lucide.createIcons();
         let ownerId = '';
         let currentRoomId = null;
+        let currentPropertyId = null;
+        let currentPropertyTitle = null;
 
         // 1. Auth & Header Populate (prefer per-tab owner session)
         document.addEventListener('DOMContentLoaded', () => {
@@ -294,7 +296,56 @@
             ownerId = owner.ownerId || owner.loginId;
             document.getElementById('headerName').innerText = owner.name;
             document.getElementById('headerAvatar').innerText = owner.name.charAt(0).toUpperCase();
-            loadRooms();
+            // Read property context from query string (set by Properties -> Manage Rooms)
+            const params = new URLSearchParams(window.location.search);
+            currentPropertyId = params.get('propertyId') || null;
+            currentPropertyTitle = params.get('propertyTitle') ? decodeURIComponent(params.get('propertyTitle')) : null;
+
+            if (currentPropertyTitle && document.getElementById('pagePropertyTitle')) {
+                document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
+            }
+
+            (async () => {
+                // If propertyId not provided, try to infer from backend or localStorage
+                if (!currentPropertyId) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+                        const res = await fetch('/api/properties', { headers });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const props = (data && data.success && Array.isArray(data.properties)) ? data.properties : [];
+                            const mine = props.find(p => {
+                                // match by owner id or ownerLoginId
+                                if (!p.owner) return false;
+                                return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
+                            });
+                            if (mine) {
+                                currentPropertyId = mine._id || mine.id;
+                                currentPropertyTitle = mine.title || mine.name || currentPropertyTitle;
+                            }
+                        }
+                    } catch (err) {
+                        // ignore and fallback to localStorage
+                    }
+
+                    if (!currentPropertyId) {
+                        // fallback to localStorage properties
+                        const allProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+                        const myFirst = allProps.find(p => (p.ownerId === ownerId) || (p.ownerLoginId === ownerId));
+                        if (myFirst) {
+                            currentPropertyId = myFirst.id || myFirst._id || myFirst.propertyId;
+                            currentPropertyTitle = myFirst.name || myFirst.title || currentPropertyTitle;
+                        }
+                    }
+
+                    if (currentPropertyTitle && document.getElementById('pagePropertyTitle')) {
+                        document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
+                    }
+                }
+
+                loadRooms();
+            })();
         });
 
         // 2. Mobile Menu
@@ -326,7 +377,7 @@
                 const res = await fetch(`/api/owners/${encodeURIComponent(ownerId)}/rooms`);
                 if (res.ok) {
                     const payload = await res.json();
-                    myRooms = payload.rooms || [];
+                        myRooms = payload.rooms || [];
                 } else {
                     console.warn('rooms API returned', res.status);
                 }
@@ -355,6 +406,16 @@
                     </div>`;
                 lucide.createIcons();
                 return;
+            }
+
+            // If a specific property context is set, filter rooms to that property
+            if (currentPropertyId) {
+                myRooms = myRooms.filter(r => {
+                    // r.property may be an id or populated object
+                    if (!r.property) return false;
+                    if (typeof r.property === 'string') return r.property === currentPropertyId;
+                    return (r.property._id || r.property.id || r.property) == currentPropertyId;
+                });
             }
 
             myRooms.forEach(room => {
@@ -622,7 +683,8 @@
 
                 // TODO: Get propertyId from room context (for now, use demo value)
                 // In production, propertyId should come from current property context
-                const propertyId = 'prop_demo_001'; // Placeholder; update when property context available
+                // Use currentPropertyId (from query param or inferred) as the propertyId for tenant assignment
+                const propertyId = currentPropertyId || 'prop_demo_001';
 
                 // Try backend API first
                 try {
