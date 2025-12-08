@@ -273,7 +273,7 @@
                         </div>
                     </div>
 
-                    <!-- Tab Switcher -->
+                        <!-- Tab Switcher -->
                     <div class="flex border-b border-slate-200 w-full mb-6">
                         <button class="px-4 py-2 text-sm font-medium text-purple-600 border-b-2 border-purple-600 bg-transparent">Overview</button>
                         <button class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">Analytics</button>
@@ -287,7 +287,7 @@
                         <div class="bg-purple-500 rounded-xl p-6 relative overflow-hidden shadow-md text-white transition-transform hover:-translate-y-1 duration-300">
                             <div class="relative z-10">
                                 <p class="text-purple-100 font-medium text-sm">Total Properties</p>
-                                <h3 class="text-3xl font-bold mt-2">12</h3>
+                                <h3 id="totalPropertiesCount" class="text-3xl font-bold mt-2">12</h3>
                                 <p class="text-xs mt-4 text-purple-100 opacity-90">Active in 3 cities</p>
                             </div>
                             <div class="absolute right-4 top-4 opacity-20">
@@ -299,7 +299,7 @@
                         <div class="bg-white rounded-xl p-6 relative overflow-hidden shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 duration-300">
                              <div class="relative z-10">
                                 <p class="text-slate-500 font-medium text-sm">Total Tenants</p>
-                                <h3 class="text-3xl font-bold text-slate-800 mt-2">89</h3>
+                            <h3 id="totalTenantsCount" class="text-3xl font-bold text-slate-800 mt-2">89</h3>
                                 <p class="text-slate-400 text-xs mt-4">All active tenants</p>
                             </div>
                             <div class="absolute right-4 top-4 opacity-5">
@@ -311,7 +311,7 @@
                         <div class="bg-purple-500 rounded-xl p-6 relative overflow-hidden shadow-md text-white transition-transform hover:-translate-y-1 duration-300">
                             <div class="relative z-10">
                                 <p class="text-purple-100 font-medium text-sm">This Month Earnings</p>
-                                <h3 class="text-3xl font-bold mt-2">₹1.2L</h3>
+                                <h3 id="monthlyRevenue" class="text-3xl font-bold mt-2">₹1.2L</h3>
                                 <p class="text-xs mt-4 text-purple-100 opacity-90">+12% from last month</p>
                             </div>
                             <div class="absolute right-4 top-4 opacity-20">
@@ -323,7 +323,7 @@
                         <div class="bg-white rounded-xl p-6 relative overflow-hidden shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 duration-300">
                              <div class="relative z-10">
                                 <p class="text-slate-500 font-medium text-sm">Vacant Seats</p>
-                                <h3 class="text-3xl font-bold text-slate-800 mt-2">4</h3>
+                            <h3 id="vacantSeatsCount" class="text-3xl font-bold text-slate-800 mt-2">4</h3>
                                 <p class="text-slate-400 text-xs mt-4">Across 12 properties</p>
                             </div>
                             <div class="absolute right-4 top-4 opacity-5">
@@ -346,6 +346,12 @@
                                     <p class="text-xs text-slate-400 uppercase font-semibold">Total Revenue</p>
                                     <p class="text-2xl font-bold text-slate-800">₹13,00,000.00</p>
                                 </div>
+                            </div>
+
+                            <!-- Area-wise Properties Chart (Chart.js) -->
+                            <div class="mt-6">
+                                <h4 class="text-sm font-semibold text-slate-700 mb-3">Properties by Area</h4>
+                                <canvas id="areaChart" height="120"></canvas>
                             </div>
 
                             <!-- Chart Container -->
@@ -526,6 +532,41 @@
         mobileOpenBtn.addEventListener('click', toggleMobileMenu);
         mobileCloseBtn.addEventListener('click', toggleMobileMenu);
         mobileOverlay.addEventListener('click', toggleMobileMenu);
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                if (!res.ok) throw new Error('Stats API failed');
+                const stats = await res.json();
+
+                // Update KPI cards
+                document.getElementById('totalPropertiesCount').innerText = stats.totalProperties || 0;
+                document.getElementById('totalTenantsCount').innerText = stats.activeTenants || 0;
+                document.getElementById('monthlyRevenue').innerText = stats.monthlyRevenue ? `₹${stats.monthlyRevenue}` : document.getElementById('monthlyRevenue').innerText;
+                document.getElementById('vacantSeatsCount').innerText = stats.vacantSeats || 0;
+
+                // Area aggregation chart
+                const labels = (stats.areaAggregation || []).map(a => a._id || 'Unknown');
+                const values = (stats.areaAggregation || []).map(a => a.properties || 0);
+
+                const ctx = document.getElementById('areaChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{ label: 'Properties', data: values, backgroundColor: '#7c3aed' }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+            } catch (err) {
+                console.warn('Failed to load dashboard stats:', err.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboardStats);
     </script>
 </body>
 </html>

@@ -102,6 +102,23 @@
                         <h1 class="text-xl font-bold text-white leading-none tracking-tight">RoomHy</h1>
                         <span class="text-[10px] text-gray-500 font-medium tracking-wider">AREA ADMIN</span>
                      </div>
+                    // Update summary KPIs from backend stats (area-level)
+                    async function updateAreaEnquiryStats() {
+                        try {
+                            const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
+                            const areaCode = user?.areaCode || user?.locationCode || '';
+                            if (!areaCode) return;
+                            const res = await fetch(`/api/admin/stats?areaCode=${encodeURIComponent(areaCode)}`);
+                            if (!res.ok) return;
+                            const s = await res.json();
+                            document.getElementById('newLeadsCount').innerText = s.enquiryCount || 0;
+                            document.getElementById('scheduledVisitsCount').innerText = s.scheduledVisits || s.pendingApprovals || 0;
+                            document.getElementById('convertedPercent').innerText = (s.conversionRate ? `${s.conversionRate}%` : 'N/A');
+                            document.getElementById('missedVisitsCount').innerText = s.missedVisits || 0;
+                        } catch (e) { console.warn('Area enquiry stats load failed', e.message); }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', updateAreaEnquiryStats);
                  </div>
             </div>
             
@@ -196,7 +213,7 @@
                         <div class="bg-white p-5 rounded-xl border border-blue-200 shadow-sm flex items-center justify-between">
                             <div>
                                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">New Leads</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1">18</h3>
+                                <h3 id="newLeadsCount" class="text-2xl font-bold text-slate-800 mt-1">18</h3>
                                 <p class="text-xs text-blue-600 mt-1 font-medium">Recieved Today</p>
                             </div>
                             <div class="bg-blue-50 p-3 rounded-lg text-blue-600">
@@ -208,7 +225,7 @@
                         <div class="bg-white p-5 rounded-xl border border-purple-200 shadow-sm flex items-center justify-between relative overflow-hidden">
                             <div>
                                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Scheduled Visits</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1">5</h3>
+                                <h3 id="scheduledVisitsCount" class="text-2xl font-bold text-slate-800 mt-1">5</h3>
                                 <p class="text-xs text-purple-600 mt-1 font-medium">For Today</p>
                             </div>
                             <div class="bg-purple-50 p-3 rounded-lg text-purple-600">
@@ -220,7 +237,7 @@
                         <div class="bg-white p-5 rounded-xl border border-green-200 shadow-sm flex items-center justify-between">
                             <div>
                                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Converted</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1">12%</h3>
+                                <h3 id="convertedPercent" class="text-2xl font-bold text-slate-800 mt-1">12%</h3>
                                 <p class="text-xs text-green-600 mt-1 font-medium">Conversion Rate</p>
                             </div>
                             <div class="bg-green-50 p-3 rounded-lg text-green-600">
@@ -232,7 +249,7 @@
                         <div class="bg-white p-5 rounded-xl border border-red-200 shadow-sm flex items-center justify-between">
                             <div>
                                 <p class="text-xs text-gray-500 font-medium uppercase tracking-wider">Missed Visits</p>
-                                <h3 class="text-2xl font-bold text-slate-800 mt-1">2</h3>
+                                <h3 id="missedVisitsCount" class="text-2xl font-bold text-slate-800 mt-1">2</h3>
                                 <p class="text-xs text-red-600 mt-1 font-medium">Action Required</p>
                             </div>
                             <div class="bg-red-50 p-3 rounded-lg text-red-600">

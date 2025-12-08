@@ -188,23 +188,48 @@
         });
 
         async function loadAreaProperties(areaCode, areaName, isAreaManager) {
-            // Read from roomhy_visits
-            const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
-            const approvedProps = visits
-                .filter(v => v.status === 'approved')
-                .map(v => ({
-                    id: v._id,
-                    title: v.propertyInfo.name,
-                    locationCode: v.propertyInfo.locationCode,
-                    propertyArea: v.propertyArea || areaName, // Use stored area from visit
-                    ownerName: v.propertyInfo.ownerName || 'Generated Owner',
-                    phone: v.propertyInfo.contactPhone,
-                    address: v.propertyInfo.address || '-', 
-                    photos: v.photos || [], 
-                    imageBase64: v.imageBase64,
-                    status: 'active'
-                }));
-            renderFilteredProperties(approvedProps, areaCode, areaName, isAreaManager);
+                // Try backend first (if available) to fetch properties for this area
+                try {
+                    if (areaCode) {
+                        const res = await fetch(`/api/properties?locationCode=${encodeURIComponent(areaCode)}`);
+                        if (res.ok) {
+                            const json = await res.json();
+                            const props = (json.properties || json || []).map(p => ({
+                                id: p._id || p.id,
+                                title: p.title || p.name,
+                                locationCode: p.locationCode || p.location,
+                                propertyArea: p.area || areaName,
+                                ownerName: (p.owner && p.owner.name) || p.ownerName || p.ownerLoginId || 'Owner',
+                                phone: p.owner && p.owner.phone || '',
+                                address: p.address || '-',
+                                photos: p.photos || [],
+                                status: p.status || 'inactive'
+                            }));
+                            renderFilteredProperties(props, areaCode, areaName, isAreaManager);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Backend properties fetch failed, falling back to local visits', e.message);
+                }
+
+                // Fallback: Read from roomhy_visits
+                const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+                const approvedProps = visits
+                    .filter(v => v.status === 'approved')
+                    .map(v => ({
+                        id: v._id,
+                        title: v.propertyInfo.name,
+                        locationCode: v.propertyInfo.locationCode,
+                        propertyArea: v.propertyArea || areaName,
+                        ownerName: v.propertyInfo.ownerName || 'Generated Owner',
+                        phone: v.propertyInfo.contactPhone,
+                        address: v.propertyInfo.address || '-',
+                        photos: v.photos || [],
+                        imageBase64: v.imageBase64,
+                        status: 'active'
+                    }));
+                renderFilteredProperties(approvedProps, areaCode, areaName, isAreaManager);
         }
 
         function renderFilteredProperties(props, areaCode, areaName, isAreaManager) {
