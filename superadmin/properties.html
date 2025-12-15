@@ -278,21 +278,22 @@
                 console.warn('Failed to fetch properties from backend, falling back to visits/localStorage', err);
             }
 
-            // Fallback: if no properties retrieved, use approved visits (legacy) or localStorage
-            if (!props || props.length === 0) {
+            // Also include properties that came from approved visits/enquiries (merge)
+            try {
                 let visits = [];
                 try {
                     const res = await fetch('/api/admin/visits?status=approved');
                     if (res.ok) visits = await res.json();
                 } catch (err) {
-                    // ignore
+                    // ignore backend error
                 }
+
                 if (!visits || visits.length === 0) {
                     const localVisits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
                     visits = localVisits.filter(v => v.status === 'approved');
                 }
 
-                props = visits.map(v => ({
+                const visitProps = visits.map(v => ({
                     id: v._id,
                     title: v.propertyInfo ? v.propertyInfo.name : (v.title || 'Property'),
                     locationCode: v.propertyInfo ? v.propertyInfo.locationCode : (v.locationCode || 'NA'),
@@ -300,10 +301,18 @@
                     ownerName: v.propertyInfo ? (v.propertyInfo.ownerName || 'Unknown') : (v.ownerName || 'Unknown'),
                     ownerPhone: v.propertyInfo ? v.propertyInfo.contactPhone : v.ownerPhone,
                     ownerLoginId: v.generatedCredentials ? v.generatedCredentials.loginId : (v.ownerLoginId || null),
-                    photos: v.photos || [],
+                    photos: v.photos || (v.imageBase64 ? [v.imageBase64] : []),
                     imageBase64: v.imageBase64,
                     status: 'active'
                 }));
+
+                // Merge visitProps into props, avoiding duplicates by id or title+locationCode
+                visitProps.forEach(vp => {
+                    const exists = props.find(p => (p.id && vp.id && p.id === vp.id) || (p.title === vp.title && p.locationCode === vp.locationCode));
+                    if (!exists) props.push(vp);
+                });
+            } catch (err) {
+                console.warn('Failed to merge approved visits into properties', err);
             }
 
             renderProperties(props);
@@ -385,7 +394,7 @@
         }
         
         // --- View Details Functionality ---
-        function viewDetails(ownerId, propName, location) {
+        async function viewDetails(ownerId, propName, location) {
             if(!ownerId) {
                 alert("Owner ID not found for this property.");
                 return;

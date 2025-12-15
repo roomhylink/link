@@ -3,234 +3,820 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roomhy - Manager Communication</title>
+    <title>RoomHy - Area Manager Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase (Firestore) - replace config below with your project values -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .sidebar { background-color: #111827; }
-        .sidebar-link { transition: all 0.2s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: #1f2937; color: white; }
-        .active-tab { background-color: #f3e8ff; color: #7e22ce; border-color: #7e22ce; }
-        .chat-scroll::-webkit-scrollbar { width: 4px; }
-        .chat-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        
+        /* Sidebar Styling */
+        .sidebar { background-color: #111827; color: #9ca3af; }
+        .sidebar-link {
+            color: #9ca3af; font-weight: 500; transition: all 0.2s ease;
+            display: flex; align-items: center; padding: 0.75rem 1.5rem;
+            font-size: 0.9rem; border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-link:hover { color: #f3f4f6; background-color: #1f2937; }
+        .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+        /* Chat UI */
+        .active-chat { background-color: #f3f4f6; border-left: 4px solid #9333ea; }
+        .chat-bubble-user { background-color: #f3f4f6; color: #1f2937; border-radius: 12px 12px 12px 0; }
+        .chat-bubble-me { background-color: #9333ea; color: white; border-radius: 12px 12px 0 12px; }
+        
+        .chat-bubble-system {
+            background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
+            border-radius: 8px; text-align: center; font-size: 0.75rem;
+            font-weight: 600; padding: 4px 12px; margin: 8px auto; width: fit-content;
+        }
+
+        /* Recording Animation */
+        .recording-pulse { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
     </style>
 </head>
-<body class="text-slate-800 h-screen overflow-hidden flex">
-
-    <!-- Sidebar -->
-    <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
-        <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+    
+    <div class="flex h-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
+            <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
                 <div class="flex items-center gap-3">
                     <div class="bg-purple-600 p-1.5 rounded-lg"><i data-lucide="map" class="w-5 h-5 text-white"></i></div>
-                    <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500">AREA ADMIN</span></div>
-                </div>
-        </div>
-        <nav class="flex-1 py-6 space-y-1">
-            <a href="areaadmin.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
-            <a href="areaproperty.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
-            <a href="visit.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Visit Reports</a>
-            <a href="areatenant.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
-            <a href="areaowner.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Owners</a>
-            <a href="areachat.html" class="sidebar-link active flex items-center px-6 py-3 text-white bg-gray-800 border-l-4 border-purple-500"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
-            <a href="profile.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
-            <a href="setting.html" class="sidebar-link flex items-center px-6 py-3 text-gray-400 hover:text-white"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
-        <!-- Chat Layout -->
-        <div class="flex flex-1 overflow-hidden">
-            
-            <!-- Left Panel: Chat List -->
-            <div class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-gray-50 h-full">
-                
-                <!-- Search & Header -->
-                <div class="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-                    <h2 class="text-xl font-bold text-slate-800 mb-4">Area Chats</h2>
-                    <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <input type="text" id="mgrSearch" placeholder="Search owners..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-transparent focus:bg-white focus:ring-2 focus:ring-purple-500 rounded-lg text-sm outline-none">
-                    </div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="px-2 py-2 bg-white border-b border-gray-200 flex justify-between gap-1">
-                    <button class="flex-1 py-2 text-xs font-medium bg-purple-100 text-purple-700 rounded text-center border border-purple-200">Owners</button>
-                    <!-- Future: Tenants Tab -->
-                </div>
-
-                <!-- List -->
-                <div class="flex-1 overflow-y-auto custom-scrollbar" id="mgrChatList">
-                    <!-- Dynamic Content -->
+                    <div><h1 class="text-xl font-bold text-white">RoomHy</h1><span class="text-[10px] text-gray-500 font-medium tracking-wider">AREA ADMIN</span></div>
                 </div>
             </div>
+            
+            <nav class="flex-1 py-6 space-y-1">
+                <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
+                <a href="areaadmin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
 
-            <!-- Right Panel: Chat Window -->
-            <div class="hidden md:flex flex-1 flex-col h-full relative bg-[#f8fafc]">
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Properties</div>
+                <a href="areaproperty.html" class="sidebar-link"><i data-lucide="home" class="w-5 h-5 mr-3"></i> Properties</a>
+                <a href="visit.html" class="sidebar-link"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Visit Reports</a>
                 
-                <!-- Chat Header -->
-                <div class="h-16 px-6 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0 shadow-sm z-10" id="mgrChatHeader">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500" id="headerAvatar">-</div>
-                        <div>
-                            <h2 class="text-sm font-bold text-slate-800" id="headerName">Select a chat</h2>
-                            <div class="text-xs text-gray-500" id="headerSub">Property Owner</div>
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">People</div>
+                <a href="areatenant.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
+                <a href="areaowner.html" class="sidebar-link"><i data-lucide="briefcase" class="w-5 h-5 mr-3"></i> Owners</a>
+                
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Communication</div>
+                <a href="areachat.html" class="sidebar-link active"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
+                <a href="areaenq.html" class="sidebar-link"><i data-lucide="help-circle" class="w-5 h-5 mr-3"></i> Enquiries</a>
+                <a href="complaint.html" class="sidebar-link"><i data-lucide="alert-triangle" class="w-5 h-5 mr-3"></i> Complaints</a>
+
+                <div class="mt-6 px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">System</div>
+                <a href="profile.html" class="sidebar-link"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+                <a href="setting.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+            <!-- Mobile Header -->
+            <div class="md:hidden h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 shadow-sm z-20">
+                <button id="mobile-menu-open" class="text-gray-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <span class="font-semibold text-gray-800">Chats</span>
+                <button class="text-gray-500"><i data-lucide="search" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="flex flex-1 overflow-hidden">
+                
+                <!-- Left Panel: Chat List -->
+                <div class="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col bg-white h-full">
+                    <!-- Search & Tabs -->
+                    <div class="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+                        <div class="relative mb-3">
+                            <input type="text" id="mgrSearch" placeholder="Search..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                        </div>
+                        
+                        <!-- Tabs -->
+                        <div class="flex bg-gray-100 p-1 rounded-lg">
+                            <button onclick="filterList('requests')" id="tab-requests" class="flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700 transition">Requests</button>
+                            <button onclick="filterList('team')" id="tab-team" class="flex-1 text-xs font-medium py-1.5 rounded-md text-center bg-white text-purple-600 shadow-sm transition">Team</button>
+                            <button onclick="filterList('support')" id="tab-support" class="flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700 transition">Support</button>
                         </div>
                     </div>
-                </div>
 
-                <!-- Messages -->
-                <div class="flex-1 overflow-y-auto p-6 chat-scroll flex flex-col gap-4 bg-slate-50" id="mgrMessages">
-                    <div class="text-center mt-20 text-gray-400">Select an owner from the left to start chatting.</div>
-                </div>
-
-                <!-- Input -->
-                <div class="p-4 bg-white border-t border-gray-200 flex-shrink-0">
-                    <div class="flex items-center gap-3">
-                        <input type="text" id="mgrInput" placeholder="Type a message..." class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-purple-500 outline-none">
-                        <button id="mgrSendBtn" class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition">
-                            <i data-lucide="send" class="w-5 h-5"></i>
-                        </button>
+                    <!-- List -->
+                    <div class="flex-1 overflow-y-auto custom-scrollbar" id="mgrChatList">
+                        <!-- Dynamic Items -->
                     </div>
                 </div>
 
+                <!-- Right Panel: Chat Window -->
+                <div class="hidden md:flex flex-1 flex-col h-full relative bg-[#f8fafc]">
+                    
+                    <!-- Chat Header -->
+                    <div class="h-16 px-6 bg-white border-b border-gray-200 flex items-center justify-between shadow-sm z-10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 overflow-hidden" id="headerAvatarContainer">
+                                <span id="headerAvatarInitials">-</span>
+                                <img id="headerAvatarImg" class="w-full h-full object-cover hidden">
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800" id="headerName">Select a chat</h2>
+                                <div class="text-xs text-gray-500" id="headerSub">...</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- Connect to Admin Button (Only visible for Support Chats) -->
+                            <button id="connectAdminBtn" onclick="connectToAdmin()" class="hidden bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-100 transition flex items-center gap-2">
+                                <i data-lucide="shield-plus" class="w-4 h-4"></i> Connect to Admin
+                            </button>
+                            
+                            <div class="h-6 w-px bg-gray-200 mx-1"></div>
+                            
+                            <button id="startCallBtn" class="text-gray-500 hover:text-purple-600 p-2 rounded-full hover:bg-purple-50" title="Voice Call"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                            <button id="startVideoBtn" class="text-gray-500 hover:text-purple-600 p-2 rounded-full hover:bg-purple-50" title="Video Call"><i data-lucide="video" class="w-5 h-5"></i></button>
+                            <button id="toggleMeetingBtn" class="text-gray-500 hover:text-purple-600 p-2 rounded-full hover:bg-purple-50" title="Start Meeting"><i data-lucide="monitor-play" class="w-5 h-5"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-slate-50 custom-scrollbar" id="mgrMessages">
+                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                            <i data-lucide="message-square" class="w-12 h-12 mb-4 opacity-20"></i>
+                            <p>Select a conversation to start chatting.</p>
+                        </div>
+                    </div>
+
+                    <!-- Input -->
+                    <div class="p-4 bg-white border-t border-gray-200">
+                        <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
+                            <button id="attachBtn" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200 transition"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                            <input id="fileInput" type="file" class="hidden">
+                            
+                            <button id="recordBtn" class="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-gray-200 transition" title="Hold to Record"><i data-lucide="mic" class="w-5 h-5"></i></button>
+                            
+                            <input type="text" id="mgrInput" placeholder="Type a message..." class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400">
+                            
+                            <button id="mgrSendBtn" class="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition shadow-sm">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div id="recordingIndicator" class="hidden text-xs text-red-500 font-bold mt-1 ml-12 animate-pulse">Recording audio...</div>
+                    </div>
+
+                </div>
             </div>
         </div>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col">
+            <nav class="flex-1 py-4 space-y-1 px-2">
+                 <a href="areaadmin.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Chats</a>
+            </nav>
+        </aside>
     </div>
 
     <script>
-        lucide.createIcons();
-        
-        const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
-        if (!user || user.role !== 'areamanager') {
-            // alert("Access Denied");
-            // window.location.href = '../index.html'; // Adjust redirect in real app
-        }
+        // Ensure Lucide Loads
+        window.addEventListener('load', () => { if(typeof lucide!=='undefined') lucide.createIcons(); });
 
-        const managerId = user.loginId || 'MGR001'; 
-        const areaCode = user.areaCode || 'KO'; // Filter by area
-        let currentChatId = null;
+        // Load Agora
+        (function loadAgora(){
+            const s = document.createElement('script');
+            s.src = 'https://download.agora.io/sdk/release/AgoraRTC_N-4.17.0.js';
+            s.async = true;
+            s.onerror = () => console.warn("Agora SDK failed to load");
+            document.head.appendChild(s);
+        })();
 
-        const ownersDb = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
-        const chatMessages = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadOwnerList();
-        });
-
-        function loadOwnerList() {
-            const list = document.getElementById('mgrChatList');
-            const search = document.getElementById('mgrSearch').value.toLowerCase();
-            list.innerHTML = '';
-
-            // Filter owners by Area Code prefix (e.g. KO starts with KO)
-            const areaOwners = Object.keys(ownersDb).filter(id => id.startsWith(areaCode));
-
-            if (areaOwners.length === 0) {
-                list.innerHTML = `<div class="p-4 text-center text-sm text-gray-500">No owners found in ${areaCode}.</div>`;
-                return;
-            }
-
-            areaOwners.forEach(ownerId => {
-                const owner = ownersDb[ownerId].profile || { name: 'Unknown', loginId: ownerId };
-                if (!owner.name.toLowerCase().includes(search) && !ownerId.toLowerCase().includes(search)) return;
-
-                const lastMsg = getLastMessage(ownerId);
-
-                const item = document.createElement('div');
-                item.className = 'p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition flex items-center gap-3';
-                item.onclick = () => openChat(ownerId, owner.name);
-                
-                item.innerHTML = `
-                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">${owner.name.charAt(0)}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <h3 class="text-sm font-semibold text-slate-800 truncate">${owner.name}</h3>
-                            <span class="text-[10px] text-gray-400">${lastMsg.time}</span>
-                        </div>
-                        <p class="text-xs text-slate-500 truncate">${lastMsg.text || 'Click to chat'}</p>
-                    </div>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        function getLastMessage(contactId) {
-            const thread = chatMessages.filter(m => 
-                (m.from === managerId && m.to === contactId) || 
-                (m.from === contactId && m.to === managerId)
-            );
-            if (thread.length === 0) return { text: '', time: '' };
-            const last = thread[thread.length - 1];
-            return {
-                text: last.message.substring(0, 20) + '...',
-                time: new Date(last.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+        // Load Socket.IO Client
+        const SOCKET_HOST = 'http://localhost:5000';
+        (function loadSocketIO() {
+            const script = document.createElement('script');
+            script.src = SOCKET_HOST + '/socket.io/socket.io.js';
+            script.async = true;
+            script.onerror = function() {
+                console.warn('Failed to load socket.io from backend, trying CDN...');
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.socket.io/4.6.1/socket.io.min.js';
+                cdnScript.async = true;
+                cdnScript.onerror = () => console.warn('Failed to load socket.io from CDN');
+                document.head.appendChild(cdnScript);
             };
+            document.head.appendChild(script);
+        })();
+
+        // 1. Session Check & Init
+        const user = JSON.parse(sessionStorage.getItem('manager_user') || localStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('user') || 'null');
+        const managerId = user ? (user.loginId || user.id) : 'MGR001'; 
+        const areaCode = user ? (user.areaCode || user.locationCode || 'KO') : 'KO';
+        
+        let currentTab = 'team';
+        let activeChatId = null;
+        let activeChatType = 'team';
+        let messagesCache = []; // Cache for current conversation
+
+        // Firestore setup
+        // IMPORTANT: Replace the firebaseConfig object below with your Firebase project's config.
+        // You can also move this config into a separate `firebase-config.js` file and include it before this script.
+        const firebaseConfig = window.firebaseConfig || {
+            apiKey: "REPLACE_WITH_YOUR_APIKEY",
+            authDomain: "REPLACE_WITH_YOUR_AUTHDOMAIN",
+            projectId: "REPLACE_WITH_YOUR_PROJECTID",
+            // optional: storageBucket, messagingSenderId, appId
+        };
+
+        let db = null;
+        try {
+            if (window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        } catch (e) {
+            console.warn('Firestore init failed. Make sure firebaseConfig is set and the SDK loaded.', e);
         }
 
-        function openChat(id, name) {
-            currentChatId = id;
-            document.getElementById('headerAvatar').innerText = name.charAt(0);
-            document.getElementById('headerName').innerText = name;
-            document.getElementById('headerSub').innerText = `Owner ID: ${id}`;
-            renderMessages();
+        function roomIdOf(a, b) {
+            return [a, b].filter(Boolean).sort().join('__');
         }
 
-        function renderMessages() {
-            if(!currentChatId) return;
-            const container = document.getElementById('mgrMessages');
-            container.innerHTML = '';
+        // 2. Data Accessors (Robust)
+        function getEmployees() { try { return JSON.parse(localStorage.getItem('roomhy_employees') || '[]'); } catch(e){return[]} }
+        function getTenants() { try { return JSON.parse(localStorage.getItem('roomhy_tenants') || '[]'); } catch(e){return[]} }
+        function getOwners() { try { return Object.values(JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}')); } catch(e){return[]} }
+        function getAcceptedRequests() { try { return JSON.parse(localStorage.getItem('roomhy_accepted_chat_requests') || '[]'); } catch(e){return[]} }
 
-            const msgs = chatMessages.filter(m => 
-                (m.from === managerId && m.to === currentChatId) || 
-                (m.from === currentChatId && m.to === managerId)
-            );
+        // Socket.IO Connection (for real-time updates) - wait for library to load
+        (function initSocket() {
+            let retries = 0;
+            const maxRetries = 20; // Retry for up to 4 seconds (20 * 200ms)
+            
+            const tryConnect = () => {
+                try {
+                    if (typeof io !== 'undefined') {
+                        const socket = io(SOCKET_HOST, { reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 5000, reconnectionAttempts: 5 });
+                        socket.on('connect', () => {
+                            console.log('Socket connected:', socket.id);
+                            socket.emit('join', managerId); // Join room named after user ID
+                        });
+                        socket.on('chat:message', (msg) => {
+                            // When a new message arrives via Socket.IO, refresh current conversation
+                            if (activeChatId && (msg.from === activeChatId || msg.to === activeChatId)) {
+                                console.log('Received new message via Socket.IO:', msg);
+                                getMsgs(managerId, activeChatId).then(() => renderMessages());
+                            }
+                        });
+                        socket.on('disconnect', () => console.warn('Socket disconnected'));
+                        console.log('Socket.IO initialized successfully');
+                    } else if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(tryConnect, 200); // Retry after 200ms
+                    } else {
+                        console.warn('Socket.IO library failed to load after retries');
+                    }
+                } catch (e) {
+                    console.warn('Socket.IO init failed:', e.message);
+                }
+            };
+            
+            setTimeout(tryConnect, 100); // Initial delay to let scripts load
+        })();
 
-            if(msgs.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 mt-10">No history. Start chatting!</div>`;
+        // Fetch messages (and attach a realtime listener) using Firestore
+        // Returns the current snapshot as an array and will also update `messagesCache` via onSnapshot
+        async function getMsgs(fromId, toId) {
+            if (!db) {
+                // Firestore not initialized: fall back to backend REST API
+                try {
+                    const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}&limit=500`);
+                    if (!resp.ok) return [];
+                    const json = await resp.json();
+                    return json.data || [];
+                } catch (e) {
+                    console.warn('getMsgs fallback REST error:', e);
+                    return [];
+                }
+            }
+            try {
+                const room = roomIdOf(fromId, toId);
+                const q = db.collection('messages').where('roomId', '==', room).orderBy('timestamp', 'asc');
+                // initial fetch
+                const snapshot = await q.get();
+                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                // Attach realtime listener (updates messagesCache & UI)
+                q.onSnapshot(snap => {
+                    messagesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderMessages();
+                }, err => console.warn('Firestore onSnapshot error', err));
+
+                return docs;
+            } catch (e) {
+                console.warn('getMsgs firestore error:', e.message || e);
+                return [];
+            }
+        }
+
+        // Send message using Firestore
+        async function sendViaFirestore(payload) {
+            // If Firestore is available, write there. Otherwise fall back to backend REST API.
+            const { from, to } = payload;
+            const room = roomIdOf(from, to);
+            const doc = {
+                from: payload.from,
+                to: payload.to,
+                message: payload.message || '',
+                type: payload.type || 'text',
+                isEscalated: !!payload.isEscalated,
+                metadata: payload.metadata || {},
+                read: !!payload.read,
+                roomId: room,
+                timestamp: Date.now()
+            };
+            if (db) {
+                // write to Firestore
+                const ref = await db.collection('messages').add(doc);
+                // also send to backend REST to keep server-side store (MongoDB) in sync
+                try {
+                    fetch('http://localhost:5000/api/chat/send', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(doc)
+                    }).then(r => { if(!r.ok) console.warn('Backend sync POST failed'); }).catch(e => console.warn('Backend sync POST error', e));
+                } catch (e) { console.warn('Backend sync error', e); }
+                return ref;
             }
 
-            msgs.forEach(msg => {
-                const isMe = msg.from === managerId;
-                const bubble = document.createElement('div');
-                bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
-                bubble.innerHTML = `
-                    <div class="max-w-[70%] ${isMe ? 'bg-purple-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white border border-gray-200 rounded-r-xl rounded-tl-xl'} p-3 shadow-sm text-sm">
-                        <p>${msg.message}</p>
-                        <span class="text-[9px] block text-right mt-1 opacity-70">${new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}</span>
+            // Fallback to server API when Firestore isn't available
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/send', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(doc)
+                });
+                if (!resp.ok) throw new Error('REST send failed');
+                return await resp.json();
+            } catch (e) {
+                console.warn('sendViaFirestore fallback error:', e);
+                throw e;
+            }
+        }
+
+        // 3. Tab Switching
+        function filterList(tab) {
+            currentTab = tab;
+            // Update Tab UI
+            ['requests', 'team', 'support'].forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                if (t === tab) {
+                    el.className = 'flex-1 text-xs font-bold py-1.5 rounded-md bg-white text-purple-600 shadow-sm transition';
+                } else {
+                    el.className = 'flex-1 text-xs font-bold py-1.5 rounded-md text-gray-500 hover:text-gray-700 transition';
+                }
+            });
+            renderList();
+            // Auto-open first contact when switching to Support tab to enable instant messaging
+            if (tab === 'support') {
+                setTimeout(() => {
+                    const list = document.getElementById('mgrChatList');
+                    if (list && list.children.length > 0) {
+                        const first = list.children[0];
+                        if (first && first.onclick) first.onclick();
+                    }
+                }, 50);
+            }
+        }
+        
+        window.filterList = filterList;
+
+        // 4. Render List
+        function renderList() {
+            const list = document.getElementById('mgrChatList');
+            if(!list) return;
+            list.innerHTML = '';
+            
+            const search = document.getElementById('mgrSearch').value.toLowerCase();
+            const accepted = getAcceptedRequests();
+
+            // --- A. REQUESTS TAB (All Employees from Manager.html) ---
+            if (currentTab === 'requests') {
+                 const allEmps = getEmployees().filter(e => e.loginId !== managerId);
+                 if(allEmps.length === 0) list.innerHTML = `<div class="p-4 text-sm text-gray-500">No employees found.</div>`;
+
+                 allEmps.forEach(e => {
+                     if(e.name && e.name.toLowerCase().includes(search)) {
+                         const isAccepted = accepted.includes(e.loginId) || e.areaCode === areaCode;
+                         list.appendChild(createListItem(
+                             e.loginId, 
+                             e.name, 
+                             'Employee', 
+                             'bg-gray-100 text-gray-600', 
+                             null, 
+                             true, 
+                             isAccepted
+                         ));
+                     }
+                 });
+            } 
+            // --- B. TEAM TAB (Area Employees + Accepted) ---
+            else if (currentTab === 'team') {
+                list.appendChild(createListItem('superadmin', 'Super Admin', 'Head Office', 'bg-red-100 text-red-700', 'SA'));
+                
+                const emps = getEmployees().filter(e => 
+                    (e.areaCode === areaCode || e.locationCode === areaCode || accepted.includes(e.loginId)) && 
+                    e.loginId !== managerId
+                );
+                
+                if(emps.length === 0) {
+                     const empty = document.createElement('div');
+                     empty.className = "p-4 text-sm text-gray-500 italic";
+                     empty.innerText = "No team members found.";
+                     list.appendChild(empty);
+                }
+
+                emps.forEach(e => {
+                     if(e.name && e.name.toLowerCase().includes(search))
+                        list.appendChild(createListItem(e.loginId, e.name, e.role || 'Team Member', 'bg-blue-100 text-blue-700'));
+                });
+            }
+            // --- C. SUPPORT TAB (All Tenants & Owners) ---
+            else if (currentTab === 'support') {
+                 // Tenants: show all tenants (no area filter needed for support chat)
+                 const tenants = getTenants();
+                 console.debug('Support tab: tenants count=', tenants.length, tenants.slice(0,2));
+                 
+                 tenants.forEach(t => {
+                     if(t.name && t.name.toLowerCase().includes(search)) {
+                         const id = t.loginId || t.id || 'TNT_' + Date.now();
+                         list.appendChild(createListItem(id, t.name, 'Tenant', 'bg-green-100 text-green-700'));
+                     }
+                 });
+
+                 // Owners: show all owners from the database
+                 const owners = getOwners();
+                 console.debug('Support tab: owners count=', owners.length, owners.slice(0,2));
+                 
+                 owners.forEach(o => {
+                     const profile = o.profile || o || {};
+                     const name = profile.name || profile.ownerName || o.name || 'Owner';
+                     const id = profile.loginId || profile.ownerId || profile.id || o.loginId || o.id || 'OWN_' + Date.now();
+                     
+                     if(name && name.toLowerCase().includes(search)) {
+                         list.appendChild(createListItem(id, name, 'Property Owner', 'bg-indigo-100 text-indigo-700'));
+                     }
+                 });
+
+                 if(list.children.length === 0) list.innerHTML = `<div class="p-4 text-sm text-gray-500">No tenants or owners found. (Check console for data count.)</div>`;
+            }
+        }
+
+        function createListItem(id, name, sub, bgClass, initials, isRequest=false, isAccepted=false) {
+            const div = document.createElement('div');
+            const isActive = id === activeChatId;
+            div.className = `p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition flex items-center gap-3 ${isActive ? 'active-chat' : ''}`;
+            
+            div.onclick = () => {
+                if(isRequest && !isAccepted) {
+                    if(confirm(`Accept ${name} into your team chat?`)) {
+                        const reqs = getAcceptedRequests();
+                        if(!reqs.includes(id)) {
+                            reqs.push(id);
+                            localStorage.setItem('roomhy_accepted_chat_requests', JSON.stringify(reqs));
+                            renderList();
+                        }
+                    }
+                }
+                openChat(id, name, sub, currentTab === 'support');
+            };
+            
+            const init = initials || (name ? name.charAt(0).toUpperCase() : '?');
+            
+            let statusBadge = '';
+            if(isRequest) {
+                statusBadge = isAccepted 
+                    ? `<span class="ml-2 px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full font-bold">Added</span>`
+                    : `<span class="ml-2 px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded-full font-bold">Add</span>`;
+            }
+
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-full ${bgClass} flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0">
+                    ${init}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-semibold text-gray-900 truncate">${name}</h4>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-xs text-gray-500 truncate">${sub}</p>
+                </div>
+            `;
+            return div;
+        }
+
+        // 5. Open Chat
+        async function openChat(id, name, sub, isSupportChat) {
+            activeChatId = id;
+            activeChatType = isSupportChat ? 'support' : 'team';
+            
+            const nameEl = document.getElementById('headerName');
+            const subEl = document.getElementById('headerSub');
+            const initialsEl = document.getElementById('headerAvatarInitials');
+            
+            if(nameEl) nameEl.innerText = name;
+            if(subEl) subEl.innerText = sub;
+            if(initialsEl) initialsEl.innerText = name.charAt(0);
+            
+            // Fetch messages from MongoDB
+            messagesCache = await getMsgs(managerId, activeChatId);
+            renderMessages();
+            
+            // Connect to Admin Logic
+            const btn = document.getElementById('connectAdminBtn');
+            if(btn) {
+                if(activeChatType === 'support') {
+                    btn.classList.remove('hidden');
+                    const escalated = messagesCache.some(m => (m.from === activeChatId || m.to === activeChatId) && m.isEscalated);
+                    
+                    if(escalated) {
+                        btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Connected`;
+                        btn.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                        btn.classList.remove('bg-purple-50', 'text-purple-700', 'border-purple-200');
+                        btn.disabled = true;
+                    } else {
+                        btn.innerHTML = `<i data-lucide="shield-plus" class="w-4 h-4"></i> Connect to Admin`;
+                        btn.classList.remove('bg-green-50', 'text-green-700', 'border-green-200');
+                        btn.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-200');
+                        btn.disabled = false;
+                    }
+                } else {
+                    btn.classList.add('hidden');
+                }
+            }
+            
+            renderList();
+            renderMessages();
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // 6. Connect to Admin Logic
+        window.connectToAdmin = async function() {
+            if(!activeChatId || activeChatType !== 'support') return;
+            if(!confirm("Bridge this user to Super Admin?")) return;
+
+            const escalationMsg = {
+                from: managerId,
+                to: activeChatId,
+                message: "🔒 System: Area Manager connected you to Super Admin.",
+                isEscalated: true,
+                type: 'system'
+            };
+
+            try {
+                await sendViaFirestore(escalationMsg);
+                // Refresh messages (getMsgs attaches realtime listener, so UI will update)
+                messagesCache = await getMsgs(managerId, activeChatId);
+                renderMessages();
+                console.debug('connectToAdmin: escalated successfully');
+            } catch (e) {
+                console.error('connectToAdmin error:', e.message || e);
+                alert('Failed to escalate to super admin');
+            }
+        }
+
+        // 7. Render Messages
+        function renderMessages() {
+            if (!activeChatId) return;
+            const container = document.getElementById('mgrMessages');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const msgs = messagesCache;
+
+            // Date divider
+            const dateDiv = document.createElement('div');
+            dateDiv.className = "flex justify-center mb-4";
+            dateDiv.innerHTML = '<span class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Today</span>';
+            container.appendChild(dateDiv);
+
+            msgs.forEach(m => {
+                const isMe = m.from === managerId;
+                const div = document.createElement('div');
+                div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+                
+                const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                
+                if (m.message && (m.message.includes('🔒') || m.message.includes('🎤'))) {
+                     // System or Audio placeholder handling in text
+                }
+
+                let content = `<p class="text-sm">${escapeHtml(m.message)}</p>`;
+                if(m.type === 'audio' && m.metadata?.audioData) {
+                    content = `<div class="flex items-center gap-2"><i data-lucide="mic" class="w-4 h-4"></i> <audio controls src="${m.metadata.audioData}" class="h-8 w-40"></audio></div>`;
+                }
+                if(m.type === 'file') {
+                    content = `<div class="flex items-center gap-2"><i data-lucide="file" class="w-4 h-4"></i> <a href="${m.metadata?.fileUrl}" class="underline text-sm">Attachment</a></div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="max-w-[75%] ${isMe ? 'chat-bubble-me' : 'chat-bubble-user'} px-4 py-2 shadow-sm">
+                        ${content}
+                        <span class="text-[10px] block text-right mt-1 opacity-70">${time}</span>
                     </div>
                 `;
-                container.appendChild(bubble);
+                container.appendChild(div);
             });
             container.scrollTop = container.scrollHeight;
+            if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        document.getElementById('mgrSendBtn').addEventListener('click', sendMessage);
-        document.getElementById('mgrInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage() });
-        document.getElementById('mgrSearch').addEventListener('input', loadOwnerList);
+        // 8. Advanced Features (Recording, File, Agora)
+        let mediaRecorder, audioChunks = [], isRecording = false;
+        const recordBtn = document.getElementById('recordBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
 
-        function sendMessage() {
-            if(!currentChatId) return;
+        if(recordBtn) {
+            recordBtn.addEventListener('mousedown', async () => {
+                 if (!activeChatId) return alert('Select chat first');
+                 try {
+                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                     mediaRecorder = new MediaRecorder(stream);
+                     audioChunks = [];
+                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                     mediaRecorder.onstop = () => {
+                         const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                         const reader = new FileReader();
+                         reader.readAsDataURL(blob);
+                             reader.onloadend = async () => {
+                             const payload = {
+                                 from: managerId,
+                                 to: activeChatId,
+                                 message: "Voice Note",
+                                 type: 'audio',
+                                 metadata: { audioData: reader.result },
+                                 timestamp: new Date().toISOString(),
+                                 isEscalated: (document.getElementById('connectAdminBtn').innerText.includes('Connected'))
+                             };
+                             try {
+                                 await sendViaFirestore(payload);
+                                 messagesCache = await getMsgs(managerId, activeChatId);
+                                 renderMessages();
+                             } catch (e) {
+                                 console.error('send voice note failed:', e.message || e);
+                             }
+                         };
+                     };
+                     mediaRecorder.start();
+                     isRecording = true;
+                     recordBtn.classList.add('text-red-600', 'bg-red-50', 'recording-pulse');
+                     if(recordingIndicator) recordingIndicator.classList.remove('hidden');
+                 } catch(e) { alert("Mic denied"); }
+            });
+            
+            recordBtn.addEventListener('mouseup', () => {
+                 if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                     mediaRecorder.stop();
+                     isRecording = false;
+                     recordBtn.classList.remove('text-red-600', 'bg-red-50', 'recording-pulse');
+                     if(recordingIndicator) recordingIndicator.classList.add('hidden');
+                 }
+            });
+        }
+
+        // File Attachment
+        const attachBtn = document.getElementById('attachBtn');
+        const fileInput = document.getElementById('fileInput');
+        if(attachBtn && fileInput) {
+            attachBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', async function() {
+                if(this.files[0] && activeChatId) {
+                    // For now we send filename metadata; implement multipart upload later
+                    const payload = {
+                        from: managerId,
+                        to: activeChatId,
+                        message: "File: " + this.files[0].name,
+                        type: 'file',
+                        metadata: { filename: this.files[0].name, fileUrl: '#' },
+                        timestamp: new Date().toISOString(),
+                        isEscalated: (document.getElementById('connectAdminBtn').innerText.includes('Connected'))
+                    };
+                    try {
+                        await sendViaFirestore(payload);
+                        messagesCache = await getMsgs(managerId, activeChatId);
+                        renderMessages();
+                    } catch (e) { console.error('file send failed', e.message || e); }
+                }
+            });
+        }
+
+        async function sendMessage() {
             const input = document.getElementById('mgrInput');
+            if (!input) { console.warn('sendMessage: no input element found'); return; }
             const text = input.value.trim();
-            if(!text) return;
+            console.debug('sendMessage: activeChatId=', activeChatId, 'text=', text);
+            if (!text) { console.warn('sendMessage: empty text'); return; }
+            if (!activeChatId) { alert('Please select a conversation first'); console.warn('sendMessage: no activeChatId'); return; }
+
+            const connectBtn = document.getElementById('connectAdminBtn');
+            const isEscalated = connectBtn ? connectBtn.innerText.includes('Connected') : false;
 
             const newMsg = {
                 from: managerId,
-                to: currentChatId,
+                to: activeChatId,
                 message: text,
-                timestamp: new Date().toISOString()
+                read: false,
+                isEscalated: isEscalated,
+                type: 'text'
             };
 
-            chatMessages.push(newMsg);
-            localStorage.setItem('roomhy_chat_messages', JSON.stringify(chatMessages));
-            input.value = '';
-            renderMessages();
-            loadOwnerList(); // Refresh preview
+            console.debug('sendMessage: posting message', newMsg);
+            try {
+                await sendViaFirestore(newMsg);
+                input.value = '';
+                // getMsgs installs a realtime listener — messagesCache will update automatically
+                messagesCache = await getMsgs(managerId, activeChatId);
+                renderMessages();
+                console.debug('sendMessage: sent successfully');
+            } catch (e) {
+                console.error('sendMessage error:', e.message || e);
+                alert('Error sending message: ' + (e.message || e));
+            }
         }
+
+        function escapeHtml(unsafe) {
+            if(!unsafe) return "";
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Event Listeners: attach after DOM ready to guarantee elements exist
+        window.addEventListener('DOMContentLoaded', () => {
+            const sendBtn = document.getElementById('mgrSendBtn');
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+            const input = document.getElementById('mgrInput');
+            if (input) input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage() });
+
+            const searchInput = document.getElementById('mgrSearch');
+            if (searchInput) searchInput.addEventListener('input', renderList);
+        });
+
+        // Sidebar logic
+        function toggleMobileMenu() {
+            document.getElementById('mobile-sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
+        }
+        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+
+        // Call / Video handlers — post local message + send backend notification to superadmin
+        async function startCallManager() {
+            if (!activeChatId) return alert('Select a conversation first');
+            const channel = `call_${activeChatId}_${Date.now()}`.replace(/[^a-zA-Z0-9-_]/g,'_');
+            // send message to conversation about starting call
+            try {
+                await sendViaFirestore({ from: managerId, to: activeChatId, message: 'Started voice call', type: 'call', metadata: { channel }, timestamp: new Date().toISOString() });
+                messagesCache = await getMsgs(managerId, activeChatId);
+                renderMessages();
+            } catch (e) { console.error('startCall send failed', e.message || e); }
+            // backend notification for Super Admin
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch((window.location.hostname.includes('localhost') ? 'http://localhost:5000' : '') + '/api/admin/notifications', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ toRole: 'superadmin', from: managerId, type: 'call', meta: { channel, target: activeChatId } })
+                });
+            } catch (e) { console.warn('notify failed', e); }
+        }
+
+        async function startVideoManager() {
+            if (!activeChatId) return alert('Select a conversation first');
+            const channel = `video_${activeChatId}_${Date.now()}`.replace(/[^a-zA-Z0-9-_]/g,'_');
+            try {
+                await sendViaFirestore({ from: managerId, to: activeChatId, message: 'Started video call', type: 'video', metadata: { channel }, timestamp: new Date().toISOString() });
+                messagesCache = await getMsgs(managerId, activeChatId);
+                renderMessages();
+            } catch (e) { console.error('startVideo send failed', e.message || e); }
+            try {
+                const token = localStorage.getItem('token') || '';
+                await fetch((window.location.hostname.includes('localhost') ? 'http://localhost:5000' : '') + '/api/admin/notifications', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ toRole: 'superadmin', from: managerId, type: 'video', meta: { channel, target: activeChatId } })
+                });
+            } catch (e) { console.warn('notify failed', e); }
+        }
+
+        // Hook buttons
+        const startCallBtnEl = document.getElementById('startCallBtn');
+        if (startCallBtnEl) startCallBtnEl.onclick = startCallManager;
+        const startVideoBtnEl = document.getElementById('startVideoBtn');
+        if (startVideoBtnEl) startVideoBtnEl.onclick = startVideoManager;
+        const toggleMeetingBtnEl = document.getElementById('toggleMeetingBtn');
+        if (toggleMeetingBtnEl) toggleMeetingBtnEl.onclick = () => alert('Meeting functionality available in main UI');
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            filterList('team');
+        });
 
     </script>
 </body>

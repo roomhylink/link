@@ -54,6 +54,13 @@
         .submenu a {
             padding-left: 3.5rem;
             font-size: 0.85rem;
+            display: block;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            color: #9ca3af;
+        }
+        .submenu a:hover {
+            color: white;
         }
         
         /* Custom Scrollbar */
@@ -76,11 +83,33 @@
             color: white;
             border-radius: 12px 12px 0 12px;
         }
+        /* System Message Bubble */
+        .chat-bubble-system {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
 
         /* Active Chat Item */
         .chat-item.active {
             background-color: #f3f4f6;
             border-left: 3px solid #9333ea;
+        }
+        
+        /* Recording Animation */
+        .recording-pulse {
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
@@ -104,7 +133,7 @@
             <!-- Navigation -->
             <nav class="flex-1 py-6 space-y-1">
                 <div class="px-6 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</div>
-                <a href="superadmin.html" class="sidebar-link active">
+                <a href="superadmin.html" class="sidebar-link">
                     <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
                 </a>
 
@@ -222,75 +251,30 @@
                     <!-- Search & Filters -->
                     <div class="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
                         <div class="relative mb-3">
-                            <input type="text" placeholder="Search conversations..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                            <input type="text" id="searchInput" placeholder="Search conversations..." class="w-full pl-9 pr-4 py-2 bg-gray-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
                             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
                         </div>
                         
                         <!-- Role Filters -->
-                        <div class="flex justify-between bg-gray-100 p-1 rounded-lg">
-                            <button onclick="filterChats('tenant')" class="chat-filter-btn active flex-1 text-xs font-medium py-1.5 rounded-md text-center bg-white text-purple-600 shadow-sm">Tenants</button>
-                            <button onclick="filterChats('manager')" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Managers</button>
-                            <button onclick="filterChats('owner')" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Owners</button>
+                        <div class="flex justify-between bg-gray-100 p-1 rounded-lg items-center">
+                            <div class="flex gap-1 w-full">
+                                <button onclick="filterChats('personal', event)" id="tab-personal" class="chat-filter-btn active flex-1 text-xs font-medium py-1.5 rounded-md text-center bg-white text-purple-600 shadow-sm">Team</button>
+                                <button onclick="filterChats('group', event)" id="tab-group" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Group</button>
+                                <button onclick="filterChats('direct', event)" id="tab-direct" class="chat-filter-btn flex-1 text-xs font-medium py-1.5 rounded-md text-center text-gray-500 hover:text-gray-700">Direct Support</button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Conversations List -->
                     <div class="flex-1 overflow-y-auto custom-scrollbar" id="chatList">
-                        <!-- Item 1 (Active) -->
-                        <div class="chat-item active p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start mb-1">
-                                <div class="flex items-center">
-                                    <div class="relative">
-                                        <img src="https://i.pravatar.cc/150?u=tenant1" class="w-10 h-10 rounded-full object-cover">
-                                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h4 class="text-sm font-semibold text-gray-900">Arjun Kapoor</h4>
-                                        <span class="text-xs text-gray-500">Tenant • Room 204</span>
-                                    </div>
-                                </div>
-                                <span class="text-xs text-gray-400">10:30 AM</span>
-                            </div>
-                            <p class="text-xs text-gray-600 truncate pl-12">Regarding the wifi issue, is it resolved?</p>
-                        </div>
+                        <!-- Contacts injected here -->
+                    </div>
 
-                        <!-- Item 2 (Unread) -->
-                        <div class="chat-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors bg-purple-50/30">
-                            <div class="flex justify-between items-start mb-1">
-                                <div class="flex items-center">
-                                    <div class="relative">
-                                        <img src="https://i.pravatar.cc/150?u=tenant2" class="w-10 h-10 rounded-full object-cover">
-                                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-gray-300 border-2 border-white rounded-full"></span>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h4 class="text-sm font-semibold text-gray-900">Neha Sharma</h4>
-                                        <span class="text-xs text-gray-500">Tenant • Room 101</span>
-                                    </div>
-                                </div>
-                                <span class="text-xs text-green-600 font-medium">Yesterday</span>
-                            </div>
-                            <div class="flex justify-between items-center pl-12">
-                                <p class="text-xs text-gray-800 font-medium truncate">I have transferred the rent via UPI.</p>
-                                <span class="bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">2</span>
-                            </div>
-                        </div>
-
-                        <!-- Item 3 -->
-                        <div class="chat-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start mb-1">
-                                <div class="flex items-center">
-                                    <div class="relative">
-                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">RJ</div>
-                                    </div>
-                                    <div class="ml-3">
-                                        <h4 class="text-sm font-semibold text-gray-900">Rohan Joshi</h4>
-                                        <span class="text-xs text-gray-500">Tenant • Room 305</span>
-                                    </div>
-                                </div>
-                                <span class="text-xs text-gray-400">Oct 22</span>
-                            </div>
-                            <p class="text-xs text-gray-500 truncate pl-12">Thanks for the quick help!</p>
-                        </div>
+                    <!-- Create Group Button (Hidden unless Group tab active) -->
+                    <div id="createGroupArea" class="p-4 border-t hidden">
+                         <button onclick="createNewGroup()" class="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center justify-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Create Group
+                        </button>
                     </div>
                 </div>
 
@@ -299,73 +283,47 @@
                     <!-- Chat Header -->
                     <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
                         <div class="flex items-center">
-                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-10 h-10 rounded-full object-cover mr-3">
+                            <div id="chatHeaderAvatarContainer" class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3 overflow-hidden">
+                                <img id="chatHeaderAvatar" src="" class="w-full h-full object-cover hidden">
+                                <span id="chatHeaderInitials" class="text-sm font-bold text-gray-500">?</span>
+                            </div>
                             <div>
-                                <h3 class="text-sm font-bold text-gray-900">Arjun Kapoor</h3>
-                                <p class="text-xs text-green-600 flex items-center"><span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>Online</p>
+                                <h3 id="chatHeaderName" class="text-sm font-bold text-gray-900">Select a Chat</h3>
+                                <p class="text-xs text-green-600 flex items-center hidden" id="chatHeaderStatus"><span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>Online</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4 text-gray-500">
-                            <button class="hover:text-purple-600" title="Call"><i data-lucide="phone" class="w-5 h-5"></i></button>
-                            <button class="hover:text-purple-600" title="View Profile"><i data-lucide="info" class="w-5 h-5"></i></button>
-                            <button class="hover:text-purple-600" title="More Options"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+                        <div class="flex items-center gap-3 text-gray-500">
+                            <button id="startCallBtn" class="hover:text-purple-600 p-1.5 rounded-full hover:bg-purple-50" title="Start Call"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                            <button id="startVideoBtn" class="hover:text-purple-600 p-1.5 rounded-full hover:bg-purple-50" title="Start Video Call"><i data-lucide="video" class="w-5 h-5"></i></button>
+                            <button id="toggleMeetingBtn" class="hover:text-purple-600 p-1.5 rounded-full hover:bg-purple-50" title="Start/End Meeting (Rec)"><i data-lucide="monitor-play" class="w-5 h-5"></i></button>
+                            <button class="hover:text-purple-600 p-1.5 rounded-full hover:bg-purple-50" title="More Options"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+                            <button id="cancelChatBtn" class="hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 ml-2" title="Close Chat" onclick="window.location.href = '../Areamanager/areachat.html';"><i data-lucide="x" class="w-5 h-5"></i></button>
                         </div>
                     </div>
 
                     <!-- Messages Area -->
                     <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar" id="messageContainer">
-                        <!-- Date Divider -->
-                        <div class="flex justify-center">
-                            <span class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Today</span>
-                        </div>
-
-                        <!-- Message Received -->
-                        <div class="flex items-end gap-2">
-                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-8 h-8 rounded-full object-cover mb-1">
-                            <div class="chat-bubble-user p-3 max-w-[70%] shadow-sm">
-                                <p class="text-sm">Hi, is the internet issue in Block A resolved? I'm having trouble connecting.</p>
-                                <span class="text-[10px] text-gray-400 block mt-1 text-right">10:15 AM</span>
-                            </div>
-                        </div>
-
-                        <!-- Message Sent -->
-                        <div class="flex items-end justify-end gap-2">
-                            <div class="chat-bubble-admin p-3 max-w-[70%] shadow-sm">
-                                <p class="text-sm">Hello Arjun, yes, the technician just left. Please try restarting your router. Let me know if it works.</p>
-                                <span class="text-[10px] text-purple-200 block mt-1 text-right">10:20 AM <i data-lucide="check-check" class="w-3 h-3 inline ml-1"></i></span>
-                            </div>
-                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold mb-1">SA</div>
-                        </div>
-
-                        <!-- Message Received -->
-                        <div class="flex items-end gap-2">
-                            <img src="https://i.pravatar.cc/150?u=tenant1" class="w-8 h-8 rounded-full object-cover mb-1">
-                            <div class="chat-bubble-user p-3 max-w-[70%] shadow-sm">
-                                <p class="text-sm">It's working now. Thanks for the quick response!</p>
-                                <span class="text-[10px] text-gray-400 block mt-1 text-right">10:25 AM</span>
-                            </div>
-                        </div>
-                        
-                         <!-- Message Sent -->
-                        <div class="flex items-end justify-end gap-2">
-                            <div class="chat-bubble-admin p-3 max-w-[70%] shadow-sm">
-                                <p class="text-sm">Great! Regarding the wifi issue, is it resolved completely for all devices?</p>
-                                <span class="text-[10px] text-purple-200 block mt-1 text-right">10:30 AM <i data-lucide="check" class="w-3 h-3 inline ml-1"></i></span>
-                            </div>
-                             <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold mb-1">SA</div>
+                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                            <i data-lucide="messages-square" class="w-16 h-16 mb-4 opacity-20"></i>
+                            <p>Select a contact to start messaging.</p>
                         </div>
                     </div>
 
                     <!-- Input Area -->
                     <div class="p-4 bg-white border-t border-gray-200">
-                        <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
-                            <button class="text-gray-400 hover:text-purple-600 p-1"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
-                            <button class="text-gray-400 hover:text-purple-600 p-1"><i data-lucide="image" class="w-5 h-5"></i></button>
-                            <input type="text" placeholder="Type a message..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400">
-                            <button class="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
+                        <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-inner">
+                            <button id="attachBtn" class="text-gray-400 hover:text-purple-600 p-2 rounded-full hover:bg-gray-100 transition" title="Attach file"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                            <input id="fileInput" type="file" class="hidden">
+                            
+                            <button id="recordBtn" class="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-gray-100 transition" title="Hold to Record Audio"><i data-lucide="mic" class="w-5 h-5"></i></button>
+                            
+                            <input id="chatInput" type="text" placeholder="Type a message..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400">
+                            
+                            <button id="sendBtn" class="bg-purple-600 text-white p-2.5 rounded-lg hover:bg-purple-700 transition-colors shadow-sm flex items-center justify-center" title="Send message">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                             </button>
                         </div>
+                        <div id="recordingIndicator" class="hidden text-xs text-red-500 font-bold mt-1 ml-12 animate-pulse">Recording audio...</div>
                     </div>
                 </div>
             </div>
@@ -382,50 +340,584 @@
     </div>
 
     <script>
-        lucide.createIcons();
+        // Ensure Lucide is loaded
+        window.addEventListener('load', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+
+        // Load Agora SDK dynamically
+        (function loadAgora(){
+            const s = document.createElement('script');
+            s.src = 'https://download.agora.io/sdk/release/AgoraRTC_N-4.17.0.js';
+            s.async = true;
+            s.onerror = () => console.warn("Agora SDK failed to load - video calls may not work.");
+            document.head.appendChild(s);
+        })();
+
+        // Load Socket.IO Client
+        const SOCKET_HOST = 'http://localhost:5000';
+        (function loadSocketIO() {
+            const script = document.createElement('script');
+            script.src = SOCKET_HOST + '/socket.io/socket.io.js';
+            script.async = true;
+            script.onerror = function() {
+                console.warn('Failed to load socket.io from backend, trying CDN...');
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdn.socket.io/4.6.1/socket.io.min.js';
+                cdnScript.async = true;
+                cdnScript.onerror = () => console.warn('Failed to load socket.io from CDN');
+                document.head.appendChild(cdnScript);
+            };
+            document.head.appendChild(script);
+        })();
+
+        let currentTab = 'personal';
+        let activeChatId = null;
+        let messagesCache = [];
+
+        // Initialize superadmin user ID
+        const user = JSON.parse(sessionStorage.getItem('superadmin_user') || localStorage.getItem('superadmin_user') || sessionStorage.getItem('user') || localStorage.getItem('user') || 'null');
+        const superadminId = user ? (user.loginId || user.id) : 'SUPERADMIN001';
+
+        // Socket.IO Connection (for real-time updates)
+        (function initSocketSuperadmin() {
+            let retries = 0;
+            const maxRetries = 20; // Retry for up to 4 seconds
+            
+            const tryConnect = () => {
+                try {
+                    if (typeof io !== 'undefined') {
+                        const socket = io(SOCKET_HOST, { reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 5000, reconnectionAttempts: 5 });
+                        socket.on('connect', () => {
+                            console.log('Socket connected:', socket.id);
+                            socket.emit('join', superadminId); // Join room named after superadmin ID
+                        });
+                        socket.on('chat:message', (msg) => {
+                            // When a new message arrives via Socket.IO, refresh current conversation
+                            if (activeChatId && (msg.from === activeChatId || msg.to === activeChatId)) {
+                                console.log('Received new message via Socket.IO:', msg);
+                                getChats(superadminId, activeChatId).then(msgs => {
+                                    messagesCache = msgs;
+                                    renderMessages();
+                                });
+                            }
+                        });
+                        socket.on('disconnect', () => console.warn('Socket disconnected'));
+                        console.log('Socket.IO initialized successfully');
+                    } else if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(tryConnect, 200); // Retry after 200ms
+                    } else {
+                        console.warn('Socket.IO library failed to load after retries');
+                    }
+                } catch (e) {
+                    console.warn('Socket.IO init failed:', e.message);
+                }
+            };
+            
+            setTimeout(tryConnect, 100); // Initial delay to let scripts load
+        })();
+
+        // Data Helpers with Safety Checks
+        function getEmployees() { 
+            try { return JSON.parse(localStorage.getItem('roomhy_employees') || '[]'); } 
+            catch(e) { console.warn('Error parsing employees', e); return []; }
+        }
+        
+        // Fetch messages from MongoDB API
+        async function getChats(fromId, toId) {
+            try {
+                const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}&limit=500`);
+                if (!resp.ok) {
+                    console.warn('getChats API failed:', resp.status);
+                    return [];
+                }
+                const json = await resp.json();
+                return json.data || [];
+            } catch (e) {
+                console.warn('getChats error:', e.message);
+                return [];
+            }
+        }
+        
+        function getGroups() { 
+            try { return JSON.parse(localStorage.getItem('roomhy_chat_groups') || '[]'); } 
+            catch(e) { console.warn('Error parsing groups', e); return []; }
+        }
 
         // Filter Tabs Logic
-        function filterChats(role) {
+        async function filterChats(role, evt) {
+            currentTab = role;
+            // UI Update
             const buttons = document.querySelectorAll('.chat-filter-btn');
             buttons.forEach(btn => {
                 btn.classList.remove('active', 'bg-white', 'text-purple-600', 'shadow-sm');
                 btn.classList.add('text-gray-500');
             });
-            
-            // In a real app, this would filter the list. 
-            // For UI demo, we just toggle styles.
-            event.target.classList.add('active', 'bg-white', 'text-purple-600', 'shadow-sm');
-            event.target.classList.remove('text-gray-500');
+            const target = evt && (evt.currentTarget || evt.target) ? (evt.currentTarget || evt.target) : document.getElementById(`tab-${role}`);
+            if (target) {
+                target.classList.add('active', 'bg-white', 'text-purple-600', 'shadow-sm');
+                target.classList.remove('text-gray-500');
+            }
+
+            // Show Group Create button only on Group tab
+            const groupArea = document.getElementById('createGroupArea');
+            if(groupArea) {
+                groupArea.classList.toggle('hidden', role !== 'group');
+            }
+
+            await renderChatList();
         }
 
-        // Sidebar Submenu
+        // Render Chat List based on Tab
+        async function renderChatList() {
+            const container = document.getElementById('chatList');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+
+            if (currentTab === 'personal') {
+                // List ALL employees from manager.html
+                const employees = getEmployees();
+                if (!employees || employees.length === 0) {
+                    container.innerHTML = '<div class="p-4 text-sm text-gray-500">No employees found. Add in Team Management.</div>';
+                    return;
+                }
+                employees.forEach(emp => {
+                    if (emp.name && emp.name.toLowerCase().includes(search)) {
+                         container.appendChild(createListItem(emp.loginId, emp.name, emp.role || 'Employee', emp.loginId === activeChatId));
+                    }
+                });
+
+            } else if (currentTab === 'group') {
+                // 1. Auto-generated Area Groups
+                const employees = getEmployees();
+                const areas = [...new Set(employees.map(e => e.areaCode).filter(Boolean))];
+                
+                areas.forEach(area => {
+                    const groupName = `Group: ${area}`;
+                    if(groupName.toLowerCase().includes(search)) {
+                        container.appendChild(createListItem(`group:${area}`, groupName, 'Area Team', `group:${area}` === activeChatId, true));
+                    }
+                });
+
+                // 2. Custom Groups
+                const groups = getGroups();
+                groups.forEach(g => {
+                    if(g.name && g.name.toLowerCase().includes(search)) {
+                        container.appendChild(createListItem(g.id, g.name, 'Custom Group', g.id === activeChatId, true));
+                    }
+                });
+
+            } else if (currentTab === 'direct') {
+                // Show Escalated Chats (Tenants/Owners who clicked 'Connect to Admin')
+                // Try to read cached messages first (localStorage), fall back to backend if empty
+                let allMsgs = [];
+                try {
+                    allMsgs = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
+                } catch (e) { allMsgs = []; }
+                // If no local cache, attempt to fetch recent conversations via backend
+                if (!allMsgs || allMsgs.length === 0) {
+                    try {
+                        const resp = await fetch(`http://localhost:5000/api/chat/user/${encodeURIComponent(superadminId)}`);
+                        if (resp.ok) {
+                            const json = await resp.json();
+                            // json.data contains conversation summaries; convert to minimal messages array
+                            allMsgs = (json.data || []).map(c => ({ from: c._id, to: superadminId, isEscalated: false, message: c.lastMessage, timestamp: c.lastTimestamp }));
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+
+                const escalatedUsers = new Set();
+
+                (allMsgs || []).forEach(m => {
+                    if (m && m.isEscalated) {
+                        const other = (m.from === superadminId || m.from === 'superadmin') ? m.to : m.from;
+                        if (other) escalatedUsers.add(other);
+                    }
+                });
+
+                if (escalatedUsers.size === 0) {
+                    container.innerHTML = `<div class="p-6 text-center text-sm text-gray-500"><i data-lucide="shield" class="w-8 h-8 mx-auto mb-2 text-gray-300"></i><br>No active support requests.</div>`;
+                    if(typeof lucide !== 'undefined') lucide.createIcons();
+                    return;
+                }
+
+                escalatedUsers.forEach(userId => {
+                    if(userId && userId.toLowerCase().includes(search)) {
+                        const type = userId.startsWith('TNT') ? 'Tenant' : 'Owner';
+                        container.appendChild(createListItem(userId, userId, `${type} Support`, userId === activeChatId));
+                    }
+                });
+            }
+        }
+
+        function createListItem(id, name, sub, isActive, isGroup=false) {
+            const div = document.createElement('div');
+            div.className = `chat-item p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${isActive ? 'active' : ''}`;
+            div.dataset.id = id;
+            
+            let bgClass = isGroup ? 'bg-orange-100 text-orange-600' : 'bg-gray-200 text-gray-600';
+            if (currentTab === 'direct') bgClass = 'bg-red-100 text-red-600';
+            else if (isActive) bgClass = 'bg-purple-100 text-purple-600';
+
+            const initials = isGroup ? 'GRP' : (name ? name.charAt(0).toUpperCase() : '?');
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full ${bgClass} flex items-center justify-center font-bold text-xs shadow-sm">
+                                ${initials}
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="text-sm font-semibold text-gray-900">${name || 'Unknown'}</h4>
+                            <span class="text-xs text-gray-500">${sub}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            div.onclick = () => openConversation(id, name, sub);
+            return div;
+        }
+
+        async function openConversation(id, name, sub) {
+            activeChatId = id;
+            // Header Update
+            const headerName = document.getElementById('chatHeaderName');
+            const headerInitials = document.getElementById('chatHeaderInitials');
+            const headerAvatar = document.getElementById('chatHeaderAvatar');
+            const headerStatus = document.getElementById('chatHeaderStatus');
+
+            if(headerName) headerName.innerText = name;
+            if(headerInitials) {
+                headerInitials.innerText = name ? name.charAt(0) : '?';
+                headerInitials.classList.remove('hidden');
+            }
+            if(headerAvatar) headerAvatar.classList.add('hidden');
+            if(headerStatus) headerStatus.classList.remove('hidden');
+            
+            // Highlight list item
+            renderChatList();
+            renderMessages();
+        }
+
+        async function renderMessages() {
+            if (!activeChatId) return;
+            const container = document.getElementById('messageContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            try {
+                const msgs = await getChats(superadminId, activeChatId);
+
+                // Date divider
+                const dateDiv = document.createElement('div');
+                dateDiv.className = "flex justify-center mb-4";
+                dateDiv.innerHTML = '<span class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Today</span>';
+                container.appendChild(dateDiv);
+
+                msgs.forEach(m => {
+                    const isMe = m.from === superadminId;
+                    const timeText = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                    
+                    // System message (Escalation alert)
+                    if (m.message && (m.message.includes('🚨') || m.message.includes('🔒'))) {
+                         const sys = document.createElement('div');
+                         sys.className = "flex justify-center my-2";
+                         sys.innerHTML = `<div class="chat-bubble-system px-4 py-2">${m.message}</div>`;
+                     container.appendChild(sys);
+                     return;
+                }
+
+                // Call/Video/File types handled generally
+                let content = `<p class="text-sm">${escapeHtml(m.message || '')}</p>`;
+                
+                // Audio handler
+                if (m.type === 'audio' && m.audioData) {
+                    content = `<div class="flex items-center gap-2"><i data-lucide="mic" class="w-4 h-4"></i> <audio controls src="${m.audioData}" class="h-8 w-40"></audio></div>`;
+                }
+                
+                // File handler
+                if (m.type === 'file') {
+                    content = `<div class="flex items-center gap-2"><i data-lucide="file" class="w-4 h-4"></i> <a href="${m.meta?.fileUrl || '#'}" target="_blank" class="underline">${m.meta?.filename || 'File'}</a></div>`;
+                }
+
+                const wrap = document.createElement('div');
+                wrap.className = isMe ? 'flex items-end justify-end gap-2' : 'flex items-end gap-2';
+                
+                if (isMe) {
+                    wrap.innerHTML = `
+                        <div class="chat-bubble-admin p-3 max-w-[70%] shadow-sm">
+                            ${content}
+                            <span class="text-[10px] text-purple-200 block mt-1 text-right">${timeText} <i data-lucide="check" class="w-3 h-3 inline ml-1"></i></span>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold mb-1">SA</div>
+                    `;
+                } else {
+                    const senderName = activeChatId.startsWith('group:') ? `<div class="text-[10px] font-bold opacity-70 mb-1">${m.from || 'User'}</div>` : '';
+                    const fromChar = m.from ? m.from.charAt(0) : '?';
+                    wrap.innerHTML = `
+                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold mb-1">${fromChar}</div>
+                         <div class="chat-bubble-user p-3 max-w-[70%] shadow-sm">
+                            ${senderName}
+                            ${content}
+                            <span class="text-[10px] text-gray-400 block mt-1 text-right">${timeText}</span>
+                        </div>
+                    `;
+                }
+                container.appendChild(wrap);
+            });
+            container.scrollTop = container.scrollHeight;
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        } catch (err) {
+            console.error('renderMessages error:', err);
+        }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !activeChatId) return;
+            
+            const newMsg = { 
+                from: superadminId, 
+                to: activeChatId, 
+                message: text, 
+                timestamp: new Date().toISOString(),
+                type: 'text',
+                // If this is a direct support chat, keep the escalation flag active
+                isEscalated: currentTab === 'direct' 
+            };
+            
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newMsg)
+                });
+                if (!resp.ok) {
+                    console.error('sendMessage failed:', resp.status);
+                    return;
+                }
+                input.value = '';
+                messagesCache = await getChats(superadminId, activeChatId);
+                renderMessages();
+            } catch (e) {
+                console.error('sendMessage error:', e.message);
+            }
+        }
+
+        // --- Create Group Logic ---
+        window.createNewGroup = function() {
+            const name = prompt("Enter Group Name:");
+            if (name) {
+                const groups = getGroups();
+                const newG = { id: `group:custom_${Date.now()}`, name: name, members: [] };
+                groups.push(newG);
+                localStorage.setItem('roomhy_chat_groups', JSON.stringify(groups));
+                filterChats('group'); // Refresh
+                alert(`Group "${name}" created!`);
+            }
+        }
+
+        // --- File Attachment Logic (Mock) ---
+        const attachBtn = document.getElementById('attachBtn');
+        const fileInput = document.getElementById('fileInput');
+        
+        if(attachBtn && fileInput) {
+            attachBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file || !activeChatId) return;
+                // Mock upload
+                const allMsgs = getChats();
+                allMsgs.push({
+                    from: 'superadmin',
+                    to: activeChatId,
+                    message: "Attachment: " + file.name,
+                    type: 'file',
+                    meta: { filename: file.name, fileUrl: '#' },
+                    timestamp: new Date().toISOString(),
+                    isEscalated: currentTab === 'direct'
+                });
+                localStorage.setItem('roomhy_chat_messages', JSON.stringify(allMsgs));
+                renderMessages();
+            });
+        }
+
+        // --- Audio Recording Logic ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        const recordBtn = document.getElementById('recordBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+
+        if(recordBtn) {
+            recordBtn.addEventListener('mousedown', async () => {
+                 if (!activeChatId) return alert('Select a chat first');
+                 try {
+                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                     mediaRecorder = new MediaRecorder(stream);
+                     audioChunks = [];
+                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                     mediaRecorder.onstop = () => {
+                         const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                         const reader = new FileReader();
+                         reader.readAsDataURL(blob);
+                         reader.onloadend = () => {
+                             const allMsgs = getChats();
+                             allMsgs.push({
+                                 from: 'superadmin',
+                                 to: activeChatId,
+                                 message: "Voice Note",
+                                 type: 'audio',
+                                 audioData: reader.result,
+                                 timestamp: new Date().toISOString(),
+                                 isEscalated: currentTab === 'direct'
+                             });
+                             localStorage.setItem('roomhy_chat_messages', JSON.stringify(allMsgs));
+                             renderMessages();
+                         };
+                     };
+                     mediaRecorder.start();
+                     isRecording = true;
+                     recordBtn.classList.add('text-red-600', 'bg-red-50', 'recording-pulse');
+                     if(recordingIndicator) recordingIndicator.classList.remove('hidden');
+                 } catch(e) { alert("Mic access denied"); }
+            });
+
+            recordBtn.addEventListener('mouseup', () => {
+                 if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                     mediaRecorder.stop();
+                     isRecording = false;
+                     recordBtn.classList.remove('text-red-600', 'bg-red-50', 'recording-pulse');
+                     if(recordingIndicator) recordingIndicator.classList.add('hidden');
+                 }
+            });
+        }
+
+        // --- Agora Call Logic ---
+        let meetingState = false;
+        const startCallBtn = document.getElementById('startCallBtn');
+        const startVideoBtn = document.getElementById('startVideoBtn');
+        const toggleMeetingBtn = document.getElementById('toggleMeetingBtn');
+
+        if(startCallBtn) startCallBtn.onclick = () => alert("Starting Agora Audio Call...");
+        if(startVideoBtn) startVideoBtn.onclick = () => alert("Starting Agora Video Call...");
+        if(toggleMeetingBtn) toggleMeetingBtn.onclick = () => {
+            meetingState = !meetingState;
+            if(meetingState) {
+                alert("Started Meeting & Screen Recording...");
+            } else {
+                alert("Meeting Ended. Recording saved.");
+            }
+        };
+
+        // Notification polling for Super Admin: fetch unread notifications and surface them
+        async function pollNotifications() {
+            try {
+                const token = localStorage.getItem('token') || '';
+                if (!token) return;
+                const base = window.location.hostname.includes('localhost') ? 'http://localhost:5000' : '';
+                const res = await fetch(base + '/api/admin/notifications?unread=1', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!res.ok) return;
+                const notifs = await res.json();
+                if (!Array.isArray(notifs) || notifs.length === 0) return;
+                for (const n of notifs) {
+                    try {
+                        const time = n.createdAt ? new Date(n.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString();
+                        const text = n.type === 'call' ? 'Incoming voice call' : (n.type === 'video' ? 'Incoming video call' : (n.text || 'Notification'));
+                        const payload = { from: n.from || 'system', type: n.type || 'info', text, time, meta: n.meta || {} };
+                        // Post to chat (so it appears in conversation history)
+                        await postChatPayload(n.from || 'system', payload);
+
+                        // Update local employee preview if present
+                        try {
+                            const raw = localStorage.getItem('roomhy_employees');
+                            if (raw) {
+                                const emps = JSON.parse(raw);
+                                const idx = emps.findIndex(e => (e.loginId || '').toString() === (n.from || '').toString());
+                                if (idx > -1) {
+                                    emps[idx].lastMessage = payload.text;
+                                    emps[idx].lastMessageTime = payload.time;
+                                    localStorage.setItem('roomhy_employees', JSON.stringify(emps));
+                                }
+                            }
+                        } catch (e) { console.warn('update preview failed', e); }
+
+                        // Mark notification read
+                        if (n._id) {
+                            await fetch(base + '/api/admin/notifications/' + encodeURIComponent(n._id) + '/read', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+                        }
+
+                        showTransientNotification(`${text} from ${n.from || 'unknown'}`);
+                    } catch (e) { console.warn('processing notif failed', e); }
+                }
+                await renderChatList();
+            } catch (e) { /* ignore */ }
+        }
+
+        function showTransientNotification(text) {
+            try {
+                const el = document.createElement('div');
+                el.className = 'fixed top-6 right-6 bg-white border border-gray-200 px-4 py-2 rounded shadow-lg text-sm z-50';
+                el.innerText = text;
+                document.body.appendChild(el);
+                setTimeout(() => { el.remove(); }, 5000);
+            } catch (e) {}
+        }
+
+        function escapeHtml(unsafe) {
+            if(!unsafe) return "";
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        const sendBtn = document.getElementById('sendBtn');
+        if(sendBtn) sendBtn.addEventListener('click', sendMessage);
+        
+        const chatInput = document.getElementById('chatInput');
+        if(chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage() });
+        
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput) searchInput.addEventListener('input', renderChatList);
+
+        // Sidebar logic
         function toggleSubmenu(id, element) {
             const submenu = document.getElementById(id);
-            const chevron = element.querySelector('.lucide-chevron-down');
-            if (submenu.classList.contains('open')) {
-                submenu.classList.remove('open');
-                chevron.style.transform = 'rotate(0deg)';
-            } else {
-                submenu.classList.add('open');
-                chevron.style.transform = 'rotate(180deg)';
+            if(submenu) {
+                const icon = element.querySelector('svg:last-child');
+                if(icon) icon.classList.toggle('rotate-180');
+                submenu.classList.toggle('open');
             }
         }
-
-        // Mobile Menu
         function toggleMobileMenu() {
-            const mobileSidebar = document.getElementById('mobile-sidebar');
-            const mobileOverlay = document.getElementById('mobile-overlay');
-            const isClosed = mobileSidebar.classList.contains('-translate-x-full');
-            
-            if (isClosed) {
-                mobileSidebar.classList.remove('-translate-x-full');
-                mobileOverlay.classList.remove('hidden');
-            } else {
-                mobileSidebar.classList.add('-translate-x-full');
-                mobileOverlay.classList.add('hidden');
-            }
+            document.getElementById('mobile-sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
         }
-        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
+        
+        const mobileMenuOpen = document.getElementById('mobile-menu-open');
+        if(mobileMenuOpen) mobileMenuOpen.addEventListener('click', toggleMobileMenu);
+
+        // Init
+        // Run init inside DOMContentLoaded to be safe
+        window.addEventListener('DOMContentLoaded', () => {
+            renderChatList();
+            // Start polling notifications for Super Admin (every 5s)
+            try { pollNotifications(); } catch(e){}
+            setInterval(() => { try { pollNotifications(); } catch(e){} }, 5000);
+        });
     </script>
 </body>
 </html>

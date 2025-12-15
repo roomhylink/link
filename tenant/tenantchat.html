@@ -2,286 +2,461 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roomhy - Tenant Chat</title>
+    <title>RoomHy - Tenant Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        (function(){
+            const SOCKET_HOST = 'http://localhost:5000';
+            window.__SOCKET_HOST = SOCKET_HOST;
+            const s = document.createElement('script');
+            s.src = SOCKET_HOST + '/socket.io/socket.io.js';
+            s.async = true;
+            s.onload = function(){ console.debug('socket.io client loaded'); };
+            s.onerror = function(){ console.warn('Failed to load socket.io client from', SOCKET_HOST); };
+            document.head.appendChild(s);
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        /* Sidebar Styles */
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 24px;
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
-            text-decoration: none;
+        .sidebar-item { display: flex; align-items: center; padding: 10px 24px; color: #94a3b8; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; border-left: 4px solid transparent; cursor: pointer; text-decoration: none; }
+        .sidebar-item:hover { background-color: #1e293b; color: #f8fafc; }
+        .sidebar-item.active { background-color: #1e293b; color: #ffffff; border-left-color: #9333ea; }
+        .sidebar-section { padding: 16px 24px 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+        .recording-pulse { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .sidebar-item:hover {
-            background-color: #1e293b;
-            color: #f8fafc;
-        }
-        .sidebar-item.active {
-            background-color: #1e293b;
-            color: #ffffff;
-            border-left-color: #9333ea;
-        }
-        .sidebar-item i { margin-right: 12px; width: 18px; height: 18px; }
-        .sidebar-section-title {
-            padding: 16px 24px 8px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            font-weight: 700;
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 4px; }
-        .chat-messages::-webkit-scrollbar { width: 6px; }
-        .chat-messages::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
     </style>
 </head>
-<body class="text-gray-900">
-    <div class="flex h-screen bg-gray-100">
-        <!-- Sidebar -->
-        <aside class="w-64 flex-shrink-0 hidden md:flex flex-col transition-all duration-300" style="background-color: #0f172a;">
-            <!-- Logo Area -->
-            <div class="h-20 flex items-center px-6 border-b border-slate-800">
-                <div class="bg-purple-600 p-2 rounded-lg mr-3">
-                    <i data-lucide="home" class="w-5 h-5 text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-white tracking-tight">RoomHy</h1>
-                    <p class="text-[10px] text-slate-400 font-medium tracking-wider">TENANT PORTAL</p>
-                </div>
-            </div>
-            <nav class="flex-1 py-2 overflow-y-auto custom-scrollbar">
-                <a href="tenantdashboard.html" class="sidebar-item">
-                    Dashboard
-                </a>
-                <div class="sidebar-section-title">Account & Actions</div>
-                <button onclick="openModal('payRentModal')" class="sidebar-item">
-                    Make Payment
-                </button>
-                <button onclick="manageRentReminder()" class="sidebar-item">
-                    Manage Rent Reminders
-                </button>
-                <a href="tenantchat.html" class="sidebar-item active">
-                    Live Chat with Owner
-                </a>
-                <div class="sidebar-section-title">Information Hub</div>
-                <a href="tenantcomplints.html" class="sidebar-item">
-                    View My Requests/Complaints
-                </a>
-                <button onclick="scrollToTab('documents')" class="sidebar-item">
-                    Documents & Bills
-                </button>
-                <button onclick="scrollToTab('activity')" class="sidebar-item">
-                    Activity Timeline
-                </button>
-                <div class="sidebar-section-title">Support</div>
-                <button onclick="viewEmergency()" class="sidebar-item text-red-400 hover:text-red-300">
-                    Emergency Contacts
-                </button>
-            </nav>
-            <div class="p-4 border-t border-slate-800">
-                <a href="tenantlogin.html" onclick="clearSession()" class="flex items-center text-slate-400 hover:text-white w-full px-4 py-2 text-sm font-medium transition-colors">
-                    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i> Logout
-                </a>
-            </div>
-        </aside>
+<body class="flex h-screen overflow-hidden">
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30">
-                <div class="flex items-center">
-                    <button id="mobile-menu-button" class="md:hidden mr-4 text-gray-600"><i data-lucide="menu" class="w-6 h-6"></i></button>
-                    <h2 class="text-lg font-semibold text-gray-800">Chat with Owner</h2>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold" id="headerAvatar">T</div>
-                </div>
-            </header>
+    <!-- Sidebar -->
+    <aside class="w-64 flex-shrink-0 hidden md:flex flex-col bg-[#0f172a]">
+        <div class="h-20 flex items-center px-6 border-b border-slate-800">
+            <div class="bg-purple-600 p-2 rounded-lg mr-3"><i data-lucide="home" class="w-5 h-5 text-white"></i></div>
+            <div><h1 class="text-xl font-bold text-white">RoomHy</h1><p class="text-[10px] text-slate-400 font-medium tracking-wider">TENANT PORTAL</p></div>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+            <a href="tenantdashboard.html" class="sidebar-item">Dashboard</a>
+            <div class="sidebar-section">Actions</div>
+            <a href="#" class="sidebar-item">Make Payment</a>
+            <a href="tenantchat.html" class="sidebar-item active">Chat</a>
+            <a href="tenantcomplints.html" class="sidebar-item">Complaints</a>
+            <div class="sidebar-section">Account</div>
+            <a href="tenantprofile.html" class="sidebar-item">My Profile</a>
+            <a href="tenantlogin.html" class="sidebar-item text-red-400 hover:text-red-300">Logout</a>
+        </nav>
+    </aside>
 
-            <!-- Chat Content (Direct Single Chat View - No List) -->
-            <main class="flex-1 flex flex-col overflow-hidden bg-white relative">
-                <!-- Chat Header -->
-                <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10" id="chatHeader">
-                    <div class="flex items-center gap-3">
-                        <div id="chatAvatarPlaceholder" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">O</div>
-                        <div>
-                            <h3 id="chatName" class="text-base font-bold text-gray-900">Property Owner</h3>
-                            <div id="chatStatus" class="flex items-center text-xs text-green-500"><span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span>Available</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button id="payNowBtn" class="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">Pay Now</button>
-                        <div class="relative">
-                            <button id="roomMembersBtn" class="px-3 py-1.5 bg-gray-100 text-gray-800 rounded-md text-sm hover:bg-gray-200">Room Members</button>
-                            <div id="roomMembersList" class="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded shadow-md p-2 hidden z-40 max-h-60 overflow-y-auto"></div>
-                        </div>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col bg-white">
+        <!-- Header -->
+        <header class="bg-white shadow-sm h-16 flex items-center px-6 z-10 border-b border-gray-200">
+            <div class="md:hidden mr-4"><i data-lucide="menu" class="w-6 h-6"></i></div>
+            <h2 class="text-lg font-bold text-gray-800 mr-auto">Messages</h2>
+            
+            <!-- Chat Mode Toggle -->
+            <div class="flex bg-gray-100 p-1 rounded-lg">
+                <button onclick="switchChatMode('owner')" id="mode-owner" class="px-4 py-1.5 text-xs font-bold rounded-md bg-white text-purple-600 shadow-sm transition">Owner</button>
+                <button onclick="switchChatMode('support')" id="mode-support" class="px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700 transition">Support</button>
+            </div>
+        </header>
+
+        <!-- Chat Area -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">
+            
+            <!-- Chat Info Header -->
+            <div class="h-14 bg-white border-b flex items-center justify-between px-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm" id="chatAvatar">O</div>
+                    <div>
+                        <h3 class="font-bold text-sm text-gray-900" id="chatTitle">Property Owner</h3>
+                        <div class="flex items-center text-xs text-green-500"><span class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Online</div>
                     </div>
                 </div>
                 
+                <div class="flex items-center gap-3">
+                    <!-- Connect to Admin Button (Support Only) -->
+                    <button id="connectAdminBtn" onclick="escalateToAdmin()" class="hidden bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i> Connect to Admin
+                    </button>
+
+                    <div class="h-6 w-px bg-gray-200 mx-1 hidden" id="dividerLine"></div>
+
+                    <!-- Call Buttons (Support Only) -->
+                    <button id="voiceCallBtn" onclick="startCall('voice')" class="hidden p-2 text-gray-500 hover:text-purple-600 rounded-full hover:bg-purple-50 transition" title="Voice Call"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                    <button id="videoCallBtn" onclick="startCall('video')" class="hidden p-2 text-gray-500 hover:text-purple-600 rounded-full hover:bg-purple-50 transition" title="Video Call"><i data-lucide="video" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-4 chat-container">
                 <!-- Messages -->
-                <div class="flex-1 overflow-y-auto chat-messages p-6 space-y-4 bg-slate-50" id="chatMessages">
-                    <!-- Messages injected here -->
+            </div>
+
+            <!-- Input -->
+            <div class="p-4 bg-white border-t">
+                <div class="flex items-center gap-3 max-w-4xl mx-auto">
+                    <button id="attachBtn" class="text-gray-400 hover:text-gray-600"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                    <input id="fileInput" type="file" class="hidden">
+                    
+                    <input id="chatInput" type="text" placeholder="Type message..." class="flex-1 bg-gray-50 border border-gray-300 rounded-full px-5 py-3 outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    
+                    <button id="recordBtn" class="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-gray-100 transition" title="Hold to Record"><i data-lucide="mic" class="w-5 h-5"></i></button>
+
+                    <button onclick="sendMessage()" class="bg-purple-600 text-white p-3 rounded-full hover:bg-purple-700 shadow-lg transition">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
                 </div>
-                
-                <!-- Input -->
-                <div class="bg-white border-t border-gray-200 p-4">
-                    <div class="flex items-center gap-2 max-w-4xl mx-auto">
-                         <input type="text" id="chatInput" placeholder="Type a message to your owner..." class="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-purple-500 outline-none text-sm shadow-sm">
-                         <button id="sendBtn" class="bg-purple-600 text-white rounded-full p-3 hover:bg-purple-700 transition shadow-md">
-                            <i data-lucide="send" class="w-5 h-5"></i>
-                         </button>
-                    </div>
-                </div>
-            </main>
+                <div id="recordingIndicator" class="hidden text-xs text-red-500 font-bold mt-1 ml-12 animate-pulse">Recording audio...</div>
+                        <div class="mt-2 px-4">
+                            <button id="tenantTestReplyBtn" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded">Send Test Reply (superadmin)</button>
+                            <span class="text-xs text-gray-500 ml-3">Last poll: <span id="tenantLastPoll">-</span> · Last send: <span id="tenantLastSend">-</span></span>
+                        </div>
+            </div>
         </div>
     </div>
-    
+
     <script>
-        lucide.createIcons();
+        window.addEventListener('load', () => { if(typeof lucide!=='undefined') lucide.createIcons(); });
+
+        // 1. Session Init
         const user = JSON.parse(localStorage.getItem('tenant_user') || localStorage.getItem('user') || 'null');
-        if (!user || user.role !== 'tenant') window.location.href = 'tenantlogin.html';
-        
-        const tenantId = user.loginId; // e.g. TNT-KO-001
-        let ownerId = null; 
-
-        // Data Sources
-        const tenantsDb = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
-        const ownersDb = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
-        const chatMessages = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
-
-        let currentChatWith = null; // { id: '', name: '', type: 'owner'|'tenant' }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('headerAvatar').innerText = user.name.charAt(0).toUpperCase();
-
-            // 1. Identify Owner
-            const tenantRecord = tenantsDb.find(t => t.loginId === tenantId);
-            if(tenantRecord && tenantRecord.ownerId) {
-                ownerId = tenantRecord.ownerId;
-                // Fetch Owner Name if available
-                const ownerProfile = ownersDb[ownerId]?.profile || ownersDb[ownerId];
-                const ownerName = ownerProfile ? (ownerProfile.name || ownerProfile.ownerName || ownerProfile.fullName || ownerId) : ownerId;
-                // Set default chat target to owner
-                currentChatWith = { id: ownerId, name: ownerName, type: 'owner' };
-                document.getElementById('chatName').innerText = currentChatWith.name + ' (Owner)';
-                loadMessages();
-            } else {
-                document.getElementById('chatMessages').innerHTML = 
-                    `<div class="flex flex-col items-center justify-center h-full text-gray-400">
-                        <i data-lucide="alert-circle" class="w-10 h-10 mb-2"></i>
-                        <p>Property Owner not assigned yet.</p>
-                    </div>`;
-                lucide.createIcons();
-                document.getElementById('chatInput').disabled = true;
-                document.getElementById('sendBtn').disabled = true;
-            }
-
-            renderRoomMembers();
-        });
-
-        function loadMessages() {
-            if(!currentChatWith) return;
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-
-            const targetId = currentChatWith.id;
-            const msgs = chatMessages.filter(m => 
-                (m.from === tenantId && m.to === targetId) || 
-                (m.from === targetId && m.to === tenantId)
-            );
-
-            if (msgs.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 mt-10 text-sm">Start conversation with ${currentChatWith.name}.</div>`;
-            } else {
-                msgs.forEach(msg => {
-                    const isMe = msg.from === tenantId;
-                    const div = document.createElement('div');
-                    div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
-                    div.innerHTML = `
-                        <div class="max-w-[80%] ${isMe ? 'bg-purple-600 text-white rounded-l-2xl rounded-tr-2xl' : 'bg-white border border-gray-200 rounded-r-2xl rounded-tl-2xl'} px-4 py-2 shadow-sm text-sm">
-                            <p>${msg.message}</p>
-                            <span class="text-[10px] block text-right mt-1 opacity-70">${new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                        </div>
-                    `;
-                    container.appendChild(div);
+        const myId = user ? user.loginId : 'TNT001';
+        // Socket.IO client (init after socket script loads)
+        (function initSocketTenant(){
+            if (typeof io === 'undefined') { setTimeout(initSocketTenant, 200); return; }
+            try {
+                const socket = io(window.__SOCKET_HOST || 'http://localhost:5000');
+                socket.emit('join', myId);
+                socket.on('chat:message', async (msg) => {
+                    try {
+                        if (!msg) return;
+                        console.log('Tenant received socket message:', msg.from, '->', msg.to, 'current target:', currentTargetId);
+                        // Refresh if message is from/to current user OR to current conversation target
+                        if (msg.from === myId || msg.to === myId || msg.from === currentTargetId || msg.to === currentTargetId) {
+                            console.log('Message is relevant to current conversation, refreshing...');
+                            await renderMessages();
+                        }
+                    } catch (e) { console.warn('tenant socket handler', e && e.message); }
                 });
+            } catch (e) { console.warn('initSocketTenant error', e && e.message); }
+        })();
+        
+        // Find owner & manager
+        const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+        const me = tenants.find(t => t.loginId === myId);
+        
+        const ownerId = me ? me.ownerId : 'OWNER001';
+        const locationCode = (me && me.property && me.property.locationCode) ? me.property.locationCode : 'KO';
+        // Mock manager ID based on location
+        const managerId = `MGR${locationCode}01`;
+
+        let currentMode = 'owner'; // 'owner' or 'support'
+        let currentTargetId = ownerId;
+
+        // 2. Switch Mode
+        function switchChatMode(mode) {
+            currentMode = mode;
+            // Update Tab UI
+            const btnOwner = document.getElementById('mode-owner');
+            const btnSupport = document.getElementById('mode-support');
+            
+            if(mode === 'owner') {
+                btnOwner.className = "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-purple-600 shadow-sm transition";
+                btnSupport.className = "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700 transition";
+                
+                currentTargetId = ownerId;
+                updateHeader('Property Owner', 'O', 'bg-blue-100 text-blue-700');
+                toggleSupportFeatures(false);
+            } else {
+                btnSupport.className = "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-purple-600 shadow-sm transition";
+                btnOwner.className = "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-gray-700 transition";
+                
+                currentTargetId = managerId;
+                updateHeader('Area Support', 'S', 'bg-green-100 text-green-700');
+                toggleSupportFeatures(true);
             }
-            container.scrollTop = container.scrollHeight;
+            renderMessages();
+            // start polling for new messages whenever mode changes
+            try { startTenantPolling(); } catch(e) { /* ignore */ }
+        }
+        window.switchChatMode = switchChatMode;
+
+        function updateHeader(title, initials, bgClass) {
+            document.getElementById('chatTitle').innerText = title;
+            const av = document.getElementById('chatAvatar');
+            av.innerText = initials;
+            av.className = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${bgClass}`;
         }
 
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
-        document.getElementById('chatInput').addEventListener('keypress', (e) => { if(e.key==='Enter') sendMessage() });
+        // Toggle Buttons Visibility
+        function toggleSupportFeatures(show) {
+            const connectBtn = document.getElementById('connectAdminBtn');
+            const voiceBtn = document.getElementById('voiceCallBtn');
+            const videoBtn = document.getElementById('videoCallBtn');
+            const divider = document.getElementById('dividerLine');
 
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if(!text || !currentChatWith) return;
+            if(show) {
+                // Show call buttons
+                voiceBtn.classList.remove('hidden');
+                videoBtn.classList.remove('hidden');
+                divider.classList.remove('hidden');
+                
+                // Show Connect to Admin logic
+                checkEscalationStatus();
+            } else {
+                connectBtn.classList.add('hidden');
+                voiceBtn.classList.add('hidden');
+                videoBtn.classList.add('hidden');
+                divider.classList.add('hidden');
+            }
+        }
 
-            const newMsg = {
-                from: tenantId,
-                to: currentChatWith.id,
-                message: text,
-                timestamp: new Date().toISOString(),
-                read: false
+        async function checkEscalationStatus() {
+             try {
+                 const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(myId)}&to=superadmin&limit=10`);
+                 const json = await resp.ok ? await resp.json() : { data: [] };
+                 const msgs = json.data || [];
+                 const isEscalated = msgs.some(m => m.isEscalated);
+                 
+                 const btn = document.getElementById('connectAdminBtn');
+                 if(isEscalated) {
+                     btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Admin Connected';
+                     btn.className = "bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 cursor-default";
+                     btn.onclick = null;
+                     btn.classList.remove('hidden');
+                 } else {
+                     btn.innerHTML = '<i data-lucide="shield-alert" class="w-4 h-4"></i> Connect to Admin';
+                     btn.className = "bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-100 transition flex items-center gap-2 cursor-pointer";
+                     btn.onclick = escalateToAdmin;
+                     btn.classList.remove('hidden');
+                 }
+                 lucide.createIcons();
+             } catch (e) {
+                 console.warn('checkEscalationStatus error:', e.message);
+             }
+        }
+
+        // 3. Escalation Logic
+        window.escalateToAdmin = async function() {
+            if(!confirm("Connect to Super Admin for unresolved support issues?")) return;
+
+            const escalationMsg = {
+                from: myId,
+                to: 'superadmin',
+                message: "🚨 TENANT REQUEST: Connecting to Super Admin Support.",
+                isEscalated: true,
+                type: 'system'
             };
 
-            chatMessages.push(newMsg);
-            localStorage.setItem('roomhy_chat_messages', JSON.stringify(chatMessages));
-            input.value = '';
-            loadMessages();
-        }
-
-        // Room members rendering & interactions
-        function renderRoomMembers(){
-            const tenantRecord = tenantsDb.find(t => t.loginId === tenantId);
-            const listEl = document.getElementById('roomMembersList');
-            if(!tenantRecord || !listEl) return;
-            const roommates = tenantsDb.filter(t => t.ownerId === tenantRecord.ownerId && t.roomNo === tenantRecord.roomNo && t.loginId !== tenantId);
-            listEl.innerHTML = '';
-            if(roommates.length === 0){
-                listEl.innerHTML = `<div class="text-sm text-gray-500 p-2">No other members in your room.</div>`;
-                return;
-            }
-            roommates.forEach(r => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-2 hover:bg-gray-50 rounded';
-                item.innerHTML = `<div><div class="text-sm font-medium text-gray-800">${r.name}</div><div class="text-xs text-gray-500">Bed ${r.bedNo || '-'}</div></div><div><button class="chatRoommateBtn px-3 py-1 text-sm bg-purple-600 text-white rounded">Chat</button></div>`;
-                listEl.appendChild(item);
-                item.querySelector('.chatRoommateBtn').addEventListener('click', () => {
-                    currentChatWith = { id: r.loginId, name: r.name, type: 'tenant' };
-                    document.getElementById('chatName').innerText = r.name + ' (Roommate)';
-                    document.getElementById('chatInput').placeholder = `Message ${r.name}...`;
-                    listEl.classList.add('hidden');
-                    loadMessages();
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(escalationMsg)
                 });
-            });
-
-            // Toggle button
-            document.getElementById('roomMembersBtn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                listEl.classList.toggle('hidden');
-            });
-            // Hide when clicking outside
-            document.addEventListener('click', () => listEl.classList.add('hidden'));
-
-            // Pay Now
-            document.getElementById('payNowBtn').addEventListener('click', () => {
-                window.location.href = 'payment.html';
-            });
+                if (resp.ok) {
+                    await checkEscalationStatus();
+                    await renderMessages();
+                    console.debug('escalateToAdmin: escalated successfully');
+                }
+            } catch (e) {
+                console.error('escalateToAdmin error:', e.message);
+                alert('Failed to escalate: ' + e.message);
+            }
         }
+
+        // Polling helpers
+        let tenantPoll = null;
+        function startTenantPolling() {
+            if (tenantPoll) clearInterval(tenantPoll);
+            tenantPoll = setInterval(async () => {
+                try { await renderMessages(); } catch (e) { console.warn('tenant poll error', e && e.message); }
+            }, 2500);
+        }
+        function stopTenantPolling() { if (tenantPoll) { clearInterval(tenantPoll); tenantPoll = null; } }
+
+        // 4. Render Messages
+        async function renderMessages() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            
+            try {
+                const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(myId)}&to=${encodeURIComponent(currentTargetId)}&limit=500`);
+                const json = await resp.ok ? await resp.json() : { data: [] };
+                const msgs = json.data || [];
+                
+                // Filter messages - messages from API already have proper from/to fields
+                const relevant = msgs;
+
+                if(relevant.length === 0) {
+                    container.innerHTML = `<div class="text-center text-gray-400 mt-10">Start conversation with ${document.getElementById('chatTitle').innerText}</div>`;
+                    return;
+                }
+
+                relevant.forEach(m => {
+                    const isMe = m.from === myId;
+                    const isAdmin = m.from === 'superadmin';
+                    
+                    const div = document.createElement('div');
+                    div.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+                    
+                    let content = `<p>${m.message}</p>`;
+                    if(m.type === 'audio') content = `<div class="flex items-center gap-2"><i data-lucide="mic" class="w-4 h-4"></i> Voice Note</div>`;
+                    if(m.type === 'file') content = `<div class="flex items-center gap-2"><i data-lucide="file" class="w-4 h-4"></i> ${m.message}</div>`;
+
+                    let bubbleClass = isMe ? 'bg-purple-600 text-white rounded-l-2xl rounded-tr-2xl' : 'bg-white border border-gray-200 rounded-r-2xl rounded-tl-2xl';
+                if(isAdmin) bubbleClass = 'bg-red-50 border border-red-200 text-red-900 rounded-r-2xl rounded-tl-2xl';
+
+                div.innerHTML = `
+                    <div class="max-w-[80%] ${bubbleClass} px-4 py-3 shadow-sm text-sm">
+                        ${isAdmin ? '<div class="text-[10px] font-bold text-red-600 mb-1">SUPER ADMIN</div>' : ''}
+                        ${content}
+                        <span class="text-[10px] block text-right mt-1 opacity-70">${new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+                });
+                container.scrollTop = container.scrollHeight;
+                lucide.createIcons();
+            } catch (e) {
+                console.error('renderMessages error:', e.message);
+                container.innerHTML = '<div class="text-center text-red-600 mt-4">Error loading messages</div>';
+            }
+        }
+
+        // 5. Send Logic
+        window.sendMessage = async function() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            // Check escalation flag for Support Mode
+            const isEscalated = document.getElementById('connectAdminBtn').innerText.includes('Connected');
+            
+            const newMsg = {
+                from: myId,
+                to: currentTargetId,
+                message: text,
+                isEscalated: (currentMode === 'support' && isEscalated),
+                type: 'text'
+            };
+
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newMsg)
+                });
+
+                if (resp.ok) {
+                    input.value = '';
+                    await renderMessages();
+                    console.debug('sendMessage: sent successfully');
+                } else {
+                    const err = await resp.json();
+                    console.error('sendMessage failed:', err);
+                    alert('Failed to send message');
+                }
+            } catch (e) {
+                console.error('sendMessage error:', e.message);
+                alert('Error sending message: ' + e.message);
+            }
+        }
+
+        // 6. Audio/File Logic
+        let isRecording = false;
+        document.getElementById('recordBtn').addEventListener('mousedown', () => {
+            isRecording = true;
+            document.getElementById('recordBtn').classList.add('text-red-600', 'bg-red-50');
+            document.getElementById('recordingIndicator').classList.remove('hidden');
+        });
+        document.getElementById('recordBtn').addEventListener('mouseup', async () => {
+            if(isRecording) {
+                isRecording = false;
+                document.getElementById('recordBtn').classList.remove('text-red-600', 'bg-red-50');
+                document.getElementById('recordingIndicator').classList.add('hidden');
+                // Send voice note via API
+                const voiceMsg = {
+                    from: myId,
+                    to: currentTargetId,
+                    message: "Voice Note",
+                    type: 'audio',
+                    isEscalated: (currentMode === 'support' && document.getElementById('connectAdminBtn').innerText.includes('Connected'))
+                };
+                try {
+                    await fetch('http://localhost:5000/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(voiceMsg)
+                    });
+                    await renderMessages();
+                } catch (e) {
+                    console.error('Voice message error:', e.message);
+                }
+            }
+        });
+
+        document.getElementById('attachBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+        document.getElementById('fileInput').addEventListener('change', async function() {
+            if(this.files[0]) {
+                const fileMsg = {
+                    from: myId,
+                    to: currentTargetId,
+                    message: "File: " + this.files[0].name,
+                    type: 'file',
+                    isEscalated: (currentMode === 'support' && document.getElementById('connectAdminBtn').innerText.includes('Connected'))
+                };
+                try {
+                    await fetch('http://localhost:5000/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(fileMsg)
+                    });
+                    await renderMessages();
+                } catch (e) {
+                    console.error('File message error:', e.message);
+                }
+            }
+        });
+
+        // 7. Call Logic
+        window.startCall = function(type) {
+            alert(`Starting ${type} call with Support Team (Agora Mock)...`);
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', (e)=>{if(e.key==='Enter') sendMessage()});
+
+        // Init
+        switchChatMode('owner');
+        // start background polling for tenant chat view
+        startTenantPolling();
+        window.addEventListener('beforeunload', () => stopTenantPolling());
+
+        // Test reply button -> create a superadmin reply to this tenant
+        document.getElementById('tenantTestReplyBtn').addEventListener('click', async () => {
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/test-reply', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to: myId, message: 'Test reply from superadmin to tenant' })
+                });
+                const j = await resp.json();
+                if (resp.ok) {
+                    await renderMessages();
+                    document.getElementById('tenantLastSend').innerText = JSON.stringify(j.data || {});
+                    alert('Test reply created');
+                } else {
+                    alert('Failed to create test reply: ' + (j.error || JSON.stringify(j)));
+                }
+            } catch (e) { alert('Test reply error: ' + e.message); }
+        });
+
     </script>
 </body>
 </html>

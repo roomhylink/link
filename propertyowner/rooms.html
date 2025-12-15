@@ -3,24 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roomhy - Room Management</title>
+    <title>RoomHy - Room Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide icons: try CDN (keeps working when local file missing) -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Sidebar Styling (match admin.html) */
         .sidebar { background-color: #111827; color: #9ca3af; }
         .sidebar-link { color: #9ca3af; font-weight: 500; transition: all 0.2s ease; display: flex; align-items: center; padding: 0.75rem 1.5rem; font-size: 0.9rem; border-left: 3px solid transparent; cursor: pointer; }
         .sidebar-link:hover { color: #f3f4f6; background-color: #1f2937; }
         .sidebar-link.active { background-color: #1f2937; color: #ffffff; border-left-color: #a855f7; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        
+        /* Profile Dropdown Transition */
+        .profile-dropdown { transition: opacity 0.2s ease-out, transform 0.2s ease-out; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        .modal { transition: opacity 0.25s ease; }
+
+        /* Room Card */
+        .room-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-top: 4px solid transparent;
+        }
+        .room-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .room-card-ac { border-top-color: #3b82f6; } /* Blue for AC */
+        .room-card-nonac { border-top-color: #f59e0b; } /* Amber for Non-AC */
+
+        /* Bed Visuals */
+        .bed-item { transition: all 0.2s; }
+        
+        .bed-occupied {
+            background: linear-gradient(to bottom right, #f0fdf4, #dcfce7);
+            border: 1px solid #bbf7d0;
+        }
+        .bed-occupied:hover { border-color: #86efac; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .bed-empty {
+            background-color: #ffffff;
+            border: 1px dashed #cbd5e1;
+            color: #64748b;
+        }
+        .bed-empty:hover {
+            border-color: #a855f7;
+            color: #7e22ce;
+            background-color: #faf5ff;
+            cursor: pointer;
+        }
+
+        .add-bed-btn {
+            border: 1px dashed #e2e8f0;
+            color: #94a3b8;
+        }
+        .add-bed-btn:hover {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        
+        /* Tab Button Active State */
+        .tab-btn.active {
+            background-color: #f3e8ff;
+            color: #7e22ce;
+            border-color: #d8b4fe;
+        }
     </style>
 </head>
-<body class="text-slate-800">
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar (Same as admin.html) -->
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <div class="flex h-full overflow-hidden">
+        <!-- Sidebar (copied from admin.html for exact match) -->
         <aside class="sidebar w-72 flex-shrink-0 hidden md:flex flex-col z-20 overflow-y-auto custom-scrollbar">
             <div class="h-16 flex items-center px-6 border-b border-gray-800 sticky top-0 bg-[#111827] z-10">
                  <div class="flex items-center gap-3">
@@ -31,921 +89,973 @@
             <nav class="flex-1 py-6 space-y-1">
                 <a href="admin.html" class="sidebar-link"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard</a>
                 <a href="properties.html" class="sidebar-link"><i data-lucide="building" class="w-5 h-5 mr-3"></i> Properties</a>
-                <!-- Active State on Rooms -->
                 <a href="rooms.html" class="sidebar-link active"><i data-lucide="bed-double" class="w-5 h-5 mr-3"></i> Rooms</a>
-                <a href="tenants.html" class="sidebar-link"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Tenants</a>
                 <a href="tenantrec.html" class="sidebar-link"><i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i> Tenant Records</a>
                 <a href="documents.html" class="sidebar-link"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Documents</a>
                 <a href="payment.html" class="sidebar-link"><i data-lucide="credit-card" class="w-5 h-5 mr-3"></i> Payments</a>
                 <a href="complaints.html" class="sidebar-link"><i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Complaints</a>
-                <a href="chat.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chats</a>
-                <a href="review.html" class="sidebar-link"><i data-lucide="star" class="w-5 h-5 mr-3"></i> Reviews</a>
                 <a href="location.html" class="sidebar-link"><i data-lucide="map-pin" class="w-5 h-5 mr-3"></i> Location</a>
-                <a href="ownerprofile.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Profile & Settings</a>
+                <a href="chat.html" class="sidebar-link"><i data-lucide="message-square" class="w-5 h-5 mr-3"></i> Chat</a>
+                <a href="ownerprofile.html" class="sidebar-link"><i data-lucide="user" class="w-5 h-5 mr-3"></i> Profile</a>
+                <a href="settings.html" class="sidebar-link"><i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings</a>
             </nav>
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden bg-[#f3f4f6]">
-            <!-- Header (Same as admin.html) -->
-            <header class="bg-white h-16 flex items-center justify-between px-6 shadow-sm z-10">
+        <div class="flex-1 flex flex-col h-full overflow-hidden bg-[#f3f4f6] relative">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 relative z-30 flex-shrink-0">
                 <div class="flex items-center">
-                    <button id="mobile-menu-open" class="md:hidden mr-4 text-slate-500"><i data-lucide="menu" class="w-6 h-6"></i></button>
-                    <h2 class="text-lg font-semibold text-slate-800">Room Management</h2>
+                    <button id="mobile-menu-button" class="md:hidden mr-4 text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i data-lucide="bed-double" class="w-6 h-6 text-purple-600"></i> Manage Rooms
+                    </h2>
                 </div>
-                <div class="flex items-center gap-4">
-                    <button class="text-slate-400 hover:text-slate-600"><i data-lucide="bell" class="w-5 h-5"></i></button>
-                    <!-- Profile Dropdown (CSS Hover based) -->
-                    <div class="relative group">
-                        <button class="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-full transition-colors">
-                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold border border-purple-200" id="headerAvatar">OP</div>
-                            <div class="text-left hidden sm:block">
-                                <p class="text-xs font-semibold text-gray-700" id="headerName">Owner</p>
-                                <p class="text-[10px] text-gray-500">Property Owner</p>
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                        <i data-lucide="bell" class="w-6 h-6"></i>
+                    </button>
+                    
+                    <!-- Profile Dropdown -->
+                    <div class="relative ml-3">
+                        <button id="profile-button" class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            <div class="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold border border-purple-200" id="headerAvatar">
+                                O
                             </div>
-                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400 hidden sm:block"></i>
                         </button>
-                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 hidden group-hover:block z-50">
-                            <a href="ownerprofile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                            <a href="#" id="logoutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</a>
+                        <!-- Dropdown menu -->
+                        <div id="profile-dropdown" class="profile-dropdown hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transform scale-95 opacity-0">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-medium text-gray-900" id="headerOwnerName">Owner</p>
+                                <p class="text-xs text-gray-500 truncate" id="headerOwnerId">ID: ...</p>
+                            </div>
+                            <a href="ownerprofile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i data-lucide="user" class="w-4 h-4 inline mr-2"></i> Your Profile</a>
+                            <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i data-lucide="settings" class="w-4 h-4 inline mr-2"></i> Settings</a>
+                            <a href="ownerlogin.html" onclick="localStorage.removeItem('user'); sessionStorage.clear();" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i> Sign out</a>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Content -->
-            <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                 <div class="max-w-7xl mx-auto">
                     
-                    <!-- Page Header (New Location for Add Button) -->
-                    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <!-- Header Section Content -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                         <div>
-                        <h1 class="text-2xl font-bold text-slate-800">Manage Rooms <span id="pagePropertyTitle" class="text-base font-normal text-gray-500"> </span></h1>
-                            <p class="text-sm text-slate-500 mt-1">Add rooms, configure beds, and assign tenants.</p>
+                            <div class="flex items-center mt-1 text-slate-500 text-sm bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-200 w-fit">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-purple-500"></i>
+                                <a id="propertyNameDisplay" class="font-medium text-purple-700 hover:underline" href="#">Loading Property...</a>
+                            </div>
+                            <div id="dataStatus" class="mt-2 text-xs text-gray-500 flex items-center gap-3">
+                                <span id="backendStatus">Backend: unknown</span>
+                                <span id="roomsCount">Rooms: -</span>
+                                <span id="tenantsCount">Tenants: -</span>
+                                <button id="loadTenantsBtn" onclick="loadTenantsFromBackend()" class="ml-2 text-xs px-2 py-1 bg-gray-100 rounded-md">Import Tenants</button>
+                            </div>
                         </div>
-                        <div class="mt-4 md:mt-0">
-                            <button onclick="openModal('room-modal')" class="bg-purple-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm flex items-center transition-colors">
-                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add New Room
-                            </button>
-                        </div>
+                        <button onclick="openAddRoomModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-purple-500/30 transition-all font-medium">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i> Add New Room
+                        </button>
                     </div>
 
-                    <!-- Rooms Grid -->
-                    <div id="rooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        <!-- Rooms will be loaded here via JS -->
+                    <!-- Room Grid -->
+                    <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Rooms will be injected here -->
                     </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-24 text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">
+                        <div class="bg-purple-50 p-4 rounded-full mb-4">
+                            <i data-lucide="bed-double" class="w-10 h-10 text-purple-400"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-700">No rooms added yet</h3>
+                        <p class="text-sm">Start by adding a room to manage beds and tenants.</p>
+                        <button onclick="openAddRoomModal()" class="mt-4 text-purple-600 font-medium hover:underline">Add Room Now</button>
+                    </div>
+
                 </div>
-            </main>
+            </div>
         </div>
         
         <!-- Mobile Sidebar Overlay -->
         <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
-        
-        <!-- Mobile Sidebar -->
-        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col overflow-y-auto">
+        <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#111827] z-40 transform -translate-x-full transition-transform duration-300 md:hidden flex flex-col shadow-2xl">
             <nav class="flex-1 py-4 space-y-1 px-2">
                  <a href="admin.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-gray-400 hover:bg-gray-800">Dashboard</a>
-                 <a href="rooms.html" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Rooms</a>
+                 <a href="#" class="flex items-center px-4 py-3 text-sm font-medium rounded-md bg-gray-800 text-white border-l-4 border-purple-500">Rooms</a>
+                 <a href="ownerlogin.html" onclick="localStorage.removeItem('user'); sessionStorage.clear();" class="flex items-center px-4 py-3 text-sm font-medium rounded-md text-red-400 hover:bg-gray-800 mt-4 border-t border-gray-700">Sign Out</a>
             </nav>
         </aside>
     </div>
 
-    <!-- 1. Add Room Modal -->
-    <div id="room-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 transform transition-all">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="text-lg font-bold text-slate-800">Add New Room</h3>
-                <button onclick="closeModal('room-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- Add Room Modal -->
+    <div id="roomModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative transform transition-all scale-100">
+            <button onclick="closeRoomModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-1 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Add New Room</h3>
+                <p class="text-sm text-gray-500">Configure room details and capacity.</p>
             </div>
-            <form id="room-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Room Number</label>
-                    <input type="text" id="room-no" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="e.g. 101" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Room Type</label>
-                    <select id="room-type" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none bg-white">
-                        <option value="Single">Single Room</option>
-                        <option value="Double">Double Sharing</option>
-                        <option value="Triple">Triple Sharing</option>
-                        <option value="Dorm">Dormitory</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Monthly Rent (₹)</label>
-                    <input type="number" id="room-rent" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="e.g. 5000" required>
+            
+            <form id="roomForm" onsubmit="saveRoom(event)">
+                <div class="space-y-5">
+                    <!-- Property Name (Read Only) -->
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Property</label>
+                        <div class="flex items-center text-sm font-medium text-gray-800">
+                            <i data-lucide="building-2" class="w-4 h-4 mr-2 text-purple-500"></i>
+                            <span id="modalPropertyNameText">Loading...</span>
+                        </div>
+                        <input type="hidden" id="modalPropertyId">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Room Number / Name</label>
+                        <input type="text" id="roomNo" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition" placeholder="e.g. 101, A-Wing">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
+                            <div class="relative">
+                                <select id="roomType" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-8 focus:ring-2 focus:ring-purple-500 outline-none appearance-none bg-white">
+                                    <option value="AC">AC Room</option>
+                                    <option value="Non-AC">Non-AC</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-3 top-3 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rent / Month (₹)</label>
+                            <input type="number" id="roomRent" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Initial Beds</label>
+                        <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                            <button type="button" onclick="adjustBedCount(-1)" class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 border-r">-</button>
+                            <input type="number" id="roomBeds" required min="1" max="10" value="2" class="w-full text-center py-2.5 outline-none" readonly>
+                            <button type="button" onclick="adjustBedCount(1)" class="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 border-l">+</button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">You can add/remove beds later.</p>
+                    </div>
                 </div>
                 
-                <div class="flex justify-end gap-3 mt-6 pt-2">
-                    <button type="button" onclick="closeModal('room-modal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm transition-colors">Save Room</button>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="closeRoomModal()" class="px-5 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg text-sm font-medium transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md hover:shadow-lg transition">Create Room</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 2. Manage Beds Modal -->
-    <div id="manage-beds-modal" class="modal fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-0 max-h-[85vh] flex flex-col overflow-hidden">
-            <div class="flex justify-between items-center p-5 border-b border-gray-200 bg-gray-50">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">Manage Beds</h3>
-                    <p class="text-xs text-gray-500">Room: <span id="modal-room-name" class="font-semibold text-purple-700"></span></p>
-                </div>
-                <button onclick="closeModal('manage-beds-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- Assign Tenant Modal -->
+    <div id="assignModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+            <button onclick="closeAssignModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Assign Tenant</h3>
+                <p class="text-sm text-gray-500" id="assignRoomTitle">Assigning to Room -</p>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-5 space-y-3 bg-white" id="beds-list">
-                <!-- Bed items injected here -->
+            <!-- Tabs -->
+            <div class="flex mb-4 bg-gray-100 p-1 rounded-lg">
+                <button onclick="toggleAssignTab('existing')" id="tabExisting" class="tab-btn active flex-1 py-2 text-sm font-medium rounded-md transition text-center">Select Existing</button>
+                <button onclick="toggleAssignTab('new')" id="tabNew" class="tab-btn flex-1 py-2 text-sm font-medium rounded-md transition text-center text-gray-500">New Tenant</button>
             </div>
 
-            <div class="p-5 border-t border-gray-200 bg-gray-50">
-                <h4 class="font-bold text-xs text-gray-700 uppercase mb-2">Add New Bed</h4>
-                <form id="add-bed-form" class="flex gap-2">
-                    <input type="text" id="new-bed-no" placeholder="Bed Label (e.g. A)" class="border border-gray-300 p-2 rounded-lg text-sm flex-1 focus:ring-2 focus:ring-purple-500 outline-none" required>
-                    <button type="submit" class="bg-slate-800 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Add</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Assign Tenant Modal -->
-    <div id="assign-tenant-modal" class="modal fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-5 border-b pb-3 sticky top-0 bg-white">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800">Assign Tenant to Room</h3>
-                    <p class="text-xs text-gray-500 mt-1">Fill in tenant details to generate login credentials</p>
-                </div>
-                <button onclick="closeModal('assign-tenant-modal')"><i data-lucide="x" class="w-5 h-5 text-gray-400 hover:text-gray-600"></i></button>
-            </div>
-            <input type="hidden" id="assign-room-id">
-            <input type="hidden" id="assign-bed-id">
-            <form id="assign-form" class="space-y-4">
-                <!-- Tenant Personal Info -->
-                <div class="border-b pb-4">
-                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Tenant Information</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
-                            <input type="text" id="tenant-name" placeholder="Enter full name" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
-                            <input type="email" id="tenant-email" placeholder="email@example.com" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Phone Number *</label>
-                            <input type="tel" id="tenant-phone" placeholder="10-digit mobile" maxlength="10" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" required>
-                        </div>
+            <form onsubmit="confirmAssignment(event)">
+                <input type="hidden" id="assignRoomId">
+                <input type="hidden" id="assignBedIndex">
+                <input type="hidden" id="assignMode" value="existing">
+                
+                <!-- Existing Tenant Section -->
+                <div id="existingTenantSection" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Unassigned Tenant</label>
+                        <select id="tenantSelect" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none bg-white">
+                            <option value="">Select a tenant...</option>
+                            <!-- Tenants loaded here -->
+                        </select>
                     </div>
                 </div>
 
-                <!-- Rental Details -->
-                <div class="border-b pb-4">
-                    <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Rental Details</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Move-in Date *</label>
-                            <input type="date" id="tenant-moveIn" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Agreed Monthly Rent (₹) *</label>
-                            <input type="number" id="tenant-rent" placeholder="e.g. 5000" min="0" class="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" required>
-                        </div>
+                <!-- New Tenant Section -->
+                <div id="newTenantSection" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="newTenantName" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <input type="tel" id="newTenantPhone" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter phone">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                        <input type="email" id="newTenantEmail" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Enter email">
                     </div>
                 </div>
 
-                <!-- Room Info Display -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p class="text-xs text-gray-600"><strong>Room:</strong> <span id="assign-room-display" class="text-blue-700 font-semibold">-</span> | <strong>Bed:</strong> <span id="assign-bed-display" class="text-blue-700 font-semibold">-</span></p>
-                </div>
-
-                <!-- Buttons -->
-                <div class="flex justify-end gap-2 mt-6 pt-4 border-t">
-                    <button type="button" onclick="closeModal('assign-tenant-modal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center transition-colors" id="assign-submit-btn">
-                        <i data-lucide="check" class="w-4 h-4 mr-1"></i> Assign Tenant
+                <div class="mt-8 flex justify-end gap-3">
+                    <button type="button" onclick="closeAssignModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-md transition flex items-center gap-2">
+                        <i data-lucide="check" class="w-4 h-4"></i> Assign & Generate Login
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 4. Tenant Credentials Modal (Success) -->
-    <div id="credentials-modal" class="modal fixed inset-0 bg-black/60 z-[61] flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl transform transition-all">
-            <div class="flex justify-between items-center mb-5 border-b pb-3">
-                <div>
-                    <h3 class="text-lg font-bold text-green-700">Tenant Assignment Successful</h3>
+    <!-- Credentials Modal -->
+    <div id="credsModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-bounce-in">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                <i data-lucide="key" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Login Created!</h3>
+            <p class="text-sm text-gray-500 mb-6">Share these credentials with the tenant.</p>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-left">
+                <div class="mb-3">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Tenant Name</label>
+                    <div class="font-bold text-slate-800" id="credName">Name</div>
                 </div>
-                <button onclick="closeModal('credentials-modal')"><i data-lucide="x" class="w-5 h-5 text-gray-400 hover:text-gray-600"></i></button>
+                <div class="mb-3">
+                    <label class="text-xs font-bold text-slate-400 uppercase">Login ID</label>
+                    <div class="flex justify-between items-center">
+                        <code class="font-mono font-bold text-purple-600 text-lg" id="credLoginId">TNT123</code>
+                        <button onclick="copyText('credLoginId')" class="text-gray-400 hover:text-purple-600"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase">Password</label>
+                    <div class="flex justify-between items-center">
+                        <code class="font-mono font-bold text-slate-700 text-lg" id="credPassword">pass123</code>
+                        <button onclick="copyText('credPassword')" class="text-gray-400 hover:text-purple-600"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
             </div>
             
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p class="text-sm text-gray-700 mb-3"><strong>Tenant Name:</strong> <span id="cred-name" class="font-semibold text-green-700">-</span></p>
-                <div class="bg-white border border-green-300 rounded p-3 mb-3">
-                    <p class="text-xs text-gray-600 mb-1">Login ID</p>
-                    <p class="font-mono text-lg font-bold text-green-700" id="cred-loginId">-</p>
-                </div>
-                <div class="bg-white border border-green-300 rounded p-3 mb-3">
-                    <p class="text-xs text-gray-600 mb-1">Temporary Password</p>
-                    <p class="font-mono text-lg font-bold text-green-700" id="cred-password">-</p>
-                </div>
-                <p class="text-xs text-red-600 font-medium bg-red-50 p-2 rounded border border-red-200">⚠️ Share these credentials with the tenant. They will be prompted to change the password on first login.</p>
-            </div>
-
-            <!-- Verification Timeline Info -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p class="text-sm font-semibold text-blue-900 mb-2 flex items-center"><i data-lucide="info" class="w-4 h-4 mr-2"></i> Onboarding Process</p>
-                <ol class="text-xs text-blue-800 space-y-1 ml-2">
-                    <li>1️⃣ Tenant sets password & completes profile</li>
-                    <li>2️⃣ KYC documents uploaded & verified</li>
-                    <li>3️⃣ Rental agreement digitally signed</li>
-                    <li>4️⃣ <strong>Only then</strong> tenant can access dashboard</li>
-                </ol>
-                <p class="text-xs text-blue-700 mt-2 font-medium">Tenant details will NOT appear in records until all steps are complete.</p>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="copyCredentials()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 shadow-sm flex items-center justify-center transition-colors">
-                    <i data-lucide="copy" class="w-4 h-4 mr-1"></i> Copy Credentials
-                </button>
-                <button onclick="closeModal('credentials-modal'); loadRooms();" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                    <i data-lucide="check" class="w-4 h-4 mr-1"></i> Done
-                </button>
-            </div>
+            <button onclick="closeCredsModal()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition">Done</button>
         </div>
     </div>
 
-        <!-- 5. Select Property Modal (when no property context is available) -->
-        <div id="select-property-modal" class="modal fixed inset-0 bg-black/60 z-[62] flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl transform transition-all max-h-[80vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">Select Property</h3>
-                <button aria-label="Close select property" title="Close" onclick="closeModal('select-property-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-                <p class="text-sm text-gray-600 mb-3">We couldn't determine which property to use. Please select the property to assign this tenant to.</p>
-                <div id="property-selection-list" class="space-y-2">
-                    <!-- Populated dynamically -->
-                </div>
-                <div class="mt-4 text-right">
-                    <button onclick="closeModal('select-property-modal')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Cancel</button>
-                </div>
-            </div>
-        </div>
-
-    <script src="../sessionManager.js"></script>
     <script>
-        lucide.createIcons();
-        let ownerId = '';
-        let currentRoomId = null;
-        let currentPropertyId = null;
-        let currentPropertyTitle = null;
+        window.addEventListener('load', () => { if(typeof lucide!=='undefined') lucide.createIcons(); });
 
-        // 1. Auth & Header Populate (prefer per-tab owner session)
-        document.addEventListener('DOMContentLoaded', () => {
-            const owner = typeof getCurrentOwner === 'function' ? getCurrentOwner() : null;
-            if (!owner) {
-                window.location.href = 'ownerlogin.html';
-                return;
-            }
-            ownerId = owner.ownerId || owner.loginId;
-            document.getElementById('headerName').innerText = owner.name;
-            document.getElementById('headerAvatar').innerText = owner.name.charAt(0).toUpperCase();
-            // Read property context from query string (set by Properties -> Manage Rooms)
-            const params = new URLSearchParams(window.location.search);
-            currentPropertyId = params.get('propertyId') || null;
-            currentPropertyTitle = params.get('propertyTitle') ? decodeURIComponent(params.get('propertyTitle')) : null;
+        // Backend base for dev (Live Server / different origin). Adjust if your backend runs elsewhere.
+        const backendBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000' : '';
+        let backendRoomsCache = null; // store rooms fetched from backend for this owner
 
-            if (currentPropertyTitle && document.getElementById('pagePropertyTitle')) {
-                document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
-            }
-
-            (async () => {
-                // If propertyId not provided, try to infer from backend or localStorage
-                if (!currentPropertyId) {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-                        const res = await fetch('/api/properties', { headers });
-                        if (res.ok) {
-                            const data = await res.json();
-                            const props = (data && data.success && Array.isArray(data.properties)) ? data.properties : [];
-                            const mine = props.find(p => {
-                                // match by owner id or ownerLoginId
-                                if (!p.owner) return false;
-                                return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
-                            });
-                            if (mine) {
-                                currentPropertyId = mine._id || mine.id;
-                                currentPropertyTitle = mine.title || mine.name || currentPropertyTitle;
-                            }
-                        }
-                    } catch (err) {
-                        // ignore and fallback to localStorage
-                    }
-
-                    if (!currentPropertyId) {
-                        // fallback to localStorage properties
-                        const allProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
-                        const myFirst = allProps.find(p => (p.ownerId === ownerId) || (p.ownerLoginId === ownerId));
-                        if (myFirst) {
-                            currentPropertyId = myFirst.id || myFirst._id || myFirst.propertyId;
-                            currentPropertyTitle = myFirst.name || myFirst.title || currentPropertyTitle;
-                        }
-                    }
-
-                    if (currentPropertyTitle && document.getElementById('pagePropertyTitle')) {
-                        document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
-                    }
-                }
-
-                loadRooms();
-            })();
-        });
-
-        // 2. Mobile Menu
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('mobile-sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+        // 1. Session & Property Init
+        const user = JSON.parse(sessionStorage.getItem('owner_user') || sessionStorage.getItem('owner_session') || localStorage.getItem('user') || 'null');
+        
+        if(!user || user.role !== 'owner') {
+            console.warn("No owner session found");
         }
-        document.getElementById('mobile-menu-open').addEventListener('click', toggleMobileMenu);
-        document.getElementById('mobile-overlay').addEventListener('click', toggleMobileMenu);
 
-        // 3. Logout
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('user');
-            window.location.href = 'ownerlogin.html';
-        });
+        const ownerId = user ? (user.ownerId || user.loginId) : 'OWNER001';
+        const areaCode = (user && user.locationCode) ? user.locationCode : 'KO'; 
+        let currentProperty = null;
 
-        // 4. Load Rooms Logic (prefer backend)
-        async function loadRooms() {
-            let myRooms = [];
+        // Load property associated with this Owner ID
+        async function loadOwnerProperty() {
+            // Try backend first: GET /api/owners/:loginId/rooms
             try {
-                const res = await fetch(`/api/owners/${encodeURIComponent(ownerId)}/rooms`);
+                const res = await fetch(`${backendBase}/api/owners/${encodeURIComponent(ownerId)}/rooms`);
                 if (res.ok) {
-                    const payload = await res.json();
-                        myRooms = payload.rooms || [];
-                } else {
-                    console.warn('rooms API returned', res.status);
+                    const data = await res.json();
+                    // data: { properties, rooms }
+                    if (data && Array.isArray(data.properties) && data.properties.length > 0) {
+                        currentProperty = data.properties[0];
+                    }
+                    if (data && Array.isArray(data.rooms)) {
+                        backendRoomsCache = data.rooms;
+                    }
                 }
             } catch (err) {
-                console.warn('Failed to load rooms from backend, falling back to localStorage', err);
+                // ignore and fallback to localStorage
+                console.warn('Owner rooms fetch failed, falling back to localStorage', err);
             }
 
-            // Fallback to localStorage
-            if (!myRooms || myRooms.length === 0) {
-                const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-                myRooms = allRooms.filter(r => r.ownerId === ownerId);
+            // Fallback to localStorage properties if backend didn't return a property
+            const properties = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+            if (!currentProperty) currentProperty = properties.find(p => p.ownerId === ownerId || p.ownerLoginId === ownerId || p.owner === ownerId);
+
+            // If not found in property list, check Visit Reports (User Requirement)
+            if (!currentProperty) {
+                const visits = JSON.parse(localStorage.getItem('roomhy_visits') || '[]');
+                console.debug('loadOwnerProperty: trying visits lookup', { ownerId, visitsCount: visits.length });
+
+                // Find visit where generated credentials or other identifiers match the ownerId
+                const matchedVisit = visits.find(v => {
+                    const gv = v.generatedCredentials || v.generatedCreds || v.generated || {};
+                    return String(v.loginId) === String(ownerId) ||
+                        String(gv.loginId) === String(ownerId) ||
+                        String(v.generatedId || '') === String(ownerId) ||
+                        String(v.username || '') === String(ownerId) ||
+                        (user && v.mobile && String(v.mobile) === String(user.phone));
+                });
+
+                console.debug('loadOwnerProperty: matchedVisit', matchedVisit);
+
+                if (matchedVisit) {
+                    // Prefer structured property info if present
+                    const pInfo = matchedVisit.propertyInfo || matchedVisit.property || matchedVisit.propertyDetails || matchedVisit;
+                    const pName = pInfo?.title || pInfo?.name || pInfo?.propertyName || matchedVisit.propertyName || matchedVisit.name || "Property Name";
+                    const pLoc = pInfo?.location || pInfo?.city || pInfo?.address || matchedVisit.location || "Location";
+                    const oName = pInfo?.ownerName || matchedVisit.ownerName || matchedVisit.owner || "Owner";
+
+                    currentProperty = {
+                        id: pInfo?._id || matchedVisit.propertyId || matchedVisit._id || matchedVisit.id || ('PROP_' + ownerId),
+                        title: pName,
+                        name: pName,
+                        location: pLoc,
+                        ownerName: oName
+                    };
+
+                    // Also update header name from Visit if session is generic
+                    if (user && (user.name === 'Owner' || !user.name)) {
+                        user.name = oName;
+                        sessionStorage.setItem('owner_user', JSON.stringify(user));
+                        // Update DOM immediately if elements exist
+                        const hn = document.getElementById('headerOwnerName');
+                        const ha = document.getElementById('headerAvatar');
+                        if (hn) hn.innerText = user.name;
+                        if (ha) ha.innerText = (user.name || 'O').charAt(0).toUpperCase();
+                    }
+                    console.debug('loadOwnerProperty: built currentProperty', currentProperty);
+                }
             }
 
-            const grid = document.getElementById('rooms-grid');
-            grid.innerHTML = '';
+            const displayEl = document.getElementById('propertyNameDisplay');
+            const modalDisplayEl = document.getElementById('modalPropertyNameText');
+            const modalIdEl = document.getElementById('modalPropertyId');
 
-            if (myRooms.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-gray-200 border-dashed">
-                        <div class="bg-purple-50 p-4 rounded-full mb-3">
-                            <i data-lucide="bed-double" class="w-8 h-8 text-purple-400"></i>
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-900">No rooms yet</h3>
-                        <p class="text-sm text-gray-500 mt-1">Get started by adding your first room configuration.</p>
-                        <button onclick="openModal('room-modal')" class="mt-4 text-purple-600 font-medium hover:underline text-sm">Add Room Now</button>
-                    </div>`;
-                lucide.createIcons();
-                return;
+                if (currentProperty) {
+                const title = currentProperty.title || currentProperty.name || currentProperty.propertyName || currentProperty.displayName || currentProperty.propName || 'Property';
+                const loc = currentProperty.location || currentProperty.locationCode || currentProperty.area || currentProperty.city || 'Unknown';
+                const text = `${title} (${loc})`;
+                if (displayEl) {
+                    // render as a clickable link to the property page (use id when available)
+                    displayEl.innerText = text;
+                    const pid = currentProperty._id || currentProperty.id || currentProperty.propertyId || currentProperty.id;
+                    if (pid) {
+                        displayEl.href = `properties.html?id=${encodeURIComponent(pid)}`;
+                        displayEl.target = '_self';
+                    } else {
+                        // fallback to properties list
+                        displayEl.href = 'properties.html';
+                        displayEl.target = '_self';
+                    }
+                }
+                if(modalDisplayEl) modalDisplayEl.innerText = text;
+                if(modalIdEl) modalIdEl.value = currentProperty._id || currentProperty.id || currentProperty.propertyId || currentProperty.id;
+            } else {
+                const errText = "No Property Linked (Contact Admin)";
+                if(displayEl) { displayEl.innerText = errText; displayEl.removeAttribute('href'); }
+                if(modalDisplayEl) modalDisplayEl.innerText = errText;
             }
-
-            // If a specific property context is set, filter rooms to that property
-            if (currentPropertyId) {
-                myRooms = myRooms.filter(r => {
-                    // r.property may be an id or populated object
-                    if (!r.property) return false;
-                    if (typeof r.property === 'string') return r.property === currentPropertyId;
-                    return (r.property._id || r.property.id || r.property) == currentPropertyId;
+            
+            // Update Header Profile
+            if(user) {
+                const headerName = document.getElementById('headerOwnerName');
+                const headerId = document.getElementById('headerOwnerId');
+                const headerAvatar = document.getElementById('headerAvatar');
+                
+                if(headerName) headerName.innerText = user.name || 'Owner';
+                if(headerId) headerId.innerText = `ID: ${ownerId}`;
+                if(headerAvatar) headerAvatar.innerText = (user.name || 'O').charAt(0).toUpperCase();
+            }
+            
+            // Profile Dropdown Logic
+            const profileBtn = document.getElementById('profile-button');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            if(profileBtn && profileDropdown) {
+                profileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isHidden = profileDropdown.classList.contains('hidden');
+                    if(isHidden) {
+                        profileDropdown.classList.remove('hidden');
+                        setTimeout(() => {
+                            profileDropdown.classList.remove('scale-95', 'opacity-0');
+                            profileDropdown.classList.add('scale-100', 'opacity-100');
+                        }, 10);
+                    } else {
+                        profileDropdown.classList.remove('scale-100', 'opacity-100');
+                        profileDropdown.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => profileDropdown.classList.add('hidden'), 200);
+                    }
+                });
+                document.addEventListener('click', () => {
+                    if(!profileDropdown.classList.contains('hidden')) {
+                        profileDropdown.classList.remove('scale-100', 'opacity-100');
+                        profileDropdown.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => profileDropdown.classList.add('hidden'), 200);
+                    }
                 });
             }
+            
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            try { document.getElementById('roomsCount').innerText = 'Rooms: ' + myRooms.length; } catch(e){}
+            try { const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]'); document.getElementById('tenantsCount').innerText = 'Tenants: ' + tenants.length; } catch(e){}
+        }
+
+        // Check backend availability and update status UI
+        async function checkBackendStatus() {
+            const statusEl = document.getElementById('backendStatus');
+            if (!backendBase) {
+                if (statusEl) statusEl.innerText = 'Backend: disabled';
+                return false;
+            }
+            try {
+                const res = await fetch(`${backendBase}/api/owners/${encodeURIComponent(ownerId)}/rooms`, { method: 'GET' });
+                if (res.ok) {
+                    if (statusEl) statusEl.innerText = 'Backend: reachable';
+                    return true;
+                } else {
+                    if (statusEl) statusEl.innerText = 'Backend: unreachable';
+                    return false;
+                }
+            } catch (e) {
+                if (statusEl) statusEl.innerText = 'Backend: connection failed';
+                return false;
+            }
+        }
+
+        // Load tenants from backend and store in localStorage (owner scoped)
+        async function loadTenantsFromBackend() {
+            if (!backendBase) return alert('Backend not configured.');
+            try {
+                const resp = await fetch(`${backendBase}/api/tenants/owner/${encodeURIComponent(ownerId)}`);
+                if (!resp.ok) return alert('Failed to fetch tenants from backend: ' + resp.status);
+                const data = await resp.json();
+                // Expect data to be an array or object with .data
+                const tenants = Array.isArray(data) ? data : (data.data || data.tenants || []);
+                if (!Array.isArray(tenants)) return alert('Unexpected tenants response');
+                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                document.getElementById('tenantsCount').innerText = 'Tenants: ' + tenants.length;
+                alert('Imported ' + tenants.length + ' tenants into localStorage');
+                // refresh room UI
+                loadRooms();
+            } catch (e) {
+                console.error('loadTenantsFromBackend error', e);
+                alert('Error importing tenants: ' + e.message);
+            }
+        }
+
+        // 2. Load Rooms
+        async function loadRooms() {
+            // Try backend cache first
+            let myRooms = [];
+            if (backendRoomsCache && Array.isArray(backendRoomsCache)) {
+                myRooms = backendRoomsCache.filter(r => (r.ownerLoginId === ownerId) || (r.owner && r.owner.loginId === ownerId) || (r.ownerId === ownerId));
+            }
+
+            // If backend didn't return rooms, fallback to localStorage
+            if (!myRooms || myRooms.length === 0) {
+                const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
+                myRooms = allRooms.filter(r => r.ownerId === ownerId || r.ownerLoginId === ownerId || r.owner === ownerId);
+
+                // If still no rooms (session ownerId might be missing), try matching by current property
+                if((!myRooms || myRooms.length === 0) && currentProperty) {
+                    const pid = currentProperty._id || currentProperty.id || currentProperty.propertyId || currentProperty.id;
+                    myRooms = allRooms.filter(r => r.propertyId === pid || r.propertyTitle === (currentProperty.title || currentProperty.name));
+                    if(myRooms && myRooms.length > 0) console.debug('loadRooms: matched rooms by property fallback', pid, myRooms.length);
+                }
+            }
+            
+            const grid = document.getElementById('roomsGrid');
+            if(!grid) return;
+            grid.innerHTML = '';
+
+            const emptyState = document.getElementById('emptyState');
+            if (myRooms.length === 0) {
+                if(emptyState) emptyState.classList.remove('hidden');
+                return;
+            }
+            if(emptyState) emptyState.classList.add('hidden');
 
             myRooms.forEach(room => {
-                const totalBeds = room.beds ? room.beds.length : 0;
-                const occupiedBeds = room.beds ? room.beds.filter(b => b.tenant).length : 0;
+                const bedsVisuals = generateBedsVisuals(room);
+                const occupied = room.beds.filter(b => b.status === 'occupied').length;
+                const total = room.beds.length;
+                const percent = Math.round((occupied / total) * 100);
+                
+                const borderColorClass = room.type === 'AC' ? 'room-card-ac' : 'room-card-nonac';
+                const badgeColor = room.type === 'AC' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700';
 
-                // Status Badge Logic
-                let statusClass = "bg-green-100 text-green-700";
-                let statusText = "Available";
-                if(totalBeds > 0 && occupiedBeds === totalBeds) {
-                    statusClass = "bg-red-100 text-red-700";
-                    statusText = "Full";
-                } else if(occupiedBeds > 0) {
-                    statusClass = "bg-yellow-100 text-yellow-700";
-                    statusText = "Filling Fast";
-                }
-
-                grid.innerHTML += `
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition group flex flex-col">
-                        <div class="h-32 bg-gray-50 flex items-center justify-center relative">
-                            <i data-lucide="bed-double" class="w-12 h-12 text-gray-300 group-hover:text-purple-400 transition-colors"></i>
-                            <div class="absolute top-3 right-3">
-                                <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-white border border-gray-200 text-gray-500 shadow-sm uppercase tracking-wider">
-                                    ${room.type}
-                                </span>
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-xl shadow-sm border border-gray-100 p-0 flex flex-col room-card ${borderColorClass}`;
+                
+                card.innerHTML = `
+                    <!-- Card Header -->
+                    <div class="p-5 pb-3 border-b border-gray-50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-lg font-bold text-gray-800">Room ${room.number}</h3>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor} uppercase tracking-wide">${room.type}</span>
+                                </div>
+                                <div class="text-xs text-gray-400">Capacity: ${total} Beds</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-bold text-slate-700">₹${room.rent}<span class="text-xs text-gray-400 font-normal">/mo</span></div>
                             </div>
                         </div>
-                        <div class="p-5 flex-1 flex flex-col">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h3 class="text-lg font-bold text-slate-800">Room ${room.roomNo}</h3>
-                                    <span class="text-xs font-medium ${statusClass} px-2 py-0.5 rounded mt-1 inline-block">${statusText}</span>
-                                </div>
-                                <p class="text-lg font-bold text-slate-800">₹${room.rent}<span class="text-xs font-normal text-gray-500">/mo</span></p>
+                        
+                        <div class="mt-3 flex items-center gap-2">
+                            <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 rounded-full" style="width: ${percent}%"></div>
                             </div>
-                            
-                            <div class="mt-auto pt-4">
-                                <div class="flex justify-between text-xs text-gray-500 mb-2">
-                                    <span>Occupancy</span>
-                                    <span class="font-medium text-gray-700">${occupiedBeds}/${totalBeds} Beds</span>
+                            <span class="text-[10px] font-bold text-gray-500">${occupied}/${total}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-5 bg-slate-50 flex-1">
+                        <div class="grid grid-cols-2 gap-3">
+                            ${bedsVisuals}
+                            <div onclick="addBedToRoom('${room.id}')" class="add-bed-btn p-3 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer transition h-full min-h-[80px]" title="Add another bed">
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mb-1 shadow-sm text-gray-400">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
                                 </div>
-                                <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4">
-                                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: ${totalBeds > 0 ? (occupiedBeds/totalBeds)*100 : 0}%"></div>
-                                </div>
-                                <button onclick="openManageBeds('${room.id}')" class="w-full py-2 bg-white border border-purple-200 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-50 transition-colors flex items-center justify-center">
-                                    <i data-lucide="settings-2" class="w-4 h-4 mr-2"></i> Manage Beds
-                                                                <button onclick="deleteRoom('${room.id}')" class="w-full mt-2 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors flex items-center justify-center">
-                                                                    <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> Delete Room
-                                                                </button>
-                                </button>
+                                <span class="text-xs font-semibold">Add Bed</span>
                             </div>
                         </div>
                     </div>
+
+                    <div class="px-5 py-3 bg-white border-t border-gray-100 flex justify-end">
+                        <button onclick="deleteRoom('${room.id}')" class="text-gray-400 hover:text-red-500 text-xs font-medium flex items-center gap-1 transition">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i> Remove Room
+                        </button>
+                    </div>
                 `;
+                grid.appendChild(card);
             });
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // 5. Add Room Handler
-        document.getElementById('room-form').addEventListener('submit', (e) => {
+        function generateBedsVisuals(room) {
+            return room.beds.map((bed, idx) => {
+                const bedNum = idx + 1;
+                if (bed.status === 'occupied') {
+                    return `
+                    <div class="bed-item bed-occupied p-3 rounded-lg relative group h-full min-h-[80px] flex flex-col justify-between">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-6 h-6 rounded-full bg-green-200 text-green-700 flex items-center justify-center text-[10px] font-bold">
+                                    ${(bed.tenantName || 'U').charAt(0)}
+                                </div>
+                                <span class="text-xs font-bold text-green-800 truncate max-w-[60px]">${bed.tenantName || 'User'}</span>
+                            </div>
+                            <span class="text-[9px] font-bold text-green-600 bg-green-100 px-1 rounded">B${bedNum}</span>
+                        </div>
+                        <div class="mt-2 text-[10px] text-green-600 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Active
+                        </div>
+                        <div class="absolute inset-0 bg-white/95 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border border-red-200" onclick="vacateBed('${room.id}', ${idx})">
+                            <span class="text-red-500 text-xs font-bold flex items-center gap-1"><i data-lucide="log-out" class="w-3 h-3"></i> Vacate</span>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div onclick="openAssignModal('${room.id}', ${idx}, '${room.number}')" class="bed-item bed-empty p-3 rounded-lg flex flex-col items-center justify-center text-center relative group h-full min-h-[80px]">
+                        <span class="absolute top-1 left-2 text-[9px] font-bold text-gray-300">B${bedNum}</span>
+                        <div class="text-purple-300 group-hover:text-purple-500 transition-colors mb-1">
+                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-semibold group-hover:underline">Assign</span>
+                        <button onclick="removeBedFromRoom('${room.id}', ${idx}, event)" class="absolute -top-1.5 -right-1.5 bg-white text-gray-300 hover:text-red-500 shadow-sm border border-gray-100 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all hover:scale-110" title="Remove Bed">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        // 3. Save Room
+        function saveRoom(e) {
             e.preventDefault();
-            const roomNo = document.getElementById('room-no').value;
-            const type = document.getElementById('room-type').value;
-            const rent = document.getElementById('room-rent').value;
+            const propId = document.getElementById('modalPropertyId').value;
+            const number = document.getElementById('roomNo').value;
+            const type = document.getElementById('roomType').value;
+            const rent = document.getElementById('roomRent').value;
+            const bedCount = parseInt(document.getElementById('roomBeds').value);
+
+            if (!propId) return alert("Property not loaded. Cannot add room.");
+
+            const beds = Array(bedCount).fill().map(() => ({ status: 'available', tenantId: null, tenantName: null }));
 
             const newRoom = {
-                id: 'rm_' + Date.now(),
+                id: 'ROOM-' + Date.now(),
                 ownerId: ownerId,
-                roomNo, type, rent,
-                beds: [] 
+                ownerLoginId: (user && (user.loginId || user.ownerId)) || ownerId,
+                owner: (user && (user.name || user.ownerName)) || undefined,
+                propertyId: propId,
+                propertyTitle: document.getElementById('modalPropertyNameText') ? document.getElementById('modalPropertyNameText').innerText : '',
+                number,
+                type,
+                rent,
+                beds
             };
 
             const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
             allRooms.push(newRoom);
             localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
 
-            // Admin Notification
-            const notifs = JSON.parse(localStorage.getItem('roomhy_notifications') || '[]');
-            notifs.push({
-                type: 'room_added',
-                message: `New Room ${roomNo} added by Owner ${ownerId}`,
-                date: new Date().toISOString(),
-                read: false
-            });
-            localStorage.setItem('roomhy_notifications', JSON.stringify(notifs));
-
-            closeModal('room-modal');
-            e.target.reset();
+            closeRoomModal();
             loadRooms();
-        });
-
-        // 6. Manage Beds
-        function openManageBeds(roomId) {
-            currentRoomId = roomId;
-            const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-            const room = allRooms.find(r => r.id === roomId);
-            document.getElementById('modal-room-name').innerText = room.roomNo;
-            renderBeds(room);
-            openModal('manage-beds-modal');
         }
 
-        function renderBeds(room) {
-            const list = document.getElementById('beds-list');
-            list.innerHTML = '';
-            
-            if(!room.beds || room.beds.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                        <p class="text-gray-400 text-sm italic">No beds added yet.</p>
-                        <p class="text-xs text-gray-400 mt-1">Add beds to start assigning tenants.</p>
-                    </div>`;
-                return;
-            }
-
-            room.beds.forEach(bed => {
-                let actionBtns = `<button onclick="openAssign('${bed.id}')" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded font-medium shadow-sm transition">Assign</button>`;
-                let statusHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wide">Vacant</span>`;
-                let tenantDetails = '';
-
-                if(bed.tenant) {
-                    statusHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 uppercase tracking-wide">Occupied</span>`;
-                    actionBtns = `<button onclick="openAssign('${bed.id}')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded font-medium shadow-sm transition">Change</button>`; 
-                    
-                    tenantDetails = `
-                        <div class="mt-3 border-t pt-3">
-                            <div class="text-xs font-semibold text-gray-700 mb-2 flex items-center"><i data-lucide="user-check" class="w-3 h-3 mr-1 text-blue-600"></i> Tenant Details</div>
-                            <div class="space-y-1.5 bg-blue-50 p-2.5 rounded border border-blue-100">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Name:</span>
-                                    <span class="font-medium text-gray-800">${bed.tenant.name}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Phone:</span>
-                                    <span class="font-medium text-gray-800">${bed.tenant.phone}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Email:</span>
-                                    <span class="font-medium text-gray-800 truncate text-right text-xs">${bed.tenant.email}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Move-in:</span>
-                                    <span class="font-medium text-gray-800">${bed.tenant.moveInDate ? new Date(bed.tenant.moveInDate).toLocaleDateString('en-IN') : '-'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Rent:</span>
-                                    <span class="font-medium text-green-700 font-bold">₹${bed.tenant.agreedRent}/mo</span>
-                                </div>
-                                <div class="flex justify-between pt-2 border-t border-blue-200">
-                                    <span class="text-gray-600">Login ID:</span>
-                                    <span class="font-mono text-xs bg-white px-2 py-1 rounded border border-blue-200 text-blue-700 font-bold">${bed.tenant.loginId}</span>
-                                </div>
-                            </div>
-                        </div>`;
-                }
-
-                const bedItem = document.createElement('div');
-                bedItem.className = "mb-3";
-                bedItem.innerHTML = `
-                    <div class="p-3 border border-gray-200 rounded-lg bg-white hover:border-purple-200 transition-colors">
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-purple-50 text-purple-700 rounded flex items-center justify-center font-bold text-xs border border-purple-100 shadow-sm">${bed.bedNo}</div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-800">Bed ${bed.bedNo}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                ${statusHtml}
-                                ${actionBtns}
-                                <button onclick="deleteBed('${bed.id}')" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1.5 rounded font-medium transition" title="Delete Bed"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
-                            </div>
-                        </div>
-                        ${tenantDetails}
-                    </div>
-                `;
-                list.appendChild(bedItem);
-            });
-            lucide.createIcons();
-        }
-
-        // 7. Add Bed Handler
-        document.getElementById('add-bed-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const bedNo = document.getElementById('new-bed-no').value;
-            
+        // 4. Manage Bed Logic
+        function addBedToRoom(roomId) {
             const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-            const idx = allRooms.findIndex(r => r.id === currentRoomId);
-            
-            if(idx !== -1) {
-                const newBed = { id: 'bd_' + Date.now(), bedNo: bedNo, tenant: null };
-                if(!allRooms[idx].beds) allRooms[idx].beds = [];
-                allRooms[idx].beds.push(newBed);
-                
+            const roomIdx = allRooms.findIndex(r => r.id === roomId);
+            if (roomIdx !== -1) {
+                if(allRooms[roomIdx].beds.length >= 10) return alert("Maximum 10 beds per room.");
+                allRooms[roomIdx].beds.push({ status: 'available', tenantId: null, tenantName: null });
                 localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
-                document.getElementById('new-bed-no').value = '';
-                renderBeds(allRooms[idx]);
-                loadRooms(); 
-            }
-        });
-
-        // 7a. Delete Bed Handler
-        function deleteBed(bedId) {
-            if(!confirm('Are you sure you want to delete this bed?')) return;
-            
-            const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-            const roomIdx = allRooms.findIndex(r => r.id === currentRoomId);
-            
-            if(roomIdx !== -1) {
-                const room = allRooms[roomIdx];
-                const bedIdx = room.beds.findIndex(b => b.id === bedId);
-                
-                if(bedIdx !== -1) {
-                    // Check if bed has tenant assigned
-                    if(room.beds[bedIdx].tenant) {
-                        alert('⚠️ Cannot delete bed with assigned tenant. Please remove tenant first.');
-                        return;
-                    }
-                    
-                    room.beds.splice(bedIdx, 1);
-                    localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
-                    renderBeds(room);
-                    loadRooms();
-                    alert('✅ Bed deleted successfully');
-                }
+                loadRooms();
             }
         }
-        // 8. Assign Tenant Handlers
-        function openAssign(bedId) {
+
+        function removeBedFromRoom(roomId, bedIdx, event) {
+            event.stopPropagation();
+            if(!confirm("Remove this bed slot permanently?")) return;
             const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-            const room = allRooms.find(r => r.id === currentRoomId);
-            const bed = room.beds.find(b => b.id === bedId);
-            
-            document.getElementById('assign-room-id').value = currentRoomId;
-            document.getElementById('assign-bed-id').value = bedId;
-            document.getElementById('assign-room-display').innerText = `Room ${room.roomNo}`;
-            document.getElementById('assign-bed-display').innerText = `Bed ${bed.bedNo}`;
-            openModal('assign-tenant-modal');
+            const roomIdx = allRooms.findIndex(r => r.id === roomId);
+            if (roomIdx !== -1) {
+                allRooms[roomIdx].beds.splice(bedIdx, 1);
+                localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
+                loadRooms();
+            }
         }
 
-        // --- Logout (per-tab) ---
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            try { sessionStorage.removeItem('owner_session'); sessionStorage.removeItem('user'); } catch(_) {}
-            try { localStorage.removeItem('user'); } catch(_) {}
-            window.location.href = 'ownerlogin.html';
-        });
+        function adjustBedCount(delta) {
+            const input = document.getElementById('roomBeds');
+            let val = parseInt(input.value) + delta;
+            if(val < 1) val = 1;
+            if(val > 10) val = 10;
+            input.value = val;
+        }
 
-        document.getElementById('assign-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitBtn = document.getElementById('assign-submit-btn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-1 animate-spin"></i> Processing...';
-
-            try {
-                const roomId = document.getElementById('assign-room-id').value;
-                const bedId = document.getElementById('assign-bed-id').value;
-                const name = document.getElementById('tenant-name').value;
-                const email = document.getElementById('tenant-email').value;
-                const phone = document.getElementById('tenant-phone').value;
-                const moveInDate = document.getElementById('tenant-moveIn').value;
-                const agreedRent = document.getElementById('tenant-rent').value;
-
-                const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
-                const room = allRooms.find(r => r.id === roomId);
-
-                // Ensure we have a proper propertyId (try to infer or prompt the owner)
-                const propertyId = await ensurePropertyContext();
-                if (!propertyId) {
-                    alert('Please select a property to assign this tenant to.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-1"></i> Assign Tenant';
-                    lucide.createIcons();
-                    return;
-                }
-
-                // Try backend API first
-                try {
-                    const response = await fetch('/api/tenants/assign', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name,
-                            email,
-                            phone,
-                            propertyId,
-                            roomNo: room.roomNo,
-                            bedNo: room.beds.find(b => b.id === bedId).bedNo,
-                            moveInDate,
-                            agreedRent
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Backend API failed');
-                    }
-
-                    const data = await response.json();
-                    if (data.success) {
-                        // Display credentials modal
-                        document.getElementById('cred-name').innerText = data.tenant.name;
-                        document.getElementById('cred-loginId').innerText = data.tenant.loginId;
-                        document.getElementById('cred-password').innerText = data.tenant.tempPassword;
-                        
-                        // Store in localStorage for demo
-                        const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
-                        tenants.push({
-                            id: data.tenant.id,
-                            name: data.tenant.name,
-                            loginId: data.tenant.loginId,
-                            tempPassword: data.tenant.tempPassword,
-                            phone: data.tenant.phone,
-                            email: data.tenant.email,
-                            property: data.tenant.property,
-                            roomNo: data.tenant.roomNo,
-                            bedNo: data.tenant.bedNo,
-                            moveInDate: data.tenant.moveInDate,
-                            agreedRent: data.tenant.agreedRent,
-                            ownerId: ownerId,
-                            status: 'pending',
-                            kycStatus: 'pending',
-                            createdAt: new Date().toISOString()
-                        });
-                        localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
-
-                        closeModal('assign-tenant-modal');
-                        document.getElementById('assign-form').reset();
-                        openModal('credentials-modal');
-                        return;
-                    }
-                } catch (err) {
-                    console.warn('Backend API unavailable, falling back to localStorage:', err.message);
-                }
-
-                // Fallback: Demo mode with localStorage only
-                const tenantId = 'tnt_' + Date.now();
-                const loginId = `TNT-${ownerId.substring(0, 2).toUpperCase()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-                const tempPassword = Math.random().toString(36).substr(2, 8).toUpperCase();
-
-                const newTenant = {
-                    id: tenantId,
-                    name,
-                    phone,
-                    email,
-                    loginId,
-                    tempPassword,
-                    property: currentPropertyTitle || propertyId,
-                    roomNo: room.roomNo,
-                    bedNo: room.beds.find(b => b.id === bedId).bedNo,
-                    moveInDate,
-                    agreedRent: parseInt(agreedRent),
-                    ownerId: ownerId,
-                    assignedBy: ownerId,
-                    status: 'pending',
-                    kycStatus: 'pending',
-                    createdAt: new Date().toISOString()
-                };
-
-                // Store tenant in localStorage
-                const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
-                tenants.push(newTenant);
-                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
-
-                // Update room/bed with tenant assignment
-                const rIdx = allRooms.findIndex(r => r.id === roomId);
-                if (rIdx > -1) {
-                    const bIdx = allRooms[rIdx].beds.findIndex(b => b.id === bedId);
-                    if (bIdx > -1) {
-                        allRooms[rIdx].beds[bIdx].tenant = { name, phone, loginId, joined: new Date().toISOString() };
-                        localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
-                    }
-                }
-
-                // Notify Admin
-                const notifs = JSON.parse(localStorage.getItem('roomhy_notifications') || '[]');
-                notifs.push({
-                    type: 'tenant_assigned',
-                    message: `Tenant ${name} assigned to Room ${room.roomNo}, Bed ${room.beds.find(b => b.id === bedId).bedNo} by Owner ${ownerId}`,
-                    date: new Date().toISOString()
+        // 5. Assign Tenant Logic with TABS
+        function openAssignModal(roomId, bedIndex, roomNum) {
+            document.getElementById('assignRoomId').value = roomId;
+            document.getElementById('assignBedIndex').value = bedIndex;
+            const titleEl = document.getElementById('assignRoomTitle');
+            if(titleEl) titleEl.innerText = `Assigning to Room ${roomNum} - Bed ${bedIndex + 1}`;
+            
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+            const available = tenants.filter(t => t.ownerId === ownerId && !t.roomNo);
+            
+            const select = document.getElementById('tenantSelect');
+            select.innerHTML = '<option value="">Select a tenant...</option>';
+            
+            if (available.length === 0) {
+                const opt = document.createElement('option');
+                opt.text = "No unassigned tenants found";
+                opt.disabled = true;
+                select.add(opt);
+            } else {
+                available.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id || t.loginId;
+                    opt.text = t.name;
+                    select.add(opt);
                 });
-                localStorage.setItem('roomhy_notifications', JSON.stringify(notifs));
-
-                // Display credentials modal
-                document.getElementById('cred-name').innerText = newTenant.name;
-                document.getElementById('cred-loginId').innerText = newTenant.loginId;
-                document.getElementById('cred-password').innerText = newTenant.tempPassword;
-
-                closeModal('assign-tenant-modal');
-                document.getElementById('assign-form').reset();
-                openModal('credentials-modal');
-
-            } catch (error) {
-                console.error('Assign tenant error:', error);
-                alert('Error assigning tenant: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-1"></i> Assign Tenant';
-                lucide.createIcons();
             }
-        });
 
-        function copyCredentials() {
-            const loginId = document.getElementById('cred-loginId').innerText;
-            const tempPassword = document.getElementById('cred-password').innerText;
-            const text = `Login ID: ${loginId}\nTemporary Password: ${tempPassword}`;
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Credentials copied to clipboard!');
-            }).catch(err => console.error('Copy failed:', err));
+            toggleAssignTab('new');
+            const modal = document.getElementById('assignModal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         }
 
-        // Ensure we have a property context before trying to assign a tenant.
-        async function ensurePropertyContext() {
-            if (currentPropertyId) return currentPropertyId;
-            // Try to infer from backend
-            try {
-                const token = localStorage.getItem('token');
-                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-                const res = await fetch('/api/properties', { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    const props = (data && data.success && Array.isArray(data.properties)) ? data.properties : (data.properties || []);
-                    const mine = props.find(p => {
-                        if (!p.owner) return false;
-                        return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
-                    });
-                    if (mine) {
-                        currentPropertyId = mine._id || mine.id;
-                        currentPropertyTitle = mine.title || mine.name || currentPropertyTitle;
-                        if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
-                        return currentPropertyId;
+        function toggleAssignTab(mode) {
+            const inputMode = document.getElementById('assignMode');
+            if(inputMode) inputMode.value = mode;
+            
+            const secExist = document.getElementById('existingTenantSection');
+            const secNew = document.getElementById('newTenantSection');
+            const tabEx = document.getElementById('tabExisting');
+            const tabNew = document.getElementById('tabNew');
+
+            if (mode === 'existing') {
+                if(secExist) secExist.classList.remove('hidden');
+                if(secNew) secNew.classList.add('hidden');
+                if(tabEx) { tabEx.classList.add('active', 'bg-white', 'text-purple-600', 'shadow-sm'); tabEx.classList.remove('text-gray-500'); }
+                if(tabNew) { tabNew.classList.remove('active', 'bg-white', 'text-purple-600', 'shadow-sm'); tabNew.classList.add('text-gray-500'); }
+            } else {
+                if(secExist) secExist.classList.add('hidden');
+                if(secNew) secNew.classList.remove('hidden');
+                if(tabNew) { tabNew.classList.add('active', 'bg-white', 'text-purple-600', 'shadow-sm'); tabNew.classList.remove('text-gray-500'); }
+                if(tabEx) { tabEx.classList.remove('active', 'bg-white', 'text-purple-600', 'shadow-sm'); tabEx.classList.add('text-gray-500'); }
+            }
+        }
+
+        function confirmAssignment(e) {
+            e.preventDefault();
+            const mode = document.getElementById('assignMode').value;
+            const roomId = document.getElementById('assignRoomId').value;
+            const bedIdx = parseInt(document.getElementById('assignBedIndex').value);
+            
+            let tenantId, tenantName;
+            
+            const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
+            const roomIdx = allRooms.findIndex(r => r.id === roomId);
+            if (roomIdx === -1) return;
+
+            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+
+            if (mode === 'existing') {
+                tenantId = document.getElementById('tenantSelect').value;
+                if (!tenantId) return alert("Select a tenant");
+                const t = tenants.find(x => x.id === tenantId || x.loginId === tenantId);
+                if(!t) return;
+                tenantName = t.name;
+                
+                if (!t.loginId) {
+                    const creds = generateCredentials(areaCode);
+                    t.loginId = creds.loginId;
+                    t.password = creds.password;
+                    showCredentialsModal(t.name, t.loginId, t.password);
+                }
+                t.roomNo = allRooms[roomIdx].number;
+                t.bedNo = bedIdx + 1;
+                t.propertyId = allRooms[roomIdx].propertyId;
+                // assign property object or fallback to title for display
+                try {
+                    const props = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+                    const prop = props.find(p => (p._id && p._id === t.propertyId) || (p.id && p.id === t.propertyId) || (p.propertyId && p.propertyId === t.propertyId) || (p.title && p.title === t.propertyId) || (p.name && p.name === t.propertyId));
+                    if (prop) t.property = prop;
+                    else if (allRooms[roomIdx].propertyTitle) t.property = { title: allRooms[roomIdx].propertyTitle };
+                    else if (currentProperty) t.property = { title: currentProperty.title || currentProperty.name };
+                } catch (err) {}
+                t.assignedBy = ownerId;
+            } else {
+                const name = document.getElementById('newTenantName').value.trim();
+                const phone = document.getElementById('newTenantPhone').value.trim();
+                const email = document.getElementById('newTenantEmail').value.trim();
+                
+                if (!name || !phone) return alert("Name and Phone required");
+
+                const creds = generateCredentials(areaCode);
+                const newTenant = {
+                    id: 'TNT-' + Date.now(),
+                    loginId: creds.loginId,
+                    password: creds.password,
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    ownerId: ownerId,
+                    roomNo: allRooms[roomIdx].number,
+                    bedNo: bedIdx + 1,
+                    propertyId: allRooms[roomIdx].propertyId,
+                    // attach property object for immediate display in tenant records
+                    property: (function(){
+                        try {
+                            const props = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
+                            const pid = allRooms[roomIdx].propertyId;
+                            const found = props.find(p => (p._id && p._id === pid) || (p.id && p.id === pid) || (p.propertyId && p.propertyId === pid) || (p.title && p.title === pid) || (p.name && p.name === pid));
+                            if (found) return found;
+                        } catch(e) {}
+                        if (allRooms[roomIdx].propertyTitle) return { title: allRooms[roomIdx].propertyTitle };
+                        if (currentProperty) return { title: currentProperty.title || currentProperty.name };
+                        return allRooms[roomIdx].propertyId || '';
+                    })(),
+                    status: 'Active',
+                    assignedBy: ownerId,
+                    joinedDate: new Date().toISOString().split('T')[0]
+                };
+                
+                tenants.push(newTenant);
+                tenantId = newTenant.loginId;
+                tenantName = name;
+
+                // Best-effort: create tenant in backend (MongoDB Atlas) so tenant is persisted server-side
+                (async () => {
+                    try {
+                        const payload = {
+                            name: newTenant.name,
+                            phone: newTenant.phone,
+                            email: newTenant.email,
+                            propertyId: newTenant.propertyId,
+                            roomNo: newTenant.roomNo,
+                            bedNo: newTenant.bedNo,
+                            moveInDate: newTenant.joinedDate,
+                            agreedRent: newTenant.agreedRent || 0
+                        };
+                        const assignUrl = `${backendBase}/api/tenants/assign`;
+                        const resp = await fetch(assignUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (resp.ok) {
+                            const d = await resp.json();
+                            if (d && d.tenant) {
+                                // update local tenant with server-side identifiers
+                                const idx = tenants.findIndex(x => x.loginId === newTenant.loginId || x.id === newTenant.id);
+                                if (idx !== -1) {
+                                    tenants[idx].dbId = d.tenant.id || d.tenant._id;
+                                    tenants[idx].loginId = d.tenant.loginId || tenants[idx].loginId;
+                                    tenants[idx].tempPassword = d.tenant.tempPassword || tenants[idx].tempPassword;
+                                    tenants[idx].property = d.tenant.property || tenants[idx].property;
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Tenant assign to backend failed (continuing with local record):', err);
                     }
+                })();
+
+                showCredentialsModal(name, creds.loginId, creds.password);
+            }
+
+            allRooms[roomIdx].beds[bedIdx] = {
+                status: 'occupied',
+                tenantId: tenantId,
+                tenantName: tenantName
+            };
+            localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
+            localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+
+            closeAssignModal();
+            loadRooms();
+        }
+
+        function generateCredentials(code) {
+            const random = Math.floor(1000 + Math.random() * 9000);
+            const loginId = `TNT${code}${random}`;
+            const password = Math.random().toString(36).slice(-8);
+            return { loginId, password };
+        }
+
+        function showCredentialsModal(name, id, pass) {
+            const nameEl = document.getElementById('credName');
+            const idEl = document.getElementById('credLoginId');
+            const passEl = document.getElementById('credPassword');
+            const modal = document.getElementById('credsModal');
+
+            if(nameEl) nameEl.innerText = name;
+            if(idEl) idEl.innerText = id;
+            if(passEl) passEl.innerText = pass;
+            
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+        function closeCredsModal() {
+            const modal = document.getElementById('credsModal');
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text);
+            alert("Copied!");
+        }
+
+        function vacateBed(roomId, bedIdx) {
+            if(!confirm("Remove tenant from this bed?")) return;
+            const allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
+            const roomIdx = allRooms.findIndex(r => r.id === roomId);
+            if (roomIdx === -1) return;
+
+            const tenantId = allRooms[roomIdx].beds[bedIdx].tenantId;
+            allRooms[roomIdx].beds[bedIdx] = { status: 'available', tenantId: null, tenantName: null };
+            localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
+
+            if (tenantId) {
+                const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+                const tIdx = tenants.findIndex(t => (t.id === tenantId || t.loginId === tenantId));
+                if (tIdx !== -1) {
+                    delete tenants[tIdx].roomNo;
+                    delete tenants[tIdx].bedNo;
+                    delete tenants[tIdx].propertyId;
+                    localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
                 }
-            } catch (err) {
-                // ignore
             }
-
-            // Fallback to localStorage
-            const allProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
-            const myFirst = allProps.find(p => (p.ownerId === ownerId) || (p.ownerLoginId === ownerId));
-            if (myFirst) {
-                currentPropertyId = myFirst.id || myFirst._id || myFirst.propertyId;
-                currentPropertyTitle = myFirst.name || myFirst.title || currentPropertyTitle;
-                if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
-                return currentPropertyId;
-            }
-
-            // No property found - prompt owner to select one
-            await loadPropertySelection();
-            openModal('select-property-modal');
-            return null;
+            loadRooms();
         }
 
-        // Populate property selection modal with available properties
-        async function loadPropertySelection() {
-            const container = document.getElementById('property-selection-list');
-            container.innerHTML = '<p class="text-xs text-gray-500">Loading properties...</p>';
-            let props = [];
-            try {
-                const token = localStorage.getItem('token');
-                const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-                const res = await fetch('/api/properties', { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    props = (data && data.success && Array.isArray(data.properties)) ? data.properties : (data.properties || []);
-                }
-            } catch (err) {
-                // ignore
+        function deleteRoom(roomId) {
+            if(!confirm("Delete this room? Tenants will be unassigned.")) return;
+            let allRooms = JSON.parse(localStorage.getItem('roomhy_rooms') || '[]');
+            
+            const room = allRooms.find(r => r.id === roomId);
+            if(room) {
+                const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+                let updatedTenants = false;
+                room.beds.forEach(bed => {
+                    if(bed.tenantId) {
+                        const tIdx = tenants.findIndex(t => t.id === bed.tenantId || t.loginId === bed.tenantId);
+                        if(tIdx !== -1) {
+                            delete tenants[tIdx].roomNo;
+                            delete tenants[tIdx].bedNo;
+                            updatedTenants = true;
+                        }
+                    }
+                });
+                if(updatedTenants) localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
             }
 
-            // Merge with localStorage as fallback
-            const localProps = JSON.parse(localStorage.getItem('roomhy_properties') || '[]');
-            props = props.concat(localProps.filter(lp => !props.find(p => (p._id === lp.id) || (p.id === lp.id) || (p.title === lp.title))));
+            allRooms = allRooms.filter(r => r.id !== roomId);
+            localStorage.setItem('roomhy_rooms', JSON.stringify(allRooms));
+            loadRooms();
+        }
 
-            // Filter to owner's properties
-            const ownerProps = props.filter(p => {
-                if (!p) return false;
-                if (p.owner) return (p.owner._id === ownerId) || (p.owner.loginId === ownerId) || (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
-                // local structure fallback
-                return (p.ownerId === ownerId) || (p.ownerLoginId === ownerId);
-            });
-
-            if (ownerProps.length === 0) {
-                container.innerHTML = '<div class="text-sm text-gray-600">No properties found. Please add a property first from the Properties page.</div>';
-                return;
+        // Modal Helpers
+        function openAddRoomModal() {
+            const modal = document.getElementById('roomModal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
             }
-
-            container.innerHTML = '';
-            ownerProps.forEach(p => {
-                const id = p._id || p.id || p.propertyId || p.id;
-                const title = p.title || p.name || id;
-                const el = document.createElement('div');
-                el.className = 'p-3 border rounded-lg hover:bg-gray-50 flex items-center justify-between';
-                el.innerHTML = `
-                    <div>
-                        <div class="font-medium text-gray-800">${title}</div>
-                        <div class="text-xs text-gray-500">${p.locationCode || ''}</div>
-                    </div>
-                    <div>
-                        <button class="px-3 py-1 bg-purple-600 text-white rounded text-sm" onclick="selectProperty('${id}','${encodeURIComponent(title)}')">Select</button>
-                    </div>`;
-                container.appendChild(el);
-            });
         }
-
-        // Called when owner selects a property from modal
-        function selectProperty(id, encodedTitle) {
-            currentPropertyId = id;
-            try { currentPropertyTitle = decodeURIComponent(encodedTitle); } catch(_) { currentPropertyTitle = encodedTitle; }
-            if (document.getElementById('pagePropertyTitle')) document.getElementById('pagePropertyTitle').innerText = currentPropertyTitle;
-            closeModal('select-property-modal');
+        function closeRoomModal() {
+            const modal = document.getElementById('roomModal');
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
-        // Utils
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+        function closeAssignModal() {
+            const modal = document.getElementById('assignModal');
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if(sidebar) sidebar.classList.toggle('-translate-x-full');
+            if(overlay) overlay.classList.toggle('hidden');
+        }
+        
+        const menuBtn = document.getElementById('mobile-menu-button'); // Fixed ID
+        if(menuBtn) menuBtn.addEventListener('click', toggleMobileMenu);
+
+        // Init (ensure backend calls complete before rendering)
+        (async function initPage(){
+            await loadOwnerProperty();
+            await checkBackendStatus();
+            await loadRooms();
+        })();
 
     </script>
 </body>

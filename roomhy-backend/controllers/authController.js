@@ -14,6 +14,11 @@ exports.login = async (req, res) => {
         const user = await User.findOne({ $or: [{ email: identifier }, { loginId: identifier }] });
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
+        // Block disabled users
+        if (user.isActive === false) {
+            return res.status(403).json({ message: 'Account disabled' });
+        }
+
         // Owners must login only using their generated loginId — disallow email-based login for owners
         if (user.role === 'owner' && identifier !== user.loginId) {
             return res.status(403).json({ message: 'Owners must login using their Owner ID' });
@@ -38,6 +43,8 @@ exports.verifyOwnerTemp = async (req, res) => {
 
         const user = await User.findOne({ loginId });
         if (!user || user.role !== 'owner') return res.status(404).json({ message: 'Owner not found' });
+
+        if (user.isActive === false) return res.status(403).json({ message: 'Account disabled' });
 
         const ok = await user.matchPassword(tempPassword);
         if (!ok) return res.status(401).json({ message: 'Invalid temporary password' });
@@ -82,6 +89,8 @@ exports.verifyTenantTemp = async (req, res) => {
 
         const user = await User.findOne({ loginId, role: 'tenant' });
         if (!user) return res.status(404).json({ success: false, message: 'Tenant not found' });
+
+        if (user.isActive === false) return res.status(403).json({ success: false, message: 'Account disabled' });
 
         const ok = await user.matchPassword(tempPassword);
         if (!ok) return res.status(401).json({ success: false, message: 'Invalid temporary password' });

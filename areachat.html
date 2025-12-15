@@ -7,6 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Load Socket.IO client from the backend server (avoid origin mismatch)
+        (function(){
+            const SOCKET_HOST = 'http://localhost:5000';
+            window.__SOCKET_HOST = SOCKET_HOST;
+            const s = document.createElement('script');
+            s.src = SOCKET_HOST + '/socket.io/socket.io.js';
+            s.async = true;
+            s.onload = function(){ console.debug('socket.io client loaded'); };
+            s.onerror = function(){ console.warn('Failed to load socket.io client from', SOCKET_HOST); };
+            document.head.appendChild(s);
+        })();
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .sidebar { background-color: #111827; }
@@ -56,8 +69,8 @@
 
                 <!-- Tabs -->
                 <div class="px-2 py-2 bg-white border-b border-gray-200 flex justify-between gap-1">
-                    <button class="flex-1 py-2 text-xs font-medium bg-purple-100 text-purple-700 rounded text-center border border-purple-200">Owners</button>
-                    <!-- Future: Tenants Tab -->
+                    <button id="mgrOwnersBtn" class="flex-1 py-2 text-xs font-medium bg-purple-100 text-purple-700 rounded text-center border border-purple-200">Owners</button>
+                    <button id="mgrSupportBtn" class="flex-1 py-2 text-xs font-medium text-gray-500 hover:text-gray-800 rounded text-center border border-gray-100">Support</button>
                 </div>
 
                 <!-- List -->
@@ -67,18 +80,19 @@
             </div>
 
             <!-- Right Panel: Chat Window -->
-            <div class="hidden md:flex flex-1 flex-col h-full relative bg-[#f8fafc]">
+            <div id="mgrRightPanel" class="hidden md:flex flex-1 flex-col h-full relative bg-[#f8fafc]">
                 
                 <!-- Chat Header -->
-                <div class="h-16 px-6 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0 shadow-sm z-10" id="mgrChatHeader">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500" id="headerAvatar">-</div>
-                        <div>
-                            <h2 class="text-sm font-bold text-slate-800" id="headerName">Select a chat</h2>
-                            <div class="text-xs text-gray-500" id="headerSub">Property Owner</div>
+                    <div class="h-16 px-6 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0 shadow-sm z-10" id="mgrChatHeader">
+                        <div class="flex items-center gap-4">
+                            <button id="mgrBackBtn" class="md:hidden mr-2 text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded" onclick="hideChatMobile()" style="display:none">Back</button>
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500" id="headerAvatar">-</div>
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800" id="headerName">Select a chat</h2>
+                                <div class="flex items-center gap-2"><div class="text-xs text-gray-500" id="headerSub">Property Owner</div><div id="mgrSyncStatus" class="text-[10px] text-gray-400"></div></div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- Messages -->
                 <div class="flex-1 overflow-y-auto p-6 chat-scroll flex flex-col gap-4 bg-slate-50" id="mgrMessages">
@@ -93,6 +107,10 @@
                             <i data-lucide="send" class="w-5 h-5"></i>
                         </button>
                     </div>
+                    <div class="mt-2 flex items-center gap-3">
+                        <button id="mgrTestReplyBtn" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded">Send Test Reply (superadmin)</button>
+                        <div id="mgrDebug" class="text-xs text-gray-500">Last poll: <span id="mgrLastPoll">-</span> · Last send: <span id="mgrLastSend">-</span></div>
+                    </div>
                 </div>
 
             </div>
@@ -101,6 +119,25 @@
 
     <script>
         lucide.createIcons();
+        // Socket.IO client (wait for script to load then connect to backend)
+        (function initSocket(){
+            if (typeof io === 'undefined') { setTimeout(initSocket, 200); return; }
+            try {
+                const socket = io(window.__SOCKET_HOST || 'http://localhost:5000');
+                socket.emit('join', managerId);
+                socket.on('chat:message', async (msg) => {
+                    try {
+                        if (!msg) return;
+                        if (msg.from === currentChatId || msg.to === currentChatId || msg.from === managerId || msg.to === managerId) {
+                            messagesCache = await getMsgs(managerId, currentChatId || msg.from || msg.to);
+                            await renderMessages();
+                        } else {
+                            await loadOwnerList();
+                        }
+                    } catch (e) { console.warn('socket msg handler error', e && e.message); }
+                });
+            } catch (e) { console.warn('initSocket error', e && e.message); }
+        })();
         
         const user = JSON.parse(sessionStorage.getItem('manager_user') || sessionStorage.getItem('user') || localStorage.getItem('manager_user') || localStorage.getItem('user') || 'null');
         if (!user || user.role !== 'areamanager') {
@@ -113,13 +150,27 @@
         let currentChatId = null;
 
         const ownersDb = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
-        const chatMessages = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
+        let messagesCache = [];
+
+        async function getMsgs(fromId, toId) {
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/messages?from=' + encodeURIComponent(fromId) + '&to=' + encodeURIComponent(toId) + '&limit=500');
+                if (!resp.ok) return [];
+                const json = await resp.json();
+                return json.data || [];
+            } catch (e) { console.warn('getMsgs error', e && e.message); return []; }
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             loadOwnerList();
         });
 
-        function loadOwnerList() {
+        async function loadOwnerList() {
             const list = document.getElementById('mgrChatList');
             const search = document.getElementById('mgrSearch').value.toLowerCase();
             list.innerHTML = '';
@@ -132,11 +183,13 @@
                 return;
             }
 
-            areaOwners.forEach(ownerId => {
+            await Promise.all(areaOwners.map(async (ownerId) => {
                 const owner = ownersDb[ownerId].profile || { name: 'Unknown', loginId: ownerId };
                 if (!owner.name.toLowerCase().includes(search) && !ownerId.toLowerCase().includes(search)) return;
 
-                const lastMsg = getLastMessage(ownerId);
+                const thread = await getMsgs(managerId, ownerId);
+                const last = thread.length ? thread[thread.length - 1] : null;
+                const lastMsg = last ? { text: (last.message || '').substring(0, 20) + '...', time: new Date(last.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) } : { text: '', time: '' };
 
                 const item = document.createElement('div');
                 item.className = 'p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition flex items-center gap-3';
@@ -153,42 +206,88 @@
                     </div>
                 `;
                 list.appendChild(item);
-            });
+            }));
         }
 
-        function getLastMessage(contactId) {
-            const thread = chatMessages.filter(m => 
-                (m.from === managerId && m.to === contactId) || 
-                (m.from === contactId && m.to === managerId)
-            );
-            if (thread.length === 0) return { text: '', time: '' };
-            const last = thread[thread.length - 1];
-            return {
-                text: last.message.substring(0, 20) + '...',
-                time: new Date(last.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-            };
+        // getLastMessage is now retrieved from server in loadOwnerList via getMsgs
+
+        let mgrPollInterval = null;
+        function showChatMobile() {
+            const right = document.getElementById('mgrRightPanel');
+            const left = document.getElementById('mgrChatList');
+            const back = document.getElementById('mgrBackBtn');
+            if (right) {
+                right.classList.remove('hidden');
+                right.classList.add('flex');
+                right.style.position = 'relative';
+                right.style.zIndex = 50;
+            }
+            if (left) left.style.display = 'none';
+            if (back) back.style.display = 'inline-block';
         }
 
-        function openChat(id, name) {
+        function hideChatMobile() {
+            const right = document.getElementById('mgrRightPanel');
+            const left = document.getElementById('mgrChatList');
+            const back = document.getElementById('mgrBackBtn');
+            if (right) {
+                right.classList.add('hidden');
+                right.classList.remove('flex');
+                right.style.position = '';
+                right.style.zIndex = '';
+            }
+            if (left) left.style.display = '';
+            if (back) back.style.display = 'none';
+            // stop polling when hiding on mobile to save requests
+            if (mgrPollInterval) { clearInterval(mgrPollInterval); mgrPollInterval = null; }
+        }
+
+        async function openChat(id, name) {
+            // clear existing poll
+            if (mgrPollInterval) { clearInterval(mgrPollInterval); mgrPollInterval = null; }
+            // if on mobile, show the chat panel
+            if (window.innerWidth < 768) showChatMobile();
+
             currentChatId = id;
             document.getElementById('headerAvatar').innerText = name.charAt(0);
             document.getElementById('headerName').innerText = name;
             document.getElementById('headerSub').innerText = `Owner ID: ${id}`;
-            renderMessages();
+            messagesCache = await getMsgs(managerId, currentChatId);
+            await renderMessages();
+
+            // start polling to get new messages for this conversation
+            mgrPollInterval = setInterval(async () => {
+                try {
+                    const updated = await getMsgs(managerId, currentChatId);
+                    const lastOld = messagesCache && messagesCache.length ? messagesCache[messagesCache.length - 1] : null;
+                    const lastNew = updated && updated.length ? updated[updated.length - 1] : null;
+                    const oldTs = lastOld ? new Date(lastOld.timestamp).getTime() : 0;
+                    const newTs = lastNew ? new Date(lastNew.timestamp).getTime() : 0;
+                    // update if new message or different length
+                    if (newTs > oldTs || updated.length !== (messagesCache ? messagesCache.length : 0)) {
+                        // update cache + UI
+                        messagesCache = updated;
+                        await renderMessages();
+                        await loadOwnerList();
+                        const status = document.getElementById('mgrSyncStatus');
+                        if (status) status.innerText = 'synced ' + new Date().toLocaleTimeString();
+                        // update debug last poll
+                        try { document.getElementById('mgrLastPoll').innerText = JSON.stringify(updated[updated.length-1] || {}); } catch(e){}
+                    }
+                } catch (e) { console.warn('mgr poll error', e && e.message); const status = document.getElementById('mgrSyncStatus'); if(status) status.innerText = 'sync error'; }
+            }, 2500);
         }
 
-        function renderMessages() {
+        async function renderMessages() {
             if(!currentChatId) return;
             const container = document.getElementById('mgrMessages');
             container.innerHTML = '';
 
-            const msgs = chatMessages.filter(m => 
-                (m.from === managerId && m.to === currentChatId) || 
-                (m.from === currentChatId && m.to === managerId)
-            );
+            const msgs = messagesCache || await getMsgs(managerId, currentChatId);
 
-            if(msgs.length === 0) {
+            if(!msgs || msgs.length === 0) {
                 container.innerHTML = `<div class="text-center text-gray-400 mt-10">No history. Start chatting!</div>`;
+                return;
             }
 
             msgs.forEach(msg => {
@@ -197,7 +296,7 @@
                 bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
                 bubble.innerHTML = `
                     <div class="max-w-[70%] ${isMe ? 'bg-purple-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white border border-gray-200 rounded-r-xl rounded-tl-xl'} p-3 shadow-sm text-sm">
-                        <p>${msg.message}</p>
+                        <p>${escapeHtml(msg.message)}</p>
                         <span class="text-[9px] block text-right mt-1 opacity-70">${new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}</span>
                     </div>
                 `;
@@ -206,29 +305,81 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        document.getElementById('mgrSendBtn').addEventListener('click', sendMessage);
+        document.getElementById('mgrSendBtn').addEventListener('click', () => sendMessage());
         document.getElementById('mgrInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage() });
-        document.getElementById('mgrSearch').addEventListener('input', loadOwnerList);
+        document.getElementById('mgrSearch').addEventListener('input', () => loadOwnerList());
+        // Support tab handler
+        const supportBtn = document.getElementById('mgrSupportBtn');
+        const ownersBtn = document.getElementById('mgrOwnersBtn');
+        if (supportBtn) {
+            supportBtn.addEventListener('click', async () => {
+                // open a conversation with superadmin
+                await openChat('superadmin', 'Support');
+                // visually mark Support tab active
+                supportBtn.classList.remove('text-gray-500');
+                supportBtn.classList.add('bg-purple-100', 'text-purple-700');
+                if (ownersBtn) {
+                    ownersBtn.classList.remove('bg-purple-100','text-purple-700');
+                    ownersBtn.classList.add('text-gray-500');
+                }
+            });
+        }
 
-        function sendMessage() {
+        if (ownersBtn) {
+            ownersBtn.addEventListener('click', async () => {
+                // reset to owners list
+                if (mgrPollInterval) { clearInterval(mgrPollInterval); mgrPollInterval = null; }
+                currentChatId = null;
+                document.getElementById('headerAvatar').innerText = '-';
+                document.getElementById('headerName').innerText = 'Select a chat';
+                document.getElementById('headerSub').innerText = 'Property Owner';
+                ownersBtn.classList.add('bg-purple-100','text-purple-700');
+                if (supportBtn) { supportBtn.classList.remove('bg-purple-100','text-purple-700'); supportBtn.classList.add('text-gray-500'); }
+                await loadOwnerList();
+            });
+        }
+
+        async function sendMessage() {
             if(!currentChatId) return;
             const input = document.getElementById('mgrInput');
             const text = input.value.trim();
             if(!text) return;
 
-            const newMsg = {
-                from: managerId,
-                to: currentChatId,
-                message: text,
-                timestamp: new Date().toISOString()
-            };
-
-            chatMessages.push(newMsg);
-            localStorage.setItem('roomhy_chat_messages', JSON.stringify(chatMessages));
-            input.value = '';
-            renderMessages();
-            loadOwnerList(); // Refresh preview
+            const payload = { from: managerId, to: currentChatId, message: text, type: 'text' };
+            try {
+                const resp = await fetch('http://localhost:5000/api/chat/send', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
+                if (resp.ok) {
+                    input.value = '';
+                    messagesCache = await getMsgs(managerId, currentChatId);
+                    await renderMessages();
+                    await loadOwnerList();
+                    try { document.getElementById('mgrLastSend').innerText = JSON.stringify(payload); } catch(e){}
+                } else {
+                    console.error('sendMessage failed', await resp.text());
+                }
+            } catch (e) { console.error('sendMessage error', e && e.message); }
         }
+
+        // Test reply helper: call backend to create a message from superadmin to manager
+        document.getElementById('mgrTestReplyBtn').addEventListener('click', async () => {
+            try {
+                const target = currentChatId || 'superadmin';
+                // if not currently viewing support, target manager as recipient of superadmin reply
+                const to = (target === 'superadmin') ? managerId : managerId;
+                const resp = await fetch('http://localhost:5000/api/chat/test-reply', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ to, message: 'Hello from superadmin (test)' }) });
+                const j = await resp.json();
+                if (resp.ok) {
+                    // refresh messages for support thread if open
+                    if (currentChatId === 'superadmin') {
+                        messagesCache = await getMsgs(managerId, 'superadmin');
+                        await renderMessages();
+                    }
+                    alert('Test reply created');
+                } else {
+                    alert('Test reply failed: ' + (j.error || JSON.stringify(j)));
+                }
+            } catch (e) { alert('Test reply error: ' + e.message); }
+        });
 
     </script>
 </body>

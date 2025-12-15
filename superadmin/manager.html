@@ -349,13 +349,14 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Role / Department</label>
-                            <select id="empRole" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white">
+                            <select id="empRole" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white" onchange="roleChangeHandler()">
                                 <option value="Marketing Team">Marketing Team</option>
                                 <option value="Accounts Department">Accounts Department</option>
                                 <option value="Maintenance Team">Maintenance Team</option>
                                 <option value="Customer Support">Customer Support</option>
                                 <option value="Custom">Custom Role</option>
                             </select>
+                            <input type="text" id="empCustomRole" placeholder="Type custom role" class="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-purple-500 bg-white hidden">
                         </div>
                         
                         <!-- City Selection -->
@@ -464,9 +465,10 @@
         ];
         let selectedPermissions = new Set();
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             loadLocationsFromStorage();
             renderPermissions();
+            await syncEmployeesFromBackend(); // Fetch employees from backend first
             loadEmployees();
             updateCounts();
             initLocationSync();
@@ -592,12 +594,82 @@
         }
 
         // --- 3. Employee CRUD ---
+        // Sync employees from backend MongoDB
+        async function syncEmployeesFromBackend() {
+            try {
+                console.log('Starting employee sync from backend...');
+                const res = await fetch('http://localhost:5000/api/employees');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.data && Array.isArray(data.data)) {
+                        console.log('Backend returned', data.data.length, 'employees');
+                        // Convert MongoDB employees to local format
+                        const converted = data.data.map(emp => ({
+                            id: emp._id,
+                            name: emp.name,
+                            loginId: emp.loginId,
+                            email: emp.email,
+                            phone: emp.phone,
+                            password: emp.password,
+                            role: emp.role,
+                            area: emp.area,
+                            areaCode: emp.areaCode,
+                            city: emp.city,
+                            permissions: emp.permissions || [],
+                            parentLoginId: emp.parentLoginId,
+                            isActive: emp.isActive !== false,
+                            _synced: true,
+                            _dbId: emp._id
+                        }));
+                        // Merge with existing local data (prefer backend if synced, keep local unsynced)
+                        const existing = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+                        const merged = [...converted];
+                        existing.forEach(e => {
+                            // Only keep local records if they haven't been synced AND don't exist in backend
+                            if (!e._synced && !merged.find(m => m.loginId === e.loginId)) {
+                                merged.push(e);
+                            }
+                        });
+                        localStorage.setItem('roomhy_employees', JSON.stringify(merged));
+                        console.log('Employees synced from backend. Total stored locally:', merged.length);
+                    } else {
+                        console.warn('Backend returned invalid employee data:', data);
+                    }
+                } else {
+                    console.warn('Backend fetch returned status:', res.status);
+                }
+            } catch (err) {
+                console.warn('Failed to sync employees from backend:', err.message);
+                // Ensure local cache is NOT lost even if backend fails
+                const existingLocal = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+                if (existingLocal.length > 0) {
+                    console.log('Keeping', existingLocal.length, 'local employees due to sync failure');
+                } else {
+                    console.warn('No local employee fallback available!');
+                }
+            }
+        }
+
         function loadEmployees() {
-            const employees = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            let employees = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
             const tbody = document.getElementById('employeesTableBody');
             const empty = document.getElementById('emptyState');
             const filterCity = document.getElementById('filterCity').value;
             const filterArea = document.getElementById('filterArea').value;
+
+            // Debug: Log current state
+            console.log('loadEmployees: Found', employees.length, 'employees in localStorage');
+            if (employees.length === 0) {
+                console.warn('WARNING: No employees found in localStorage. This may indicate data loss.');
+                // Attempt to re-sync from backend immediately
+                console.log('Attempting emergency re-sync from backend...');
+                syncEmployeesFromBackend().then(() => {
+                    employees = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+                    console.log('After re-sync, found', employees.length, 'employees');
+                    loadEmployees(); // Retry rendering
+                });
+                return;
+            }
 
             const filtered = employees.filter(e => {
                 const matchRole = currentTeamFilter === 'All' || e.role === currentTeamFilter;
@@ -612,19 +684,25 @@
                 return;
             }
             empty.classList.add('hidden');
-            tbody.innerHTML = filtered.map(e => `
+            tbody.innerHTML = filtered.map(e => {
+                const active = (typeof e.isActive === 'undefined') ? true : !!e.isActive;
+                return `
                 <tr class="hover:bg-gray-50 border-b border-gray-100">
-                    <td class="px-6 py-4"><div class="font-medium text-gray-900 text-sm">${e.name}</div><div class="text-xs text-gray-500">${e.phone}</div></td>
+                    <td class="px-6 py-4"><div class="font-medium text-gray-900 text-sm">${e.name} ${e.parentLoginId ? '<span class="text-xs text-gray-400">(Reports to ' + e.parentLoginId + ')</span>' : ''}</div><div class="text-xs text-gray-500">${e.phone}</div></td>
                     <td class="px-6 py-4"><span class="bg-white border px-2 py-1 rounded text-xs font-semibold">${e.role}</span></td>
                     <td class="px-6 py-4 text-sm text-gray-600">${e.area || '-'}, <span class="text-xs text-gray-400">${e.city || '-'}</span></td>
-                    <td class="px-6 py-4"><code class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded font-bold">${e.loginId}</code></td>
+                    <td class="px-6 py-4"><code class="text-xs ${active ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-500'} px-2 py-1 rounded font-bold">${e.loginId}</code>
+                        ${!active ? '<div class="text-xs text-red-600 mt-1">Disabled</div>' : ''}
+                    </td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="editEmployee('${e.id}')" class="p-1.5 text-gray-400 hover:text-purple-600" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                        <button onclick="viewCredentials('${e.loginId}', '${e.password}')" class="p-1.5 text-gray-400 hover:text-blue-600" title="View Credentials"><i data-lucide="key" class="w-4 h-4"></i></button>
+                        <button onclick="viewCredentials('${e.loginId}', '${e.password || ''}')" class="p-1.5 text-gray-400 hover:text-blue-600" title="View Credentials"><i data-lucide="key" class="w-4 h-4"></i></button>
+                        ${active ? `<button onclick="logoutEmployee('${e.loginId}')" class="p-1.5 text-gray-400 hover:text-red-600" title="Logout"><i data-lucide="log-out" class="w-4 h-4"></i></button>` : `<button onclick="reactivateEmployee('${e.loginId}')" class="p-1.5 text-gray-400 hover:text-green-600" title="Reactivate"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>`}
+                        <button onclick="openSubEmployeeModal('${e.loginId}')" class="p-1.5 text-gray-400 hover:text-indigo-600" title="Add Sub-employee"><i data-lucide="user-plus" class="w-4 h-4"></i></button>
                         <button onclick="deleteEmp('${e.id}')" class="p-1.5 text-gray-400 hover:text-red-600" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             lucide.createIcons();
         }
 
@@ -656,8 +734,20 @@
 
         // --- Actions ---
         function generateCreds() {
-            document.getElementById('empLoginId').value = 'EMP' + Math.floor(10000 + Math.random() * 90000);
+            // Generate login id using RY + area code if set, else EMP fallback
+            const area = document.getElementById('modalArea').value || '';
+            const areaCode = (area || '').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0,4);
+            const prefix = areaCode ? `RY${areaCode}` : 'EMP';
+            const genId = prefix + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('empLoginId').value = genId;
             document.getElementById('empPassword').value = Math.random().toString(36).slice(-8).toUpperCase();
+        }
+
+        // Show/hide custom role input
+        function roleChangeHandler() {
+            const role = document.getElementById('empRole').value;
+            if (role === 'Custom') document.getElementById('empCustomRole').classList.remove('hidden');
+            else document.getElementById('empCustomRole').classList.add('hidden');
         }
 
         async function saveEmployee() {
@@ -677,8 +767,18 @@
             
             const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
 
+            // Enforce login ID prefix: RY + areaCode (or just RY if no areaCode). If the entered loginId doesn't start with RY, generate one.
+            const desiredPrefix = 'RY' + (areaCode || '');
+            let finalLoginId = (loginId || '').toString().toUpperCase();
+            if (!finalLoginId.startsWith('RY')) {
+                finalLoginId = desiredPrefix + Math.floor(1000 + Math.random() * 9000);
+                document.getElementById('empLoginId').value = finalLoginId;
+            }
+
             // Prepare payload for backend
-            const payload = { name, email, phone, password, role, loginId, locationCode: areaCode };
+            // If custom role provided, use it
+            const finalRole = (role === 'Custom' && document.getElementById('empCustomRole').value.trim()) ? document.getElementById('empCustomRole').value.trim() : role;
+            const payload = { name, email, phone, password, role: finalRole, loginId: finalLoginId, area, areaCode, city, locationCode: areaCode, permissions: Array.from(selectedPermissions) };
 
             if (editingEmployeeId) {
                 // Update existing employee
@@ -687,25 +787,24 @@
                 if (empIdx >= 0) {
                     db[empIdx] = {
                         ...db[empIdx],
-                        name, role, city, area, areaCode, phone, email, loginId, password,
+                        name, role: finalRole, city, area, areaCode, phone, email, loginId: finalLoginId, password,
                         permissions: Array.from(selectedPermissions)
                     };
                 }
-                // Try to update on backend (by loginId) if token available
+                // Try to update on backend via new /api/employees endpoint
                 try {
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        const res = await fetch(`/api/admin/users/${encodeURIComponent(loginId)}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify(payload)
-                        });
-                        if (res.ok) {
-                            const data = await res.json();
-                            // attach db sync flag to local record
-                            const updated = db.find(e => e.loginId === loginId || e.id === prevEditingId);
-                            if (updated) { updated._synced = true; updated._dbId = data.user.id; }
-                        }
+                    const res = await fetch(`http://localhost:5000/api/employees/${encodeURIComponent(finalLoginId)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        // attach db sync flag to local record
+                        const updated = db.find(e => e.loginId === finalLoginId || e.id === prevEditingId);
+                        if (updated) { updated._synced = true; updated._dbId = data.data._id; }
+                    } else {
+                        console.warn('Employee update API returned', res.status);
                     }
                 } catch (err) {
                     console.warn('Employee update API failed, saved locally:', err.message);
@@ -715,28 +814,27 @@
                 // Create new employee
                 const newEmp = {
                     id: Date.now().toString(),
-                    name, role, city, area, areaCode, phone, email, loginId, password,
+                    name, role: finalRole, city, area, areaCode, phone, email, loginId: finalLoginId, password,
                     permissions: Array.from(selectedPermissions),
                     createdAt: new Date().toISOString()
                 };
-                // Try backend create first
-                let createdOnServer = null;
+                // Attach parentLoginId if creating sub-employee
+                const parent = document.getElementById('employeeModal').dataset.parentLogin;
+                if (parent) newEmp.parentLoginId = parent;
+                // Try backend create via new /api/employees endpoint
                 try {
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        const res = await fetch('/api/admin/users', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                            body: JSON.stringify(payload)
-                        });
-                        if (res.ok) {
-                            const data = await res.json();
-                            createdOnServer = data.user;
-                            newEmp._synced = true;
-                            newEmp._dbId = data.user.id;
-                        } else {
-                            console.warn('Employee create API returned', res.status);
-                        }
+                    const res = await fetch('http://localhost:5000/api/employees', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        newEmp._synced = true;
+                        newEmp._dbId = data.data._id;
+                        console.log('Employee created on backend:', data.data);
+                    } else {
+                        console.warn('Employee create API returned', res.status);
                     }
                 } catch (err) {
                     console.warn('Employee create API failed, saving locally:', err.message);
@@ -753,7 +851,7 @@
             
             // Show Creds modal if new employee
             if (!isEditing) {
-                document.getElementById('viewLoginId').innerText = loginId;
+                document.getElementById('viewLoginId').innerText = finalLoginId;
                 document.getElementById('viewPassword').innerText = password;
                 document.getElementById('viewCredModal').classList.remove('hidden');
             } else {
@@ -804,6 +902,59 @@
             document.getElementById('employeeModal').classList.remove('hidden');
         }
 
+        // Logout (deactivate) an employee: mark isActive=false and clear their token/login
+        function logoutEmployee(loginId) {
+            if(!confirm('Logout this employee and disable their login?')) return;
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const idx = db.findIndex(e => e.loginId === loginId);
+            if (idx === -1) return alert('Employee not found');
+            db[idx].isActive = false;
+            localStorage.setItem('roomhy_employees', JSON.stringify(db));
+            applyFilters();
+            alert('Employee logged out and disabled. Their login ID will not work.');
+        }
+
+        // Reactivate employee
+        function reactivateEmployee(loginId) {
+            if(!confirm('Reactivate this employee?')) return;
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const idx = db.findIndex(e => e.loginId === loginId);
+            if (idx === -1) return alert('Employee not found');
+            db[idx].isActive = true;
+            localStorage.setItem('roomhy_employees', JSON.stringify(db));
+            applyFilters();
+            alert('Employee reactivated. Login will work now.');
+        }
+
+        // Open modal to add sub-employee under a parent login id
+        function openSubEmployeeModal(parentLoginId) {
+            openEmployeeModal();
+            // Prefill parent relationship
+            const db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+            const parent = db.find(e => e.loginId === parentLoginId);
+            if (parent) {
+                // Prefill city/area and role based on parent
+                document.getElementById('modalCity').value = parent.city || '';
+                updateModalAreaDropdown();
+                document.getElementById('modalArea').value = parent.area || '';
+                if (['Marketing Team','Accounts Department','Maintenance Team','Customer Support'].includes(parent.role)) {
+                    document.getElementById('empRole').value = parent.role;
+                    document.getElementById('empCustomRole').classList.add('hidden');
+                } else {
+                    document.getElementById('empRole').value = 'Custom';
+                    document.getElementById('empCustomRole').classList.remove('hidden');
+                    document.getElementById('empCustomRole').value = parent.role;
+                }
+            } else {
+                document.getElementById('empRole').value = 'Custom';
+                document.getElementById('empCustomRole').classList.remove('hidden');
+            }
+            // store parentLoginId in a hidden field
+            document.getElementById('employeeModal').dataset.parentLogin = parentLoginId;
+            // Show note
+            document.querySelector('#employeeModal p').innerText = `Creating sub-employee under ${parentLoginId}`;
+        }
+
         function deleteEmp(id) {
             if(!confirm("Delete?")) return;
             let db = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
@@ -831,6 +982,8 @@
             
             if(currentTeamFilter !== 'All') document.getElementById('empRole').value = currentTeamFilter;
             document.getElementById('employeeModal').classList.remove('hidden');
+            // clear any parent marker
+            delete document.getElementById('employeeModal').dataset.parentLogin;
         }
         function closeEmployeeModal() { 
             editingEmployeeId = null;

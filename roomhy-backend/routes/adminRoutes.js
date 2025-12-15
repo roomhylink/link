@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const chatController = require('../controllers/chatController');
+const agoraController = require('../controllers/agoraController');
+const recordingController = require('../controllers/recordingController');
+const notificationController = require('../controllers/notificationController');
 const VisitReport = require('../models/VisitReport'); // Ensure model is imported
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -33,5 +37,21 @@ router.post('/users', protect, authorize('superadmin'), adminController.createUs
 
 // Admin: Update a user by loginId - Super Admin only
 router.patch('/users/:loginId', protect, authorize('superadmin'), adminController.updateUser);
+
+// Chat endpoints: store/retrieve admin <-> employee chats
+// Allow superadmin and area managers to access chats; controller will enforce area checks
+router.get('/chats/:loginId', protect, authorize('superadmin','areamanager'), chatController.getConversation);
+router.post('/chats/:loginId', protect, authorize('superadmin','areamanager'), chatController.postMessage);
+
+// Upload recordings (meeting blobs). Protected route.
+router.post('/recordings', protect, authorize('superadmin','areamanager'), recordingController.uploadRecording);
+
+// Agora token endpoint (authenticated)
+router.post('/agora/token', protect, agoraController.getToken);
+
+// Notifications: create (managers) and list (superadmin)
+router.post('/notifications', protect, notificationController.createNotification);
+router.get('/notifications', protect, authorize('superadmin'), notificationController.getNotifications);
+router.post('/notifications/:id/read', protect, authorize('superadmin'), notificationController.markRead);
 
 module.exports = router;

@@ -506,7 +506,8 @@
                 document.getElementById('detailAadhaar').innerText = (tenant.kyc && tenant.kyc.aadhar) ? tenant.kyc.aadhar : 'N/A';
                 document.getElementById('detailGuardian').innerText = tenant.emergencyContact || 'Not Provided';
                 document.getElementById('detailJoinDate').innerText = tenant.moveInDate ? new Date(tenant.moveInDate).toLocaleDateString() : '-';
-                document.getElementById('detailProperty').innerText = `${tenant.property} (Rm ${tenant.roomNo})`;
+                const propDisplay = (typeof tenant.property === 'object' && tenant.property !== null) ? (tenant.property.title || tenant.property.name || JSON.stringify(tenant.property)) : (tenant.property || 'Unknown Property');
+                document.getElementById('detailProperty').innerText = `${propDisplay} (Rm ${tenant.roomNo})`;
 
                 // Load Image
                 updateDocView('aadhaar_front');

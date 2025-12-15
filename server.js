@@ -11,6 +11,22 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Create HTTP server and attach Socket.IO
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server, { cors: { origin: '*', methods: ['GET','POST'] } });
+app.set('io', io);
+
+io.on('connection', (socket) => {
+    console.log('Socket connected:', socket.id);
+    socket.on('join', (room) => {
+        try { socket.join(room); console.log('Socket', socket.id, 'joined', room); } catch(e){}
+    });
+    socket.on('leave', (room) => { try { socket.leave(room); } catch(e){} });
+    socket.on('disconnect', () => console.log('Socket disconnected:', socket.id));
+});
+
 // Serve Static Files (HTML, CSS, JS, Images)
 app.use(express.static('.')); // Serve all files from root directory
 app.use('/Areamanager', express.static('./Areamanager'));
@@ -43,6 +59,8 @@ app.use('/api/visits', require('./roomhy-backend/routes/visitRoutes'));
 app.use('/api/rooms', require('./roomhy-backend/routes/roomRoutes'));
 app.use('/api/notifications', require('./roomhy-backend/routes/notificationRoutes'));
 app.use('/api/owners', require('./roomhy-backend/routes/ownerRoutes'));
+app.use('/api/chat', require('./roomhy-backend/routes/chatRoutes'));
+app.use('/api/employees', require('./roomhy-backend/routes/employeeRoutes'));
 
 // Test endpoint: seed a test owner for development
 app.post('/api/test/seed-owner', async (req, res) => {
@@ -85,4 +103,4 @@ app.use((req, res, next) => {
     return res.status(404).send('Not Found');
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

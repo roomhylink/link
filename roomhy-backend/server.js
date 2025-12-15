@@ -8,11 +8,22 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(express.json());
+// allow larger JSON bodies for base64 recording uploads
+app.use(express.json({ limit: '200mb' }));
 app.use(cors());
+const path = require('path');
+
+// Serve recording files
+app.use('/recordings', express.static(path.join(__dirname, 'public', 'recordings')));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
+const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/roomhy';
+if (!process.env.MONGO_URI) {
+    console.warn('Warning: MONGO_URI not set. Falling back to local MongoDB at', mongoUri);
+}
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 })
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.error("DB Connection Error:", err));
@@ -35,5 +46,5 @@ app.get('/', (req, res) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(Server running on port ${PORT});
+    console.log(`Server running on port ${PORT}`);
 });

@@ -429,7 +429,11 @@
 
             if (tenantRecord) {
                 const rent = tenantRecord.agreedRent || 0;
-                const propName = tenantRecord.property || 'Roomhy Property';
+                let propName = 'Roomhy Property';
+                if (tenantRecord.property) {
+                    if (typeof tenantRecord.property === 'string') propName = tenantRecord.property;
+                    else if (typeof tenantRecord.property === 'object') propName = tenantRecord.property.title || tenantRecord.property.name || JSON.stringify(tenantRecord.property);
+                }
                 const roomInfo = `Room ${tenantRecord.roomNo || '-'} (${tenantRecord.bedNo || '-'})`;
                 
                 document.getElementById('rent-amount').innerText = `₹ ${rent.toLocaleString()}`;

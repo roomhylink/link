@@ -363,8 +363,14 @@
             const areaCode = user?.areaCode || user?.area || '';
             if (!areaCode) return;
             try {
-                const res = await fetch(`/api/admin/stats?areaCode=${encodeURIComponent(areaCode)}`);
-                if (!res.ok) throw new Error('Stats fetch failed');
+                // If frontend is served from a different origin (e.g. live preview on :5500),
+                // the relative `/api` call will hit the frontend server and return 404.
+                // Use a local dev backend base when host is not the backend port.
+                const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+                const backendHost = isLocalhost ? 'http://localhost:5000' : '';
+                const url = `${backendHost}/api/admin/stats?areaCode=${encodeURIComponent(areaCode)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Stats fetch failed: ' + res.status);
                 const stats = await res.json();
                 document.getElementById('totalPropertiesCountArea').innerText = stats.totalProperties || 0;
                 document.getElementById('pendingApprovalsCountArea').innerText = stats.pendingApprovals || stats.enquiryCount || 0;

@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RoomHy - Staff Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Suppress Tailwind CDN production warning in development
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+                return; // Suppress this specific warning
+            }
+            originalWarn.apply(console, args);
+        };
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="seeder.js"></script>
@@ -111,17 +121,53 @@
             sessionStorage.removeItem('owner_session');
             // keep localStorage untouched unless explicitly logging out from another flow
 
-            // Auto-detect role by ID format
+            // Auto-detect role by checking known local datasets first (more forgiving)
+            const up = loginId.toUpperCase();
+
+            // Check Area Managers DB
+            try {
+                const mgrs = JSON.parse(localStorage.getItem('roomhy_areamanagers_db') || '[]');
+                if (Array.isArray(mgrs) && mgrs.find(m => (m.loginId || '').toUpperCase() === up)) {
+                    loginAreaManager(loginId, password, errorMsg);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Could not parse roomhy_areamanagers_db', e);
+            }
+
+            // Check Employees DB
+            try {
+                const emps = JSON.parse(localStorage.getItem('roomhy_employees') || '[]');
+                if (Array.isArray(emps) && emps.find(e => (e.loginId || '').toUpperCase() === up)) {
+                    loginEmployee(loginId, password, errorMsg);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Could not parse roomhy_employees', e);
+            }
+
+            // Check Owners DB (object keyed by ownerId)
+            try {
+                const owners = JSON.parse(localStorage.getItem('roomhy_owners_db') || '{}');
+                if (owners && (owners[loginId] || owners[up] || Object.prototype.hasOwnProperty.call(owners, loginId))) {
+                    loginOwner(loginId, password, errorMsg);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Could not parse roomhy_owners_db', e);
+            }
+
+            // Fallback to format-based detection
             if (loginId.includes('@')) {
                 // Email format - try SuperAdmin
                 loginSuperAdmin(loginId, password, errorMsg);
-            } else if (loginId.toUpperCase().startsWith('ROOMHY')) {
+            } else if (up.startsWith('ROOMHY')) {
                 // Owner ID format
                 loginOwner(loginId, password, errorMsg);
-            } else if (loginId.toUpperCase().startsWith('MGR')) {
+            } else if (up.startsWith('MGR')) {
                 // Area Manager format
                 loginAreaManager(loginId, password, errorMsg);
-            } else if (loginId.toUpperCase().startsWith('EMP')) {
+            } else if (up.startsWith('EMP')) {
                 // Employee format
                 loginEmployee(loginId, password, errorMsg);
             } else {

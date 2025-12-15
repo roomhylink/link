@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache & Storage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Clear Cache & Storage</h1>
+        
+        <div class="space-y-4">
+            <button id="clearLocalStorage" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Clear localStorage
+            </button>
+            
+            <button id="clearSessionStorage" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                Clear sessionStorage
+            </button>
+            
+            <button id="clearBoth" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                Clear All Storage
+            </button>
+            
+            <button id="clearCache" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Clear Browser Cache
+            </button>
+        </div>
+        
+        <div id="status" class="mt-6 p-4 bg-gray-100 rounded text-sm text-gray-700"></div>
+    </div>
+
+    <script>
+        function logStatus(msg) {
+            const el = document.getElementById('status');
+            const time = new Date().toLocaleTimeString();
+            el.innerHTML += `<div>[${time}] ${msg}</div>`;
+            console.log(msg);
+        }
+
+        document.getElementById('clearLocalStorage').addEventListener('click', () => {
+            try {
+                const keys = Object.keys(localStorage);
+                logStatus(`Found ${keys.length} items in localStorage`);
+                keys.forEach(key => {
+                    const size = (new Blob([localStorage.getItem(key)]).size / 1024).toFixed(2);
+                    logStatus(`  - ${key}: ${size} KB`);
+                });
+                localStorage.clear();
+                logStatus('✓ localStorage cleared');
+            } catch (e) {
+                logStatus('✗ Error: ' + e.message);
+            }
+        });
+
+        document.getElementById('clearSessionStorage').addEventListener('click', () => {
+            try {
+                const keys = Object.keys(sessionStorage);
+                logStatus(`Found ${keys.length} items in sessionStorage`);
+                sessionStorage.clear();
+                logStatus('✓ sessionStorage cleared');
+            } catch (e) {
+                logStatus('✗ Error: ' + e.message);
+            }
+        });
+
+        document.getElementById('clearBoth').addEventListener('click', () => {
+            try {
+                const localKeys = Object.keys(localStorage);
+                const sessionKeys = Object.keys(sessionStorage);
+                logStatus(`Clearing ${localKeys.length} localStorage + ${sessionKeys.length} sessionStorage items...`);
+                localStorage.clear();
+                sessionStorage.clear();
+                logStatus('✓ All storage cleared');
+                setTimeout(() => {
+                    logStatus('Redirecting to home page...');
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (e) {
+                logStatus('✗ Error: ' + e.message);
+            }
+        });
+
+        document.getElementById('clearCache').addEventListener('click', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(reg => {
+                        reg.unregister();
+                        logStatus('✓ Service Worker unregistered');
+                    });
+                });
+            }
+            
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    cacheNames.forEach(cacheName => {
+                        caches.delete(cacheName);
+                        logStatus(`✓ Cache "${cacheName}" deleted`);
+                    });
+                });
+            }
+
+            logStatus('Note: Browser cache requires manual clearing via DevTools or browser settings');
+        });
+
+        // Show current storage usage on load
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                let totalSize = 0;
+                Object.keys(localStorage).forEach(key => {
+                    totalSize += new Blob([localStorage.getItem(key)]).size;
+                });
+                const usedMB = (totalSize / 1024 / 1024).toFixed(2);
+                logStatus(`Current localStorage usage: ${usedMB} MB`);
+            } catch (e) {
+                logStatus('Could not calculate storage: ' + e.message);
+            }
+        });
+    </script>
+</body>
+</html>

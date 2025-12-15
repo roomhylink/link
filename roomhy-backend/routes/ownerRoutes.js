@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Owner = require('../models/Owner');
+const Message = require('../models/Message');
 const Property = require('../models/Property');
 const Room = require('../models/Room');
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -92,3 +93,34 @@ router.get('/:loginId/rooms', async (req, res) => {
 });
 
 module.exports = router;
+
+// POST /owners/:loginId/request-head
+// Called by an authenticated owner to request escalation to Super Admin (head).
+router.post('/:loginId/request-head', protect, async (req, res) => {
+    try {
+        const loginId = req.params.loginId;
+        // only owner role should be allowed here
+        if (!req.user || req.user.role !== 'owner' || req.user.loginId !== loginId) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        const text = req.body.text || 'Owner requests to chat with Super Admin.';
+        const time = req.body.time || new Date().toISOString();
+
+        let convo = await Message.findOne({ participant: `owner:${loginId}` });
+        if (!convo) {
+            convo = new Message({ participant: `owner:${loginId}`, messages: [] });
+        }
+
+        // mark conversation as headOnly so only superadmin can reply
+        convo.headOnly = true;
+        convo.messages.push({ from: `owner:${loginId}`, text, time, createdAt: new Date() });
+        convo.updatedAt = new Date();
+        await convo.save();
+
+        return res.json({ participant: convo.participant, messages: convo.messages });
+    } catch (err) {
+        console.error('Error in request-head:', err);
+        res.status(500).json({ message: err.message });
+    }
+});

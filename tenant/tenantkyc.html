@@ -103,19 +103,84 @@
             }
         });
 
+        function cleanupLocalStorage() {
+            try {
+                // Calculate current usage before cleanup
+                let totalSize = 0;
+                Object.keys(localStorage).forEach(key => {
+                    totalSize += new Blob([localStorage.getItem(key)]).size;
+                });
+                const beforeMB = (totalSize / 1024 / 1024).toFixed(2);
+                console.debug(`cleanupLocalStorage: Before cleanup = ${beforeMB} MB`);
+
+                // Remove old chat messages to free up space (keep only recent 50)
+                const msgs = JSON.parse(localStorage.getItem('roomhy_chat_messages') || '[]');
+                if (msgs.length > 50) {
+                    const recent = msgs.slice(-50);
+                    localStorage.setItem('roomhy_chat_messages', JSON.stringify(recent));
+                    console.debug(`cleanupLocalStorage: Removed ${msgs.length - 50} old messages`);
+                }
+                
+                // Remove large cached data that's not critical
+                const keysToRemove = [
+                    'roomhy_accepted_chat_requests',
+                    'roomhy_employees',
+                    'roomhy_properties_cache',
+                    'roomhy_rooms'
+                ];
+                
+                keysToRemove.forEach(key => {
+                    try {
+                        const item = localStorage.getItem(key);
+                        if (item) {
+                            const itemSize = (new Blob([item]).size / 1024).toFixed(2);
+                            localStorage.removeItem(key);
+                            console.debug(`cleanupLocalStorage: Removed ${key} (${itemSize} KB)`);
+                        }
+                    } catch (e) {
+                        console.warn(`cleanupLocalStorage: Could not remove ${key}`, e.message);
+                    }
+                });
+                
+                // Calculate usage after cleanup
+                totalSize = 0;
+                Object.keys(localStorage).forEach(key => {
+                    totalSize += new Blob([localStorage.getItem(key)]).size;
+                });
+                const afterMB = (totalSize / 1024 / 1024).toFixed(2);
+                console.debug(`cleanupLocalStorage: After cleanup = ${afterMB} MB (freed ${(beforeMB - afterMB).toFixed(2)} MB)`);
+            } catch (e) {
+                console.warn('cleanupLocalStorage failed:', e.message);
+            }
+        }
+
         function submitKYC() {
             const aadhar = document.getElementById('aadhar').value.replace(/\s/g, '');
             if(aadhar.length !== 12) return alert("Invalid Aadhar Number");
             if(!base64Image) return alert("Please upload document");
 
-            const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
-            const idx = tenants.findIndex(t => t.loginId === user.loginId);
-            
-            if(idx > -1) {
-                tenants[idx].kyc = { aadhar, idProofFile: base64Image, uploadedAt: new Date().toISOString() };
-                tenants[idx].kycStatus = 'submitted'; // MARK SUBMITTED
-                localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
-                window.location.href = 'tenantagreement.html';
+            try {
+                // Clean up space before storing
+                cleanupLocalStorage();
+
+                const tenants = JSON.parse(localStorage.getItem('roomhy_tenants') || '[]');
+                const idx = tenants.findIndex(t => t.loginId === user.loginId);
+                
+                if(idx > -1) {
+                    tenants[idx].kyc = { aadhar, idProofFile: base64Image, uploadedAt: new Date().toISOString() };
+                    tenants[idx].kycStatus = 'submitted'; // MARK SUBMITTED
+                    localStorage.setItem('roomhy_tenants', JSON.stringify(tenants));
+                    window.location.href = 'tenantagreement.html';
+                } else {
+                    alert('Tenant record not found');
+                }
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('Storage full. Please clear browser cache and try again.');
+                    console.warn('QuotaExceededError:', e.message);
+                } else {
+                    alert('Error saving KYC: ' + e.message);
+                }
             }
         }
     </script>
