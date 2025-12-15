@@ -7,9 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase (Firestore) - replace config below with your project values -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase removed: using REST API backend only -->
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         
@@ -224,25 +222,11 @@
         let activeChatType = 'team';
         let messagesCache = []; // Cache for current conversation
 
-        // Firestore setup
-        // IMPORTANT: Replace the firebaseConfig object below with your Firebase project's config.
-        // You can also move this config into a separate `firebase-config.js` file and include it before this script.
-        const firebaseConfig = window.firebaseConfig || {
-            apiKey: "REPLACE_WITH_YOUR_APIKEY",
-            authDomain: "REPLACE_WITH_YOUR_AUTHDOMAIN",
-            projectId: "REPLACE_WITH_YOUR_PROJECTID",
-            // optional: storageBucket, messagingSenderId, appId
-        };
-
+        // Firebase/Firestore intentionally disabled - using REST API backend instead
         let db = null;
-        try {
-            if (window.firebase && !firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-        } catch (e) {
-            console.warn('Firestore init failed. Make sure firebaseConfig is set and the SDK loaded.', e);
-        }
 
         function roomIdOf(a, b) {
+            // Utility function for future use if needed
             return [a, b].filter(Boolean).sort().join('__');
         }
 
@@ -288,46 +272,23 @@
             setTimeout(tryConnect, 100); // Initial delay to let scripts load
         })();
 
-        // Fetch messages (and attach a realtime listener) using Firestore
-        // Returns the current snapshot as an array and will also update `messagesCache` via onSnapshot
+        // Fetch messages from backend REST API
         async function getMsgs(fromId, toId) {
-            if (!db) {
-                // Firestore not initialized: fall back to backend REST API
-                try {
-                    const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}&limit=500`);
-                    if (!resp.ok) return [];
-                    const json = await resp.json();
-                    return json.data || [];
-                } catch (e) {
-                    console.warn('getMsgs fallback REST error:', e);
-                    return [];
-                }
-            }
             try {
-                const room = roomIdOf(fromId, toId);
-                const q = db.collection('messages').where('roomId', '==', room).orderBy('timestamp', 'asc');
-                // initial fetch
-                const snapshot = await q.get();
-                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-                // Attach realtime listener (updates messagesCache & UI)
-                q.onSnapshot(snap => {
-                    messagesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderMessages();
-                }, err => console.warn('Firestore onSnapshot error', err));
-
-                return docs;
+                const resp = await fetch(`http://localhost:5000/api/chat/messages?from=${encodeURIComponent(fromId)}&to=${encodeURIComponent(toId)}&limit=500`);
+                if (!resp.ok) return [];
+                const json = await resp.json();
+                return json.data || [];
             } catch (e) {
-                console.warn('getMsgs firestore error:', e.message || e);
+                console.warn('getMsgs error:', e);
                 return [];
             }
         }
 
-        // Send message using Firestore
+        // Send message via REST API
         async function sendViaFirestore(payload) {
-            // If Firestore is available, write there. Otherwise fall back to backend REST API.
+            // Note: kept name for backward compatibility, but now uses REST API only
             const { from, to } = payload;
-            const room = roomIdOf(from, to);
             const doc = {
                 from: payload.from,
                 to: payload.to,
@@ -336,30 +297,19 @@
                 isEscalated: !!payload.isEscalated,
                 metadata: payload.metadata || {},
                 read: !!payload.read,
-                roomId: room,
                 timestamp: Date.now()
             };
-            if (db) {
-                // write to Firestore
-                const ref = await db.collection('messages').add(doc);
-                // also send to backend REST to keep server-side store (MongoDB) in sync
-                try {
-                    fetch('http://localhost:5000/api/chat/send', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(doc)
-                    }).then(r => { if(!r.ok) console.warn('Backend sync POST failed'); }).catch(e => console.warn('Backend sync POST error', e));
-                } catch (e) { console.warn('Backend sync error', e); }
-                return ref;
-            }
 
-            // Fallback to server API when Firestore isn't available
             try {
                 const resp = await fetch('http://localhost:5000/api/chat/send', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(doc)
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(doc)
                 });
                 if (!resp.ok) throw new Error('REST send failed');
                 return await resp.json();
             } catch (e) {
-                console.warn('sendViaFirestore fallback error:', e);
+                console.warn('sendViaFirestore error:', e);
                 throw e;
             }
         }

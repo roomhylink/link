@@ -154,8 +154,20 @@
         
         const ownerId = me ? me.ownerId : 'OWNER001';
         const locationCode = (me && me.property && me.property.locationCode) ? me.property.locationCode : 'KO';
-        // Mock manager ID based on location
-        const managerId = `MGR${locationCode}01`;
+        
+        // Area Manager ID lookup: try from areamanagers_db, otherwise fallback to constructed ID
+        let managerId = `MGR${locationCode}01`; // Default fallback
+        try {
+            const areaManagers = JSON.parse(localStorage.getItem('roomhy_areamanagers_db') || '{}');
+            const mgrsForArea = Object.values(areaManagers).filter(m => m && m.areaCode === locationCode);
+            if (mgrsForArea.length > 0) {
+                managerId = mgrsForArea[0].loginId; // Use the real Area Manager's loginId
+            } else {
+                console.warn('No Area Manager found for location:', locationCode, '— using fallback ID:', managerId);
+            }
+        } catch (e) {
+            console.warn('Failed to lookup Area Manager, using fallback:', managerId);
+        }
 
         let currentMode = 'owner'; // 'owner' or 'support'
         let currentTargetId = ownerId;

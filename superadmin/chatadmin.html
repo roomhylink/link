@@ -826,10 +826,34 @@
                 const token = localStorage.getItem('token') || '';
                 if (!token) return;
                 const base = window.location.hostname.includes('localhost') ? 'http://localhost:5000' : '';
-                const res = await fetch(base + '/api/admin/notifications?unread=1', { headers: { 'Authorization': 'Bearer ' + token } });
-                if (!res.ok) return;
-                const notifs = await res.json();
+                
+                // Error handling: endpoint may not exist, catch and log gracefully
+                let res;
+                try {
+                    res = await fetch(base + '/api/admin/notifications?unread=1', { 
+                        headers: { 'Authorization': 'Bearer ' + token },
+                        timeout: 5000 
+                    });
+                } catch (fetchErr) {
+                    console.debug('Notification endpoint unavailable:', fetchErr.message);
+                    return;
+                }
+                
+                if (!res.ok) {
+                    console.debug('Notification endpoint returned:', res.status);
+                    return;
+                }
+                
+                let notifs;
+                try {
+                    notifs = await res.json();
+                } catch (jsonErr) {
+                    console.warn('Failed to parse notification response:', jsonErr.message);
+                    return;
+                }
+                
                 if (!Array.isArray(notifs) || notifs.length === 0) return;
+                
                 for (const n of notifs) {
                     try {
                         const time = n.createdAt ? new Date(n.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString();
@@ -852,16 +876,23 @@
                             }
                         } catch (e) { console.warn('update preview failed', e); }
 
-                        // Mark notification read
+                        // Mark notification read (ignore if endpoint fails)
                         if (n._id) {
-                            await fetch(base + '/api/admin/notifications/' + encodeURIComponent(n._id) + '/read', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } });
+                            try {
+                                await fetch(base + '/api/admin/notifications/' + encodeURIComponent(n._id) + '/read', { 
+                                    method: 'POST', 
+                                    headers: { 'Authorization': 'Bearer ' + token } 
+                                }).catch(e => console.debug('Mark read failed:', e.message));
+                            } catch (e) { console.debug('Mark read error:', e.message); }
                         }
 
                         showTransientNotification(`${text} from ${n.from || 'unknown'}`);
                     } catch (e) { console.warn('processing notif failed', e); }
                 }
                 await renderChatList();
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                console.debug('pollNotifications error:', e.message);
+            }
         }
 
         function showTransientNotification(text) {

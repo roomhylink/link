@@ -251,9 +251,9 @@
                     });
                 }
 
-                // Fallback: if still empty, return all tenants (safer for owner UX) but log a warning
+                // If still empty, return all tenants from localStorage (fallback for demo)
                 if (!tenants || tenants.length === 0) {
-                    console.warn('No tenants matched ownerId:', ownerId, '— returning all tenants as a fallback. Check localStorage.roomhy_tenants and owner_user values.');
+                    console.warn('No tenants matched ownerId:', ownerId, '— using all from localStorage. For production, API fallback should be implemented.');
                     return all;
                 }
 
@@ -275,6 +275,20 @@
                 return [];
             }
         }
+        
+        // Fetch tenants from API as fallback if localStorage is empty
+        async function getTenantsFromAPI(ownerLoginId) {
+            try {
+                const resp = await fetch(`http://localhost:5000/api/tenants?ownerId=${encodeURIComponent(ownerLoginId)}`);
+                if (!resp.ok) return [];
+                const json = await resp.json();
+                return json.data || json || [];
+            } catch (e) {
+                console.warn('getTenantsFromAPI error:', e.message);
+                return [];
+            }
+        }
+        
         function getManagers() { try { return safeParse(safeGetItem('roomhy_areamanagers_db'), []) || []; } catch(e){return[]} }
 
         // 3. Filter Tabs
